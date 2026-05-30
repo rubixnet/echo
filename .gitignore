@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+evn.sh
 
 # debug
 npm-debug.log*
