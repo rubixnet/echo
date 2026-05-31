@@ -1,0 +1,61 @@
+import { v } from "convex/values";
+import { mutation, query } from "./_generated/server"
+
+export const getProfile = query({
+    args: { workosID: v.string() },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("users")
+            .withIndex("workosId", q => q.eq("workosId", args.workosID))
+            .unique();
+    }
+})
+
+export const createProfile = mutation({
+    args: {
+        workosId: v.string(),
+        email: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const exisitingUser = await ctx.db
+            .query("users")
+            .withIndex("workosId", q => q.eq("workosId", args.workosId))
+            .unique();
+
+        if (exisitingUser) {
+            return exisitingUser;
+        }
+
+        const newUserId = await ctx.db.insert("users", {
+            workosId: args.workosId,
+            email: args.email,
+            name: ''
+        })
+
+        return await ctx.db.get(newUserId);
+    }
+})
+
+export const finalizeUser = mutation({
+    args: {
+        workosId: v.string(), 
+        name: v.string(), 
+        email: v.string(), 
+    }, 
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("workosId", q => q.eq("workosId", args.workosId))
+            .unique();
+
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            const patchData: any = {
+                name: args.name,
+                email: args.email,
+            }
+            return await ctx.db.patch(user._id, patchData);
+        }
+})

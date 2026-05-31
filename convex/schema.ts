@@ -1,4 +1,4 @@
-import { defineSchema, defineTable } from "convex/schema";
+import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
@@ -6,5 +6,5 @@ export default defineSchema({
         name: v.string(), 
         email: v.string(), 
         workosId: v.string(), 
-    }).index("workosId", ["workosId"], { unique: true }),
+    }).index("workosId", ["workosId"]),
 })

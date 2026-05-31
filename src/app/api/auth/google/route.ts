@@ -18,5 +18,5 @@ export async function GET(req: Request) {
         redirectUri,
     })
 
-    return NextResponse.json(authorizationUrl);
+    return NextResponse.redirect(authorizationUrl);
 }

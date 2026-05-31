@@ -14,7 +14,7 @@ export default function LoginPage() {
       icon: Zap,
       title: "Millisecond Sync",
       desc: "Our custom engine calculates latency on the fly. When you press play, everyone hears the beat drop at the exact same moment.",
-    },
+  },
     {
       icon: Globe2,
       title: "Global Stream",
@@ -81,14 +81,16 @@ export default function LoginPage() {
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-teal-100/60 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
         
         <div className="relative w-full max-w-lg aspect-square">
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-3xl border border-white shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[2.5rem] overflow-hidden flex flex-col">
+          <div className="absolute inset-0 overflow-hidden flex flex-col">
             
             <div 
-              className="flex-1 flex transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] h-full"
+              className="flex-1 flex  transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] h-full"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
-              {slides.map((slide, index) => (
-                <div key={index} className="min-w-full h-full flex flex-col justify-center px-12 pt-4 pb-16">
+              {slides.map((slide, index) => 
+                <div key={index} className="min-w-full  h-full flex flex-col justify-center px-2">
+                  <div className=" bg-white/60 backdrop-blur-3xl border w-full border-white px-4 py-6 gap-2 rounded-[2rem] ">
+                    
                   <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-neutral-100 flex items-center justify-center text-emerald-500 mb-8">
                     <slide.icon size={28} strokeWidth={2.5} />
                   </div>
@@ -98,8 +100,9 @@ export default function LoginPage() {
                   <p className="text-neutral-500 font-medium leading-relaxed text-lg">
                     {slide.desc}
                   </p>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="absolute bottom-12 left-12 flex gap-2 z-20">
