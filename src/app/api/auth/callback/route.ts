@@ -2,69 +2,75 @@ import { WorkOS } from "@workos-inc/node";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
-import { fetchQuery, fetchMutation } from 'convex/nextjs';
+import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY!);
-const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect("/login");
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   try {
     const response = await workos.userManagement.authenticateWithCode({
       clientId: process.env.WORKOS_CLIENT_ID!,
       code,
-    })
+    });
 
     const workosUser = response.user;
+
     const workosUserWithName = workosUser as typeof workosUser & {
       firstName?: string | null;
       lastName?: string | null;
     };
-    const fallbackName = workosUser.email.split("@")[0] || "Player";
-    const displayName =
-      [workosUserWithName.firstName, workosUserWithName.lastName]
-        .filter(Boolean)
-        .join(" ")
-        .trim() || fallbackName;
+    const fallbackName = workosUser.email.split("@")[0];
+    const displayName = [workosUserWithName.firstName, workosUserWithName.lastName]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || fallbackName;
 
     let profile = await fetchQuery(api.users.getProfile, { workosID: workosUser.id });
+    let isNewUser = false;
 
     if (!profile) {
       profile = await fetchMutation(api.users.createProfile, {
         workosId: workosUser.id,
         email: workosUser.email,
       });
-
-      const token = await new SignJWT({
-        userId: workosUser.id,
-        email: workosUser.email,
-      })
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('60d')
-        .sign(JWT_SECRET);
-
-      const cookieStore = await cookies();
-      cookieStore.set('session', token, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 60,
-      });
-
+      isNewUser = true;
     }
-  }
-  catch (error) {
+
+    const token = await new SignJWT({
+      userId: workosUser.id,
+      email: workosUser.email,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("60d")
+      .sign(JWT_SECRET);
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", token, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 60,
+    });
+
+    if (isNewUser) {
+      return NextResponse.redirect(new URL("/tour", req.url));
+    }
+
+    return NextResponse.redirect(new URL("/home", req.url));
+
+  } catch (error) {
     console.error("Auth Callback Error:", error);
-    return NextResponse.redirect(new URL('/login?error=auth_failed', req.url));
+    return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
   }
 }
-
