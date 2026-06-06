@@ -64,10 +64,10 @@ export async function GET(req: Request) {
     });
 
     if (isNewUser) {
-      return NextResponse.redirect(new URL("/tour", req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    return NextResponse.redirect(new URL("/home", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.url));
 
   } catch (error) {
     console.error("Auth Callback Error:", error);
