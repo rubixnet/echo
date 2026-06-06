@@ -31,7 +31,7 @@ export default function DashboardPage() {
           
           <button className="relative z-10 shrink-0 flex items-center gap-2 bg-white text-neutral-900 px-8 py-4 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
             <Plus size={18} strokeWidth={3} />
-            Create Room fix this stuff.! 
+            Create Room.! 
           </button>
         </div>
       </section>  

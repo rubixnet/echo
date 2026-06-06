@@ -42,7 +42,6 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-[#fcfcfc] font-sans">
 
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-32 relative z-10">
-
         <div className="absolute top-8 left-8 sm:left-16 md:left-24 lg:left-32">
           <Link href="/" className="flex items-center gap-3 group">
             <h1 className="text-2xl font-black tracking-tight text-neutral-900">Echo ♪</h1>
