@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+making the onboarding super smooth! and better! invite link different ui for the room id (if the member ir owner of the room to control and play song! )
 
-## Getting Started
+      different mode to stream and play. 
 
-First, run the development server:
+ok this is a holy shitty great design and we will need to make some great ui of how the search page will look as well, along with the following details, 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+    we will have homepage the current one, libraries page, album of an artist, an artist page, search page, search result and for you page. 
+    
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    not all of this are important but we just need main feature like the below one, 
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    where the user can search for a song play it, create a room or jam something like it and invite friends 
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    or share link and the song will be playing! 
 
-## Learn More
+        basec on this (
+          we also need to know if the user has stopped the song or not, if they have closed the window and the stream has stopped or not etc. 
+        )
 
-To learn more about Next.js, take a look at the following resources:
+    along with this maybe later moving on to create an algorithm! so that this later becomes a better music streaming platform! 
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    this is all just a later plan keep all of this in memory! 
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    we will also need to host this songs properly in a good manner and make sure everything's properly, for now we can do it with the ui. 
 
-## Deploy on Vercel
+    payments and more additional stuff. 
+    
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    i don't need code of this all right now but I want you to tell me all the things this will take and what order should we ship this in as well, 
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    so that this will be a mvp as well as a final product from mvp, mvp is multi stream support to listen to same music with friends.
+   
+    and an actual path to achive this with backend frontend, the current progress is basic homepage
+, 
+
+
+
+  this is the rooms file, 
+  showing count of all current rooms going on their details and showing it in the live rooms file, 
+  (knowing which songs does the user like for now and show them live rooms for now in their own language only! )
+
+
+  
