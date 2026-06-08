@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Home, Search, Library, Heart, Users, Play, Pause,
   SkipForward, SkipBack, Volume2, VolumeX, LogOut, PanelLeftClose, PanelLeftOpen,
@@ -13,7 +13,7 @@ import { useAudioEngine } from "@/hooks/audioPlayer";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
@@ -27,7 +27,7 @@ export default function ClientLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+
   const { progressRef, isPlaying, currentTimeStr, duration, togglePlay, seek, volume, setVolume } = useAudioEngine();
   const createRoom = useMutation(api.rooms.createRoom);
 
@@ -49,7 +49,7 @@ export default function ClientLayout({
       const newRoomId = await createRoom({
         name: roomNameInput,
         isPublic: true,
-        userId: user._id 
+        userId: user._id
       });
 
       setActiveRoom({
@@ -57,10 +57,10 @@ export default function ClientLayout({
         name: roomNameInput,
         listenerCount: 1
       });
-      
+
       setIsCreating(false);
       setRoomNameInput("");
-      
+
       router.push(`/dashboard/room/${newRoomId}`);
     } catch (error) {
       console.error("Failed to create room:", error);
@@ -79,7 +79,7 @@ export default function ClientLayout({
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2000);
   };
-  
+
   return (
     <div className="flex flex-col h-screen w-full bg-neutral-50/50 font-sans overflow-hidden selection:bg-emerald-200 selection:text-emerald-900">
       <div className="flex flex-1 overflow-hidden">
@@ -117,8 +117,8 @@ export default function ClientLayout({
                     <Heart size={18} strokeWidth={pathname === "/dashboard/liked" ? 2.5 : 2} className="shrink-0" />
                     {!isCollapsed && <span>Liked Songs</span>}
                   </Link>
-                  <Link href="/dashboard/rooms" className={cn("flex items-center rounded-xl text-sm font-bold text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all h-10", isCollapsed ? "justify-center" : "gap-3 px-3", pathname === "/dashboard/rooms" && "bg-white text-neutral-900 shadow-sm border border-neutral-200/50")}>
-                    <Users size={18} strokeWidth={pathname === "/dashboard/rooms" ? 2.5 : 2} className="shrink-0" />
+                  <Link href="/dashboard/room" className={cn("flex items-center rounded-xl text-sm font-bold text-neutral-500 hover:text-neutral-900 hover:bg-white/60 transition-all h-10", isCollapsed ? "justify-center" : "gap-3 px-3", pathname === "/dashboard/rooms" && "bg-white text-neutral-900 shadow-sm border border-neutral-200/50")}>
+                    <Users size={18} strokeWidth={pathname === "/dashboard/room" ? 2.5 : 2} className="shrink-0" />
                     {!isCollapsed && <span>Live Rooms</span>}
                   </Link>
                 </nav>
@@ -181,9 +181,18 @@ export default function ClientLayout({
                   </Avatar>
                   {!isCollapsed && <div className="flex flex-col min-w-0 text-sm font-bold text-neutral-900 truncate">{user?.email?.split('@')[0] || "Unknown User"}</div>}
                 </div>
-                <Link href="/api/auth/logout">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"><LogOut size={16} /></Button>
+
+                <Link
+                  href="/api/auth/logout"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "icon" }),
+                    "h-8 w-8 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                  )}
+                  title="Sign Out"
+                >
+                  <LogOut size={16} />
                 </Link>
+
               </div>
             </div>
           </div>
@@ -232,16 +241,16 @@ export default function ClientLayout({
               <Shield size={12} className="text-emerald-500" /> Sync Active
             </div>
           )}
-          
+
           <button onClick={() => setVolume && setVolume(volume === 0 ? 0.8 : 0)} className="text-neutral-400 hover:text-neutral-900 hidden sm:block">
             {volume === 0 ? <VolumeX size={18} /> : <Volume2 size={18} />}
           </button>
           <div className="w-16 md:w-24 hidden sm:flex items-center">
-            <input 
-              type="range" 
-              min="0" 
-              max="1" 
-              step="0.01" 
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
               value={volume !== undefined ? volume : 0.8}
               onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
               className="w-full h-1.5 bg-neutral-200 rounded-full appearance-none cursor-pointer accent-neutral-900"
