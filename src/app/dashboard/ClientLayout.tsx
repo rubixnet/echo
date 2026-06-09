@@ -27,9 +27,10 @@ export default function ClientLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
-
   const { progressRef, isPlaying, currentTimeStr, duration, togglePlay, seek, volume, setVolume } = useAudioEngine();
   const createRoom = useMutation(api.rooms.createRoom);
+  const deleteRoom = useMutation(api.rooms.deleteRoom);
+
 
   const [activeRoom, setActiveRoom] = useState<{ id: string; name: string; listenerCount: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -38,8 +39,8 @@ export default function ClientLayout({
 
   const navItems = [
     { name: "Home", href: "/dashboard", icon: Home },
-    { name: "Search", href: "/dashboard/search", icon: Search },
     { name: "Library", href: "/dashboard/library", icon: Library },
+    { name: "Search", href: "/dashboard/search", icon: Search },
   ];
 
   const handleCreateRoom = async () => {
@@ -67,7 +68,18 @@ export default function ClientLayout({
     }
   };
 
-  const handleCloseRoom = () => {
+  const handleCloseRoom = async () => {
+    if (activeRoom && user?._id) {
+      try {
+        await deleteRoom({
+          roomId: activeRoom.id as any,
+          userId: user._id
+        });
+      } catch (err) {
+        console.error("Failed to delete room from database", err);
+      }
+    }
+    
     setActiveRoom(null);
     router.push("/dashboard");
   };

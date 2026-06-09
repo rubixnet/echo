@@ -11,6 +11,21 @@ export const getProfile = query({
     }
 })
 
+export const completedOnboarding = mutation({
+    args: {
+        userId: v.id("users"), 
+        genres: v.array(v.string()), 
+    }, 
+    handler: async (ctx, args) => { 
+        await ctx.db.patch(args.userId, { 
+            favoriteGenres: args.genres,
+            onboarded: true,
+        })
+
+        return { status: "success"}
+    }
+})
+
 export const createProfile = mutation({
     args: {
         workosId: v.string(),

@@ -22,11 +22,13 @@ export const getPublicRooms = query({
     }
 });
 
+
+
 export const createRoom = mutation({
-    args: { 
-        name: v.string(), 
+    args: {
+        name: v.string(),
         isPublic: v.boolean(),
-        userId: v.id("users") 
+        userId: v.id("users")
     },
     handler: async (ctx, args) => {
         const user = await ctx.db.get(args.userId);
@@ -37,7 +39,7 @@ export const createRoom = mutation({
             hostId: user._id,
             isPlaying: false,
             pausePosition: 0,
-            listeners: [user._id], 
+            listeners: [user._id],
             isPublic: args.isPublic,
         });
 
@@ -46,10 +48,10 @@ export const createRoom = mutation({
 });
 
 export const joinRoom = mutation({
-    args: { 
+    args: {
         roomId: v.id("rooms"),
         userId: v.id("users")
-    }, 
+    },
     handler: async (ctx, args) => {
         const user = await ctx.db.get(args.userId);
         if (!user) return;
@@ -66,17 +68,17 @@ export const joinRoom = mutation({
 });
 
 export const syncPlayback = mutation({
-    args: { 
-        roomId: v.id("rooms"), 
+    args: {
+        roomId: v.id("rooms"),
         isPlaying: v.boolean(),
-        clientCurrentTime: v.number(), 
+        clientCurrentTime: v.number(),
         trackId: v.optional(v.id("tracks")),
-        userId: v.id("users") 
+        userId: v.id("users")
     },
     handler: async (ctx, args) => {
         const user = await ctx.db.get(args.userId);
         const room = await ctx.db.get(args.roomId);
-        
+
         if (!room || !user) throw new Error("Not found");
 
         if (room.hostId !== user._id) {
@@ -94,7 +96,7 @@ export const syncPlayback = mutation({
         if (args.isPlaying) {
             const serverTime = Date.now();
             updateData.serverStartTime = serverTime - (args.clientCurrentTime * 1000);
-            updateData.pausePosition = 0; 
+            updateData.pausePosition = 0;
         } else {
             updateData.pausePosition = args.clientCurrentTime;
             updateData.serverStartTime = undefined;
@@ -103,3 +105,17 @@ export const syncPlayback = mutation({
         await ctx.db.patch(args.roomId, updateData);
     },
 });
+
+export const deleteRoom = mutation({
+    args: {
+        roomId: v.id("rooms"),
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const room = await ctx.db.get(args.roomId)
+        if (!room) return;
+        if (room.hostId === args.userId) {
+            await ctx.db.delete(args.roomId);
+        }
+    }
+})
