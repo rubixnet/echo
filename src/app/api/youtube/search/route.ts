@@ -13,30 +13,11 @@ const INVIDIOUS_INSTANCES = [
   "https://invidious.flokinet.to"
 ];
 
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
 
   if (!query) return NextResponse.json({ items: [] }, { status: 400 });
-
-  for (const instance of PIPED_INSTANCES) {
-    try {
-      const res = await fetch(`${instance}/search?q=${encodeURIComponent(query)}&filter=music_songs`, {
-        next: { revalidate: 300 }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.items && data.items.length > 0) {
-          return NextResponse.json(data);
-        }
-      }
-    } catch (e) {
-      console.warn(`Piped instance down: ${instance}`);
-    }
-  }
-
-  console.log("Piped network exhausted. Dropping back to Invidious search matrix...");
 
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
@@ -56,6 +37,24 @@ export async function GET(request: Request) {
       }
     } catch (e) {
       console.warn(`Invidious instance down: ${instance}`);
+    }
+  }
+
+  console.log("Invidious network exhausted. Dropping back to Piped search matrix...");
+
+  for (const instance of PIPED_INSTANCES) {
+    try {
+      const res = await fetch(`${instance}/search?q=${encodeURIComponent(query)}&filter=music_songs`, {
+        next: { revalidate: 300 }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items && data.items.length > 0) {
+          return NextResponse.json(data);
+        }
+      }
+    } catch (e) {
+      console.warn(`Piped instance down: ${instance}`);
     }
   }
 
