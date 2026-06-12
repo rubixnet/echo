@@ -14,6 +14,8 @@ export default defineSchema({
         title: v.string(),
         artist: v.string(),
         duration: v.optional(v.string()), 
+        source: v.string(), 
+        youtubeId: v.optional(v.string()), 
         audioUrl: v.string(),
         coverUrl: v.string(),
     })
