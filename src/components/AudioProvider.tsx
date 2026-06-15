@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useRef, useState } from "react";
+import React, { createContext, useContext, useRef, useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 
 const DEFAULT_TRACK = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
@@ -14,17 +14,20 @@ export interface TrackMetadata {
 const AudioEngineContext = createContext<any>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-    const playerRef = useRef<ReactPlayer | null>(null);
+    const ytPlayerRef = useRef<ReactPlayer | null>(null);
+    const nativeAudioRef = useRef<HTMLAudioElement | null>(null);
     const progressRef = useRef<HTMLDivElement | null>(null);
 
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isLoading, setIsLoading] = useState(false); 
+    const [isLoading, setIsLoading] = useState(false);
     const [durationSec, setDurationSec] = useState(0);
     const [duration, setDuration] = useState("0:00");
     const [currentTimeStr, setCurrentTimeStr] = useState("0:00");
     const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
     const [volume, setVolumeState] = useState(0.8);
     const [activeMetadata, setActiveMetadata] = useState<TrackMetadata | null>(null);
+
+    const isYouTube = currentTrackUrl ? (currentTrackUrl.includes("youtube.com") || currentTrackUrl.includes("youtu.be")) : false;
 
     const formatTime = (time: number) => {
         if (isNaN(time) || !isFinite(time)) return "0:00";
@@ -33,132 +36,170 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const handleProgress = (state: { playedSeconds: number, played: number }) => {
-        setCurrentTimeStr(formatTime(state.playedSeconds));
-        if (progressRef.current) {
-            progressRef.current.style.width = `${state.played * 100}%`;
-        }
-    };
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        nativeAudioRef.current = new Audio();
+        nativeAudioRef.current.crossOrigin = "anonymous";
 
-    const handleDuration = (duration: number) => {
-        setDurationSec(duration);
-        setDuration(formatTime(duration));
-    };
+        const audio = nativeAudioRef.current;
+        let animationFrame: number;
+
+        const updateTime = () => {
+            setCurrentTimeStr(formatTime(audio.currentTime));
+            if (progressRef.current && audio.duration) {
+                progressRef.current.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+            }
+            animationFrame = requestAnimationFrame(updateTime);
+        };
+
+        audio.addEventListener("play", () => { setIsPlaying(true); updateTime(); });
+        audio.addEventListener("pause", () => { setIsPlaying(false); cancelAnimationFrame(animationFrame); });
+        audio.addEventListener("loadedmetadata", () => {
+            setDurationSec(audio.duration);
+            setDuration(formatTime(audio.duration));
+        });
+        audio.addEventListener("waiting", () => setIsLoading(true));
+        audio.addEventListener("playing", () => setIsLoading(false));
+
+        return () => {
+            audio.pause();
+            cancelAnimationFrame(animationFrame);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!currentTrackUrl || !nativeAudioRef.current) return;
+
+        if (isYouTube) {
+            nativeAudioRef.current.pause();
+        } else {
+            setIsLoading(true);
+            nativeAudioRef.current.src = currentTrackUrl;
+            nativeAudioRef.current.volume = volume;
+            nativeAudioRef.current.load();
+            if (isPlaying) {
+                nativeAudioRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+            }
+        }
+    }, [currentTrackUrl, isYouTube]);
+
+
+    useEffect(() => {
+        if (!isYouTube && nativeAudioRef.current) {
+            if (isPlaying && nativeAudioRef.current.paused) {
+                const playPromise = nativeAudioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(e => {
+                        if (e.name !== 'AbortError') console.log("Autoplay blocked:", e);
+                    });
+                }
+            } else if (!isPlaying && !nativeAudioRef.current.paused) {
+                nativeAudioRef.current.pause();
+            }
+        }
+    }, [isPlaying, isYouTube]);
 
     const setVolume = (val: number) => {
         setVolumeState(val);
+        if (nativeAudioRef.current && !isYouTube) {
+            nativeAudioRef.current.volume = val;
+        }
     };
 
     const loadTrack = (url: string, metadata?: TrackMetadata) => {
         if (currentTrackUrl === url) return;
-        setIsLoading(true);
         setCurrentTrackUrl(url);
-        setIsPlaying(true); 
-        
-        if (metadata) {
-            setActiveMetadata(metadata);
-        }
+        setIsPlaying(true);
+        if (metadata) setActiveMetadata(metadata);
     };
 
     const togglePlay = () => {
         if (!currentTrackUrl) {
-            loadTrack(DEFAULT_TRACK, { 
-                title: "System Ready", 
-                artist: "Audio Engine", 
-                coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200" 
-            });
+            loadTrack(DEFAULT_TRACK, { title: "System Ready", artist: "Audio Engine", coverUrl: "" });
             return;
         }
         setIsPlaying(!isPlaying);
     };
 
     const seek = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!playerRef.current || durationSec === 0) return;
-        
         const bounds = e.currentTarget.getBoundingClientRect();
-        const clickX = e.clientX - bounds.left;
-        const clickPositionPercent = Math.max(0, Math.min(1, clickX / bounds.width));
+        const percent = Math.max(0, Math.min(1, (e.clientX - bounds.left) / bounds.width));
 
-        // ReactPlayer allows seeking by fraction (0 to 1)
-        playerRef.current.seekTo(clickPositionPercent, "fraction");
-        
-        if (progressRef.current) {
-            progressRef.current.style.width = `${clickPositionPercent * 100}%`;
+        if (isYouTube && ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
+            ytPlayerRef.current.seekTo(percent, "fraction");
+        } else if (!isYouTube && nativeAudioRef.current && durationSec > 0) {
+            nativeAudioRef.current.currentTime = percent * durationSec;
         }
+
+        if (progressRef.current) progressRef.current.style.width = `${percent * 100}%`;
     };
 
     const getCurrentTime = () => {
-        return playerRef.current ? playerRef.current.getCurrentTime() : 0;
+        if (isYouTube && ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+            return ytPlayerRef.current.getCurrentTime();
+        }
+        if (!isYouTube && nativeAudioRef.current) return nativeAudioRef.current.currentTime;
+        return 0;
     };
 
     const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
-        if (!playerRef.current) return;
-        
-        if (forcePlay && serverStartTime) {
-            const timeRunning = Date.now() - serverStartTime;
-            const targetTime = timeRunning / 1000;
-            
-            if (Math.abs(getCurrentTime() - targetTime) > 0.5) {
-                playerRef.current.seekTo(targetTime, "seconds");
+        const targetTime = forcePlay && serverStartTime ? (Date.now() - serverStartTime) / 1000 : pausePosition;
+
+        if (isYouTube) {
+            if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
+                if (Math.abs((ytPlayerRef.current.getCurrentTime() || 0) - targetTime) > 0.5) {
+                    ytPlayerRef.current.seekTo(targetTime, "seconds");
+                }
             }
-            setIsPlaying(true);
-        } else {
-            playerRef.current.seekTo(pausePosition, "seconds");
-            setIsPlaying(false);
+            setIsPlaying(forcePlay);
+        } else if (!isYouTube && nativeAudioRef.current) {
+            if (Math.abs(nativeAudioRef.current.currentTime - targetTime) > 0.5) {
+                nativeAudioRef.current.currentTime = targetTime;
+            }
+            setIsPlaying(forcePlay);
         }
     };
 
     return (
         <AudioEngineContext.Provider value={{
-            progressRef,
-            isPlaying,
-            isLoading, 
-            currentTimeStr,
-            duration,
-            currentTrackUrl,
-            activeMetadata,
-            volume,
-            setActiveMetadata,
-            setIsLoading,
-            setVolume,
-            loadTrack,
-            togglePlay,
-            seek,
-            getCurrentTime,
-            forceSync
+            progressRef, isPlaying, isLoading, currentTimeStr, duration,
+            currentTrackUrl, activeMetadata, volume,
+            setActiveMetadata, setIsLoading, setVolume,
+            loadTrack, togglePlay, seek, getCurrentTime, forceSync
         }}>
-            <div className="hidden">
-                <ReactPlayer
-                    ref={playerRef}
-                    url={currentTrackUrl || ""}
-                    playing={isPlaying}
-                    volume={volume}
-                    onProgress={handleProgress}
-                    onDuration={handleDuration}
-                    onBuffer={() => setIsLoading(true)}
-                    onBufferEnd={() => setIsLoading(false)}
-                    onReady={() => setIsLoading(false)}
-                    onError={(e) => {
-                        console.error("Player Error:", e);
-                        setIsLoading(false);
-                        setIsPlaying(false);
-                    }}
-                    width="0"
-                    height="0"
-                    config={{
-                        youtube: { playerVars: { origin: typeof window !== 'undefined' ? window.location.origin : '' } }
-                    }}
-                />
+            <div className="fixed top-[-9999px] left-[-9999px] w-[10px] h-[10px] opacity-0 pointer-events-none overflow-hidden -z-50">
+                {isYouTube && (
+                    <ReactPlayer
+                        ref={ytPlayerRef}
+                        url={currentTrackUrl || ""}
+                        playing={isPlaying}
+                        volume={volume}
+                        width="10px"
+                        height="10px"
+                        config={{
+                            youtube: {
+                                playerVars: {
+                                    playsinline: 1, // Forces audio to play without fullscreening on mobile
+                                    autoplay: 1,
+                                }
+                            }
+                        }}
+                        onProgress={(s) => {
+                            setCurrentTimeStr(formatTime(s.playedSeconds));
+                            if (progressRef.current) progressRef.current.style.width = `${s.played * 100}%`;
+                        }}
+                        onReady={() => setIsLoading(false)}
+                    />
+                )}
             </div>
             {children}
         </AudioEngineContext.Provider>
     );
 }
 
-export function useAudioEngine() {
+
+export const useAudioEngine = () => {
     const context = useContext(AudioEngineContext);
-    if (!context) {
-        throw new Error("useAudioEngine must be used within an AudioProvider");
-    }
+    if (!context) throw new Error("useAudioEngine must be used within an AudioProvider");
     return context;
-}
+};
