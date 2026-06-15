@@ -22,7 +22,7 @@ export default function SearchPage() {
   const { loadTrack, togglePlay, currentTrackUrl, isPlaying, setActiveMetadata, setIsLoading } = useAudioEngine();
 
   const hostedTracks = useQuery(api.tracks.search, { searchQuery: searchTerm });
-  const ensureYouTubeTrack = useMutation(api.tracks.ensureYouTubeTrack);
+  const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
   const exclusives = hostedTracks?.filter((t) => t.source === "hosted") || [];
 
   useEffect(() => {
@@ -78,36 +78,35 @@ export default function SearchPage() {
     });
   };
 
-  const handlePlayYouTube = async (ytTrack: any) => {
+const handlePlayYouTube = async (ytTrack: any) => {
     const videoId = ytTrack.url.split("?v=")[1];
-    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const standardYoutubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     setIsLoading(true);
     setLoadingId(videoId);
 
     try {
-      loadTrack(youtubeUrl, {
+      loadTrack(standardYoutubeUrl, {
         title: ytTrack.title,
         artist: ytTrack.uploaderName,
         coverUrl: ytTrack.thumbnail,
-        source: "youtube"
       });
 
       const durationStr = `${Math.floor(ytTrack.duration / 60)}:${(ytTrack.duration % 60)
         .toString()
         .padStart(2, "0")}`;
-
-      await ensureYouTubeTrack({
+      
+        await ensureYoutubeTrack({
         youtubeId: videoId,
         title: ytTrack.title,
         artist: ytTrack.uploaderName,
-        audioUrl: youtubeUrl, // We save the standard URL now
+        audioUrl: standardYoutubeUrl, 
         coverUrl: ytTrack.thumbnail,
         duration: durationStr
       });
 
-    } catch (error) {
-      console.error("Playback routing failure:", error);
+    } catch (error: any) {
+      console.error("Playback routing failure:", error.message);
     } finally {
       setIsLoading(false);
       setLoadingId(null);
@@ -116,7 +115,6 @@ export default function SearchPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-12 pb-32 text-neutral-900 selection:bg-emerald-200 selection:text-emerald-900 antialiased">
-
       <form onSubmit={handleSearchSubmit} className="relative w-full">
         <input
           type="text"
@@ -143,7 +141,6 @@ export default function SearchPage() {
       </form>
 
       <div className="space-y-10">
-
         {ytResults.length > 0 && (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-2 px-1">

@@ -7,14 +7,25 @@ const execAsync = promisify(exec);
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  if (!id) return new NextResponse("Missing ID", { status: 400 });
+  if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
   try {
-    const { stdout } = await execAsync(`yt-dlp -g "https://www.youtube.com/watch?v=${id}"`);
-    const streamUrl = stdout.trim();
+    const { stdout, stderr } = await execAsync(`yt-dlp -g -f bestaudio "https://www.youtube.com/watch?v=${id}"`);
+    
+    const streamUrl = stdout.trim().split('\n')[0];
+    if (!streamUrl) {
+      return NextResponse.json({ 
+        error: "yt-dlp returned no URL", 
+        details: stderr 
+      }, { status: 500 });
+    }
 
     return NextResponse.json({ url: streamUrl });
-  } catch (e) {
-    return new NextResponse("Extraction failed", { status: 500 });
+  } catch (e: any) {
+    console.error("YTDLP Extraction Error:", e);
+    return NextResponse.json({ 
+      error: "Stream extraction failed on the server.",
+      details: e.message || "Unknown system error"
+    }, { status: 500 });
   }
 }

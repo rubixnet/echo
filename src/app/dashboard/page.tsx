@@ -64,14 +64,11 @@ export default function DashboardPage() {
           <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-50 rounded-bl-full pointer-events-none transition-all duration-500 group-hover:scale-110" />
           
           <div className="space-y-4 max-w-md relative z-10">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
-              <Sparkles size={10} /> Sync Infrastructure
-            </span>
             <h2 className="text-2xl md:text-3xl font-black text-neutral-950 tracking-tight leading-none">
               Broadcast Studio Workspace
             </h2>
             <p className="text-xs md:text-sm text-neutral-400 font-medium leading-relaxed">
-              Initialize a high-fidelity synchronized channel. Invite collaborators to co-curate your playlist streams across devices instantly with zero latency adjustments.
+              Start streaming songs with your frineds and invite them to listen to the music at the same time. 
             </p>
           </div>
 
