@@ -13,16 +13,16 @@ export const getProfile = query({
 
 export const completedOnboarding = mutation({
     args: {
-        userId: v.id("users"), 
-        genres: v.array(v.string()), 
-    }, 
-    handler: async (ctx, args) => { 
-        await ctx.db.patch(args.userId, { 
+        userId: v.id("users"),
+        genres: v.array(v.string()),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
             favoriteGenres: args.genres,
             onboarded: true,
         })
 
-        return { status: "success"}
+        return { status: "success" }
     }
 })
 
@@ -30,47 +30,45 @@ export const createProfile = mutation({
     args: {
         workosId: v.string(),
         email: v.string(),
+        name: v.string(), 
     },
     handler: async (ctx, args) => {
-        const exisitingUser = await ctx.db
+        const existingUser = await ctx.db
             .query("users")
-            .withIndex("workosId", q => q.eq("workosId", args.workosId))
+            .withIndex("workosId", (q) => q.eq("workosId", args.workosId))
             .unique();
 
-        if (exisitingUser) {
-            return exisitingUser;
-        }
+        if (existingUser) return existingUser;
 
-        const newUserId = await ctx.db.insert("users", {
+        return await ctx.db.insert("users", {
             workosId: args.workosId,
             email: args.email,
-            name: ''
-        })
-
-        return await ctx.db.get(newUserId);
+            name: args.name,
+            onboarded: false, 
+        });
     }
-})
+});
 
 export const finalizeUser = mutation({
     args: {
-        workosId: v.string(), 
-        name: v.string(), 
-        email: v.string(), 
-    }, 
+        workosId: v.string(),
+        name: v.string(),
+        email: v.string(),
+    },
     handler: async (ctx, args) => {
         const user = await ctx.db
             .query("users")
             .withIndex("workosId", q => q.eq("workosId", args.workosId))
             .unique();
 
-            if (!user) {
-                throw new Error("User not found");
-            }
-
-            const patchData: any = {
-                name: args.name,
-                email: args.email,
-            }
-            return await ctx.db.patch(user._id, patchData);
+        if (!user) {
+            throw new Error("User not found");
         }
+
+        const patchData: any = {
+            name: args.name,
+            email: args.email,
+        }
+        return await ctx.db.patch(user._id, patchData);
+    }
 })
