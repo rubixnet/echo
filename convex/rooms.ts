@@ -22,8 +22,6 @@ export const getPublicRooms = query({
     }
 });
 
-
-
 export const createRoom = mutation({
     args: {
         name: v.string(),

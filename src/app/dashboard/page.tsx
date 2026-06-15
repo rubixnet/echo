@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
-import { useAudioEngine } from "@/hooks/audioPlayer";
+import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
 import { Plus, Play, Pause, Radio, Music, Sparkles, ArrowUpRight, Disc } from "lucide-react";
 import Link from "next/link";

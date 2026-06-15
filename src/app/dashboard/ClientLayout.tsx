@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { AudioProvider, useAudioEngine } from "@/hooks/audioPlayer";
+import { AudioProvider, useAudioEngine } from "@/components/AudioProvider";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { UserProvider } from "@/hooks/useUser";

@@ -1,9 +1,5 @@
-import { mutation, query } from "./_generated/server"
-import { v } from "convex/values"
-
-export const generateUploadUrl = mutation(async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
-});
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
 
 export const ensureYoutubeTrack = mutation({
     args: {
@@ -15,13 +11,13 @@ export const ensureYoutubeTrack = mutation({
         duration: v.string(),
     },
     handler: async (ctx, args) => {
-        const existing = = await ctx.db
+        const existing = await ctx.db
             .query("tracks")
             .withIndex("by_youtubeId", (q) => q.eq("youtubeId", args.youtubeId))
             .unique();
 
         if (existing) {
-            await ctx.db.patch(existing._id, { audioUrl: args.audioUrl })
+            await ctx.db.patch(existing._id, { audioUrl: args.audioUrl });
             return existing._id;
         }
         return await ctx.db.insert("tracks", {
@@ -45,17 +41,17 @@ export const saveTrack = mutation({
     },
     handler: async (ctx, args) => {
         const audioUrl = await ctx.storage.getUrl(args.storageId);
-        if (!audioUrl) throw new Error("failed to get audio url")
+        if (!audioUrl) throw new Error("failed to get audio url");
         await ctx.db.insert("tracks", {
             title: args.title,
-            source: source, 
+            source: "user_upload",
             duration: "0:00",
             artist: args.artist,
             audioUrl: audioUrl,
             coverUrl: args.coverUrl,
-        })
+        });
     }
-})
+});
 
 export const getRecommended = query({
     args: {},

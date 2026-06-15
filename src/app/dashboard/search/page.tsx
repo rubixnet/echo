@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useAudioEngine } from "@/hooks/audioPlayer";
+import { useAudioEngine } from "@/components/AudioProvider";
 import { Search as SearchIcon, Play, Pause, Loader2, Database, Globe, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -11,10 +11,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const initialQuery = searchParams.get("q") || "";
   const [searchTerm, setSearchTerm] = useState(initialQuery);
-  
+
   const [ytResults, setYtResults] = useState<any[]>([]);
   const [isSearchingYt, setIsSearchingYt] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -61,11 +61,11 @@ export default function SearchPage() {
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchTerm.trim()) return;
-    
+
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set("q", searchTerm);
     router.replace(currentUrl.pathname + currentUrl.search);
-    
+
     executeSearch(searchTerm);
   };
 
@@ -80,30 +80,18 @@ export default function SearchPage() {
 
   const handlePlayYouTube = async (ytTrack: any) => {
     const videoId = ytTrack.url.split("?v=")[1];
-    
-    setActiveMetadata({
-      title: ytTrack.title,
-      artist: ytTrack.uploaderName,
-      coverUrl: ytTrack.thumbnail
-    });
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
     setIsLoading(true);
+    setLoadingId(videoId);
 
     try {
-      setLoadingId(videoId);
-
-      const res = await fetch(`/api/youtube/stream?id=${videoId}`);
-      if (!res.ok) throw new Error("Server stream extraction failed");
-      const data = await res.json();
-
-      const bestAudio = data.audioStreams.find((s: any) =>
-        s.mimeType.includes("mp4") ||
-        s.mimeType.includes("mp3") ||
-        s.mimeType.includes("webm") ||
-        s.format === "M4A" || 
-        s.format === "WEBM"
-      ) || data.audioStreams[0];
-      
-      if (!bestAudio) throw new Error("No clean audio asset exposed");
+      loadTrack(youtubeUrl, {
+        title: ytTrack.title,
+        artist: ytTrack.uploaderName,
+        coverUrl: ytTrack.thumbnail,
+        source: "youtube"
+      });
 
       const durationStr = `${Math.floor(ytTrack.duration / 60)}:${(ytTrack.duration % 60)
         .toString()
@@ -113,20 +101,15 @@ export default function SearchPage() {
         youtubeId: videoId,
         title: ytTrack.title,
         artist: ytTrack.uploaderName,
-        audioUrl: bestAudio.url,
+        audioUrl: youtubeUrl, // We save the standard URL now
         coverUrl: ytTrack.thumbnail,
         duration: durationStr
       });
 
-      loadTrack(bestAudio.url, {
-        title: ytTrack.title,
-        artist: ytTrack.uploaderName,
-        coverUrl: ytTrack.thumbnail,
-      });
     } catch (error) {
-      console.error("Extraction routing failure:", error);
-      setIsLoading(false);
+      console.error("Playback routing failure:", error);
     } finally {
+      setIsLoading(false);
       setLoadingId(null);
     }
   };
@@ -145,8 +128,8 @@ export default function SearchPage() {
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
           <SearchIcon size={16} className="text-neutral-400" />
         </div>
-        
-        <button 
+
+        <button
           type="submit"
           disabled={isSearchingYt}
           className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-950 transition-colors disabled:opacity-50"

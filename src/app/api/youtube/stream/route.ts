@@ -1,33 +1,20 @@
 import { NextResponse } from "next/server";
-import ytStream from "yt-stream";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-
-  if (!id) return NextResponse.json({ error: "Missing stream identifier" }, { status: 400 });
+  if (!id) return new NextResponse("Missing ID", { status: 400 });
 
   try {
-    const videoUrl = `https://www.youtube.com/watch?v=${id}`;
-    
-    const result = await (ytStream as any).search(videoUrl);
-    
-    const streamData = Array.isArray(result) ? result[0] : result;
+    const { stdout } = await execAsync(`yt-dlp -g "https://www.youtube.com/watch?v=${id}"`);
+    const streamUrl = stdout.trim();
 
-    if (!streamData || !streamData.stream) {
-      throw new Error("No stream data returned from resolver");
-    }
-
-    return NextResponse.json({
-      audioStreams: [{
-        url: streamData.stream,
-        mimeType: "audio/webm",
-        format: "WEBM"
-      }]
-    });
-
-  } catch (error) {
-    console.error("Local yt-stream extraction failed:", error);
-    return NextResponse.json({ error: "Local stream resolution failed" }, { status: 500 });
+    return NextResponse.json({ url: streamUrl });
+  } catch (e) {
+    return new NextResponse("Extraction failed", { status: 500 });
   }
 }

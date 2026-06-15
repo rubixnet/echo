@@ -1,130 +1,164 @@
 "use client";
 
-import React, { createContext, useContext, useRef, useState, useEffect } from "react";
+import React, { createContext, useContext, useRef, useState } from "react";
+import ReactPlayer from "react-player";
 
-interface AudioContextType {
-  progressRef: React.RefObject<HTMLDivElement | null>;
-  isPlaying: boolean;
-  currentTimeStr: string;
-  duration: string;
-  currentTrackUrl: string | null;
-  volume: number;
-  setVolume: (v: number) => void;
-  togglePlayLocal: () => void;
-  loadTrack: (url: string) => void;
-  seekLocal: (e: React.MouseEvent<HTMLDivElement>) => void;
-  forceSync: (serverStartTime?: number, pausePosition?: number, forcePlay?: boolean) => void;
-  getCurrentTime: () => number;
+const DEFAULT_TRACK = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+
+export interface TrackMetadata {
+    title: string;
+    artist: string;
+    coverUrl: string;
 }
 
-const AudioContext = createContext<AudioContextType | null>(null);
-
+const AudioEngineContext = createContext<any>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const progressRef = useRef<HTMLDivElement | null>(null);
-  
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
-  const [currentTimeStr, setCurrentTimeStr] = useState("0:00");
-  const [duration, setDuration] = useState("0:00");
-  const [volume, setVolumeState] = useState(0.8);
+    const playerRef = useRef<ReactPlayer | null>(null);
+    const progressRef = useRef<HTMLDivElement | null>(null);
 
-  const formatTime = (time: number) => {
-    if (isNaN(time)) return "0:00";
-    const m = Math.floor(time / 60);
-    const s = Math.floor(time % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); 
+    const [durationSec, setDurationSec] = useState(0);
+    const [duration, setDuration] = useState("0:00");
+    const [currentTimeStr, setCurrentTimeStr] = useState("0:00");
+    const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
+    const [volume, setVolumeState] = useState(0.8);
+    const [activeMetadata, setActiveMetadata] = useState<TrackMetadata | null>(null);
 
-  useEffect(() => {
-    audioRef.current = new Audio();
-    audioRef.current.volume = volume;
-    let animationFrameId: number;
-
-    const updateProgress = () => {
-      if (audioRef.current && progressRef.current && audioRef.current.duration > 0) {
-        const percent = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-        progressRef.current.style.width = `${percent}%`;
-      }
-      animationFrameId = requestAnimationFrame(updateProgress);
+    const formatTime = (time: number) => {
+        if (isNaN(time) || !isFinite(time)) return "0:00";
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     };
 
-    const handlePlay = () => { setIsPlaying(true); updateProgress(); };
-    const handlePause = () => { setIsPlaying(false); cancelAnimationFrame(animationFrameId); };
-    const handleTime = () => setCurrentTimeStr(formatTime(audioRef.current!.currentTime));
-    const handleMeta = () => setDuration(formatTime(audioRef.current!.duration));
-
-    audioRef.current.addEventListener("play", handlePlay);
-    audioRef.current.addEventListener("pause", handlePause);
-    audioRef.current.addEventListener("timeupdate", handleTime);
-    audioRef.current.addEventListener("loadedmetadata", handleMeta);
-
-    return () => {
-      audioRef.current?.pause();
-      cancelAnimationFrame(animationFrameId);
+    const handleProgress = (state: { playedSeconds: number, played: number }) => {
+        setCurrentTimeStr(formatTime(state.playedSeconds));
+        if (progressRef.current) {
+            progressRef.current.style.width = `${state.played * 100}%`;
+        }
     };
-  }, []); 
 
-  const setVolume = (val: number) => {
-    setVolumeState(val);
-    if (audioRef.current) audioRef.current.volume = val;
-  };
+    const handleDuration = (duration: number) => {
+        setDurationSec(duration);
+        setDuration(formatTime(duration));
+    };
 
-  const loadTrack = (url: string) => {
-    if (!audioRef.current || currentTrackUrl === url) return;
-    audioRef.current.src = url;
-    setCurrentTrackUrl(url);
-    audioRef.current.load();
-  };
+    const setVolume = (val: number) => {
+        setVolumeState(val);
+    };
 
-  const togglePlayLocal = () => {
-    if (!audioRef.current) return;
-    
-    if (!currentTrackUrl) {
-      loadTrack(DEFAULT_TRACK);
-    }
-    
-    const playPromise = isPlaying ? audioRef.current.pause() : audioRef.current.play();
-    if (playPromise !== undefined && !isPlaying) {
-      playPromise.catch((error) => console.log("Autoplay prevented by browser. User must click first.", error));
-    }
-  };
+    const loadTrack = (url: string, metadata?: TrackMetadata) => {
+        if (currentTrackUrl === url) return;
+        setIsLoading(true);
+        setCurrentTrackUrl(url);
+        setIsPlaying(true); 
+        
+        if (metadata) {
+            setActiveMetadata(metadata);
+        }
+    };
 
-  const seekLocal = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !audioRef.current.duration) return;
-    const bounds = e.currentTarget.getBoundingClientRect();
-    const percent = (e.clientX - bounds.left) / bounds.width;
-    audioRef.current.currentTime = percent * audioRef.current.duration;
-  };
+    const togglePlay = () => {
+        if (!currentTrackUrl) {
+            loadTrack(DEFAULT_TRACK, { 
+                title: "System Ready", 
+                artist: "Audio Engine", 
+                coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200" 
+            });
+            return;
+        }
+        setIsPlaying(!isPlaying);
+    };
 
-  const getCurrentTime = () => audioRef.current?.currentTime || 0;
+    const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!playerRef.current || durationSec === 0) return;
+        
+        const bounds = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - bounds.left;
+        const clickPositionPercent = Math.max(0, Math.min(1, clickX / bounds.width));
 
-  const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
-    if (!audioRef.current) return;
-    if (forcePlay && serverStartTime) {
-      const timeRunning = Date.now() - serverStartTime;
-      const targetTime = timeRunning / 1000;
-      if (Math.abs(audioRef.current.currentTime - targetTime) > 0.5) {
-        audioRef.current.currentTime = targetTime;
-      }
-      if (audioRef.current.paused) audioRef.current.play().catch(e => console.log(e));
-    } else {
-      audioRef.current.currentTime = pausePosition;
-      if (!audioRef.current.paused) audioRef.current.pause();
-    }
-  };
+        // ReactPlayer allows seeking by fraction (0 to 1)
+        playerRef.current.seekTo(clickPositionPercent, "fraction");
+        
+        if (progressRef.current) {
+            progressRef.current.style.width = `${clickPositionPercent * 100}%`;
+        }
+    };
 
-  return (
-    <AudioContext.Provider value={{ progressRef, isPlaying, currentTimeStr, duration, currentTrackUrl, volume, setVolume, togglePlayLocal, loadTrack, seekLocal, forceSync, getCurrentTime }}>
-      {children}
-    </AudioContext.Provider>
-  );
+    const getCurrentTime = () => {
+        return playerRef.current ? playerRef.current.getCurrentTime() : 0;
+    };
+
+    const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
+        if (!playerRef.current) return;
+        
+        if (forcePlay && serverStartTime) {
+            const timeRunning = Date.now() - serverStartTime;
+            const targetTime = timeRunning / 1000;
+            
+            if (Math.abs(getCurrentTime() - targetTime) > 0.5) {
+                playerRef.current.seekTo(targetTime, "seconds");
+            }
+            setIsPlaying(true);
+        } else {
+            playerRef.current.seekTo(pausePosition, "seconds");
+            setIsPlaying(false);
+        }
+    };
+
+    return (
+        <AudioEngineContext.Provider value={{
+            progressRef,
+            isPlaying,
+            isLoading, 
+            currentTimeStr,
+            duration,
+            currentTrackUrl,
+            activeMetadata,
+            volume,
+            setActiveMetadata,
+            setIsLoading,
+            setVolume,
+            loadTrack,
+            togglePlay,
+            seek,
+            getCurrentTime,
+            forceSync
+        }}>
+            <div className="hidden">
+                <ReactPlayer
+                    ref={playerRef}
+                    url={currentTrackUrl || ""}
+                    playing={isPlaying}
+                    volume={volume}
+                    onProgress={handleProgress}
+                    onDuration={handleDuration}
+                    onBuffer={() => setIsLoading(true)}
+                    onBufferEnd={() => setIsLoading(false)}
+                    onReady={() => setIsLoading(false)}
+                    onError={(e) => {
+                        console.error("Player Error:", e);
+                        setIsLoading(false);
+                        setIsPlaying(false);
+                    }}
+                    width="0"
+                    height="0"
+                    config={{
+                        youtube: { playerVars: { origin: typeof window !== 'undefined' ? window.location.origin : '' } }
+                    }}
+                />
+            </div>
+            {children}
+        </AudioEngineContext.Provider>
+    );
 }
 
-
-export const useAudio = () => {
-  const context = useContext(AudioContext);
-  if (!context) throw new Error("useAudio must be used within AudioProvider");
-  return context;
-};
+export function useAudioEngine() {
+    const context = useContext(AudioEngineContext);
+    if (!context) {
+        throw new Error("useAudioEngine must be used within an AudioProvider");
+    }
+    return context;
+}

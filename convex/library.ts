@@ -5,7 +5,6 @@ export const toggleLike = mutation({
     args: { trackId: v.id("tracks") },
     handler: async (ctx, args) => {
         const identity = await ctx.auth.getUserIdentity();
-
         if (!identity) throw new Error("Not logged in");
 
         const user = await ctx.db
@@ -17,9 +16,7 @@ export const toggleLike = mutation({
 
         const existingLike = await ctx.db
             .query("likedSongs")
-            .withIndex("by_user_and_track", (q) =>
-                q.eq("userId", user._id).eq("trackId", args.trackId)
-            )
+            .withIndex("by_user_and_track", (q) => q.eq("userId", user._id).eq("trackId", args.trackId))
             .unique();
 
         if (existingLike) {
@@ -45,7 +42,6 @@ export const toggleLike = mutation({
 });
 
 export const getMyLikes = query({
-    args: {},
     handler: async (ctx) => {
         const identity = await ctx.auth.getUserIdentity();
         if (!identity) return [];
