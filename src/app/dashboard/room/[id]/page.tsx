@@ -3,7 +3,7 @@
 import { useEffect, use } from "react"; 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import { useAudioEngine } from "@/hooks/audioPlayer";
+import { useAudioEngine } from "@/components/AudioProvider";
 import { Play, Pause } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 

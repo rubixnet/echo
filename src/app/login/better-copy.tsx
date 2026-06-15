@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-[#fcfcfc] font-sans selection:bg-emerald-200 selection:text-emerald-900">
-      
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-32 relative z-10">
         
         <div className="absolute top-8 left-8 sm:left-16 md:left-24 lg:left-32">
