@@ -58,7 +58,7 @@ export const getRecommended = query({
     handler: async (ctx) => {
         return await ctx.db.query("tracks").take(10);
     },
-})
+});
 
 export const search = query({
     args: { searchQuery: v.string() },
@@ -73,4 +73,55 @@ export const search = query({
             )
             .take(20);
     },
+});
+
+export const checkLiked = query({
+    args: { userId: v.id("users"), trackId: v.optional(v.id("tracks")) },
+    handler: async (ctx, args) => {
+        if (!args.trackId) return false;
+        const like = await ctx.db
+            .query("likedSongs")
+            .withIndex("by_user_and_track", (q) => 
+                q.eq("userId", args.userId).eq("trackId", args.trackId!)
+            )
+            .first();
+        return !!like;
+    }
+});
+
+export const toggleLike = mutation({
+    args: {
+        userId: v.id("users"),
+        trackId: v.id("tracks"),
+        title: v.string(),
+        artist: v.string(),
+        coverUrl: v.string(),
+        duration: v.string(),
+        audioUrl: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("likedSongs")
+            .withIndex("by_user_and_track", (q) => 
+                q.eq("userId", args.userId).eq("trackId", args.trackId)
+            )
+            .first();
+
+        if (existing) {
+            await ctx.db.delete(existing._id);
+            return false; 
+        } else {
+            await ctx.db.insert("likedSongs", {
+                userId: args.userId,
+                trackId: args.trackId,
+                likedAt: Date.now(),
+                title: args.title,
+                artist: args.artist,
+                coverUrl: args.coverUrl,
+                duration: args.duration,
+                audioUrl: args.audioUrl,
+            });
+            return true; 
+        }
+    }
 });

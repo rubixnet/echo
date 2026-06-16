@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Home, Search, Library, Users, Play, Pause,
   SkipForward, SkipBack, Volume2, VolumeX, LogOut, PanelLeftClose, PanelLeftOpen,
-  Radio, Plus, X, Link2, Music, Check, Shield, Loader2, Sparkles
+  Radio, Plus, X, Link2, Music, Check, Shield, Loader2, Heart, MoreHorizontal, ListPlus, PlusCircle
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { AudioProvider, useAudioEngine } from "@/components/AudioProvider";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { UserProvider } from "@/hooks/useUser";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -26,6 +26,7 @@ export default function ClientLayout({ children, user }: { children: React.React
   );
 }
 
+
 function DashboardShell({ children, user }: { children: React.ReactNode; user: any; }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -38,17 +39,44 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
 
   const createRoom = useMutation(api.rooms.createRoom);
   const deleteRoom = useMutation(api.rooms.deleteRoom);
+  const toggleLikeMutation = useMutation(api.tracks.toggleLike);
+
+  const isLiked = useQuery(api.tracks.checkLiked, {
+      userId: user?._id,
+      trackId: activeMetadata?.id
+  });
 
   const [activeRoom, setActiveRoom] = useState<{ id: string; name: string; listenerCount: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [roomNameInput, setRoomNameInput] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
+  
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const navItems = [
     { name: "Home", href: "/dashboard", icon: Home },
     { name: "Global Vault", href: "/dashboard/search", icon: Search },
     { name: "My Library", href: "/dashboard/library", icon: Library },
   ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (activeRoom && user?._id) {
+        deleteRoom({ roomId: activeRoom.id as any, userId: user._id }).catch(() => {});
+      }
+    };
+  }, [activeRoom, user, deleteRoom]);
 
   const handleCreateRoom = async () => {
     if (!roomNameInput.trim()) return;
@@ -79,6 +107,23 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
     setTimeout(() => setShareCopied(false), 2000);
   };
 
+  const handleLike = async () => {
+    if (!activeMetadata?.id || !user?._id) return;
+    try {
+        await toggleLikeMutation({
+            userId: user._id,
+            trackId: activeMetadata.id as any,
+            title: activeMetadata.title,
+            artist: activeMetadata.artist,
+            coverUrl: activeMetadata.coverUrl,
+            duration: duration,
+            audioUrl: currentTrackUrl || ""
+        });
+    } catch (e) {
+        console.error("Failed to like track", e);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen w-full bg-[#FAFAFA] font-sans overflow-hidden selection:bg-emerald-200 selection:text-emerald-900 text-neutral-900">
       <div className="flex flex-1 overflow-hidden relative">
@@ -88,7 +133,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
           isCollapsed ? "w-20" : "w-64"
         )}>
           <div className="flex flex-col h-full">
-
             <div className={cn("h-[88px] flex items-center px-3.5 border-b border-neutral-100/50", isCollapsed ? "justify-center px-0" : "justify-between")}>
               {!isCollapsed && (
                 <Link href="/dashboard" className="flex items-center gap-3 group">
@@ -104,7 +148,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
             </div>
 
             <div className="p-4 flex-1 overflow-y-auto space-y-8 scrollbar-hide">
-
               <nav className="space-y-1">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
@@ -235,14 +278,12 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                 </Link>
               </div>
             </div>
-
           </div>
         </aside>
 
         <main className="flex-1 overflow-y-auto relative pb-32">
           {children}
         </main>
-
       </div>
 
       <div className="absolute bottom-0 left-0 md:left-64 right-0 px-4 md:px-8 pb-4 md:pb-6 z-50 pointer-events-none transition-all duration-300">
@@ -254,9 +295,18 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                 <div className="w-14 h-14 bg-neutral-100 border border-neutral-200/50 rounded-2xl overflow-hidden shadow-sm shrink-0 relative group">
                   <img src={activeMetadata.coverUrl} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <div className="hidden sm:block min-w-0 pr-4">
-                  <h4 className="text-sm font-bold text-neutral-950 truncate tracking-tight">{activeMetadata.title}</h4>
-                  <p className="text-xs font-medium text-neutral-500 truncate mt-0.5">{activeMetadata.artist}</p>
+                <div className="hidden sm:flex items-center min-w-0 pr-4">
+                  <div className="min-w-0 pr-2">
+                    <h4 className="text-sm font-bold text-neutral-950 truncate tracking-tight">{activeMetadata.title}</h4>
+                    <p className="text-xs font-medium text-neutral-500 truncate mt-0.5">{activeMetadata.artist}</p>
+                  </div>
+                  {/* LIKE BUTTON */}
+                  <button 
+                    onClick={handleLike}
+                    className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
+                  >
+                    <Heart size={18} className={cn("transition-colors", isLiked ? "text-emerald-500 fill-emerald-500" : "text-neutral-400 hover:text-neutral-900")} />
+                  </button>
                 </div>
               </>
             ) : (
@@ -272,6 +322,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
             )}
           </div>
 
+          {/* MIDDLE: Playback Controls */}
           <div className="flex flex-col items-center justify-center w-2/4 md:w-1/3 gap-2.5">
             <div className="flex items-center gap-5 md:gap-8">
               <button className="text-neutral-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all">
@@ -283,7 +334,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                 disabled={!currentTrackUrl}
                 className="w-12 h-12 bg-neutral-950 text-white rounded-full flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none"
               >
-
                 {isLoading ? (
                   <Loader2 size={20} className="animate-spin text-white" />
                 ) : isPlaying ? (
@@ -319,12 +369,13 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-5 w-1/4 md:w-1/3">
+          <div className="flex items-center justify-end gap-3 w-1/4 md:w-1/3">
             {activeRoom && (
               <div className="hidden lg:flex items-center gap-1.5 mr-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-[10px] font-black uppercase tracking-widest shadow-sm">
                 <Shield size={12} className="text-emerald-500" /> Sync Active
               </div>
             )}
+            
             <div className="hidden sm:flex items-center gap-2.5 group">
               <button
                 onClick={() => setVolume && setVolume(volume === 0 ? 0.8 : 0)}
@@ -336,9 +387,30 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                 type="range" min="0" max="1" step="0.01"
                 value={volume !== undefined ? volume : 0.8}
                 onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))}
-                className="w-20 md:w-24 h-1.5 bg-neutral-200 rounded-full appearance-none cursor-pointer accent-neutral-950 opacity-70 group-hover:opacity-100 transition-opacity"
+                className="w-16 md:w-20 h-1.5 bg-neutral-200 rounded-full appearance-none cursor-pointer accent-neutral-950 opacity-70 group-hover:opacity-100 transition-opacity"
               />
             </div>
+
+            <div className="relative ml-2" ref={menuRef}>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors"
+              >
+                <MoreHorizontal size={20} />
+              </button>
+
+              {isMenuOpen && (
+                <div className="absolute bottom-full right-0 mb-3 w-48 bg-white border border-neutral-200/60 rounded-2xl shadow-xl overflow-hidden py-1.5 z-50 animate-in fade-in slide-in-from-bottom-2">
+                  <button className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-50 transition-colors">
+                    <ListPlus size={16} /> Add to Playlist
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-50 transition-colors">
+                    <PlusCircle size={16} /> Create Playlist
+                  </button>
+                </div>
+              )}
+            </div>
+            
           </div>
         </div>
       </div>
