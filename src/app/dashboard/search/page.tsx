@@ -26,6 +26,16 @@ export default function SearchPage() {
   const exclusives = hostedTracks?.filter((t) => t.source === "hosted") || [];
 
   useEffect(() => {
+    const suppressAbortError = (event: PromiseRejectionEvent) => {
+      if (event.reason && (event.reason.name === 'AbortError' || event.reason.message?.includes('AbortError'))) {
+        event.preventDefault(); // Silences the Next.js error overlay completely
+      }
+    };
+    window.addEventListener('unhandledrejection', suppressAbortError);
+    return () => window.removeEventListener('unhandledrejection', suppressAbortError);
+  }, []);
+
+  useEffect(() => {
     if (initialQuery && ytResults.length === 0 && !isSearchingYt) {
       executeSearch(initialQuery);
     }
@@ -78,25 +88,26 @@ export default function SearchPage() {
     });
   };
 
-const handlePlayYouTube = async (ytTrack: any) => {
+
+  const handlePlayYouTube = async (ytTrack: any) => {
     const videoId = ytTrack.url.split("?v=")[1];
     const standardYoutubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
     setIsLoading(true);
     setLoadingId(videoId);
 
-    try {
-      loadTrack(standardYoutubeUrl, {
-        title: ytTrack.title,
-        artist: ytTrack.uploaderName,
-        coverUrl: ytTrack.thumbnail,
-      });
+    loadTrack(standardYoutubeUrl, {
+      title: ytTrack.title,
+      artist: ytTrack.uploaderName,
+      coverUrl: ytTrack.thumbnail,
+    });
 
+    try {
       const durationStr = `${Math.floor(ytTrack.duration / 60)}:${(ytTrack.duration % 60)
         .toString()
         .padStart(2, "0")}`;
-      
-        await ensureYoutubeTrack({
+
+      const trackId = await ensureYoutubeTrack({
         youtubeId: videoId,
         title: ytTrack.title,
         artist: ytTrack.uploaderName,
@@ -104,6 +115,8 @@ const handlePlayYouTube = async (ytTrack: any) => {
         coverUrl: ytTrack.thumbnail,
         duration: durationStr
       });
+
+      setActiveMetadata((prev: any) => prev ? { ...prev, id: trackId } : prev);
 
     } catch (error: any) {
       console.error("Playback routing failure:", error.message);

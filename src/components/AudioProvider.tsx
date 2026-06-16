@@ -6,6 +6,7 @@ import ReactPlayer from "react-player";
 const DEFAULT_TRACK = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
 
 export interface TrackMetadata {
+    id?: string;
     title: string;
     artist: string;
     coverUrl: string;
@@ -17,7 +18,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const ytPlayerRef = useRef<ReactPlayer | null>(null);
     const nativeAudioRef = useRef<HTMLAudioElement | null>(null);
     const progressRef = useRef<HTMLDivElement | null>(null);
-
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [durationSec, setDurationSec] = useState(0);
@@ -37,88 +37,58 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        nativeAudioRef.current = new Audio();
-        nativeAudioRef.current.crossOrigin = "anonymous";
-
-        const audio = nativeAudioRef.current;
-        let animationFrame: number;
-
-        const updateTime = () => {
-            setCurrentTimeStr(formatTime(audio.currentTime));
-            if (progressRef.current && audio.duration) {
-                progressRef.current.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
-            }
-            animationFrame = requestAnimationFrame(updateTime);
-        };
-
-        audio.addEventListener("play", () => { setIsPlaying(true); updateTime(); });
-        audio.addEventListener("pause", () => { setIsPlaying(false); cancelAnimationFrame(animationFrame); });
-        audio.addEventListener("loadedmetadata", () => {
-            setDurationSec(audio.duration);
-            setDuration(formatTime(audio.duration));
-        });
-        audio.addEventListener("waiting", () => setIsLoading(true));
-        audio.addEventListener("playing", () => setIsLoading(false));
-
-        return () => {
-            audio.pause();
-            cancelAnimationFrame(animationFrame);
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!currentTrackUrl || !nativeAudioRef.current) return;
-
-        if (isYouTube) {
-            nativeAudioRef.current.pause();
-        } else {
-            setIsLoading(true);
-            nativeAudioRef.current.src = currentTrackUrl;
+        if (!isYouTube && nativeAudioRef.current && currentTrackUrl) {
             nativeAudioRef.current.volume = volume;
-            nativeAudioRef.current.load();
+            
             if (isPlaying) {
-                nativeAudioRef.current.play().catch(e => console.log("Autoplay blocked:", e));
-            }
-        }
-    }, [currentTrackUrl, isYouTube]);
-
-
-    useEffect(() => {
-        if (!isYouTube && nativeAudioRef.current) {
-            if (isPlaying && nativeAudioRef.current.paused) {
                 const playPromise = nativeAudioRef.current.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(e => {
-                        if (e.name !== 'AbortError') console.log("Autoplay blocked:", e);
+                        if (e.name !== 'AbortError') console.error("Play blocked by browser:", e);
                     });
                 }
-            } else if (!isPlaying && !nativeAudioRef.current.paused) {
+            } else {
                 nativeAudioRef.current.pause();
             }
         }
-    }, [isPlaying, isYouTube]);
+    }, [isPlaying, currentTrackUrl, volume, isYouTube]);
 
-    const setVolume = (val: number) => {
-        setVolumeState(val);
-        if (nativeAudioRef.current && !isYouTube) {
-            nativeAudioRef.current.volume = val;
+    const handleNativeTimeUpdate = () => {
+        if (!nativeAudioRef.current) return;
+        const current = nativeAudioRef.current.currentTime;
+        setCurrentTimeStr(formatTime(current));
+        
+        if (progressRef.current && durationSec > 0) {
+            progressRef.current.style.width = `${(current / durationSec) * 100}%`;
+        }
+    };
+
+    const handleYtProgress = (state: { playedSeconds: number, played: number }) => {
+        setCurrentTimeStr(formatTime(state.playedSeconds));
+        if (progressRef.current) {
+            progressRef.current.style.width = `${state.played * 100}%`;
         }
     };
 
     const loadTrack = (url: string, metadata?: TrackMetadata) => {
         if (currentTrackUrl === url) return;
+        
+        setIsLoading(true);
         setCurrentTrackUrl(url);
+        setActiveMetadata(metadata || null);
         setIsPlaying(true);
-        if (metadata) setActiveMetadata(metadata);
     };
 
     const togglePlay = () => {
         if (!currentTrackUrl) {
-            loadTrack(DEFAULT_TRACK, { title: "System Ready", artist: "Audio Engine", coverUrl: "" });
+            loadTrack(DEFAULT_TRACK, { title: "System Ready", artist: "Audio Engine", coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200" });
             return;
         }
         setIsPlaying(!isPlaying);
+    };
+    
+    const setVolume = (val: number) => {
+        setVolumeState(val);
     };
 
     const seek = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -130,34 +100,29 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         } else if (!isYouTube && nativeAudioRef.current && durationSec > 0) {
             nativeAudioRef.current.currentTime = percent * durationSec;
         }
-
         if (progressRef.current) progressRef.current.style.width = `${percent * 100}%`;
     };
 
     const getCurrentTime = () => {
         if (isYouTube && ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
-            return ytPlayerRef.current.getCurrentTime();
+            return ytPlayerRef.current.getCurrentTime() || 0;
         }
-        if (!isYouTube && nativeAudioRef.current) return nativeAudioRef.current.currentTime;
+        if (!isYouTube && nativeAudioRef.current) return nativeAudioRef.current.currentTime || 0;
         return 0;
     };
 
     const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
         const targetTime = forcePlay && serverStartTime ? (Date.now() - serverStartTime) / 1000 : pausePosition;
-
-        if (isYouTube) {
-            if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
-                if (Math.abs((ytPlayerRef.current.getCurrentTime() || 0) - targetTime) > 0.5) {
-                    ytPlayerRef.current.seekTo(targetTime, "seconds");
-                }
+        if (isYouTube && ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
+            if (Math.abs((ytPlayerRef.current.getCurrentTime() || 0) - targetTime) > 0.5) {
+                ytPlayerRef.current.seekTo(targetTime, "seconds");
             }
-            setIsPlaying(forcePlay);
         } else if (!isYouTube && nativeAudioRef.current) {
             if (Math.abs(nativeAudioRef.current.currentTime - targetTime) > 0.5) {
                 nativeAudioRef.current.currentTime = targetTime;
             }
-            setIsPlaying(forcePlay);
         }
+        setIsPlaying(forcePlay);
     };
 
     return (
@@ -168,35 +133,45 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             loadTrack, togglePlay, seek, getCurrentTime, forceSync
         }}>
             <div className="fixed top-[-9999px] left-[-9999px] w-[10px] h-[10px] opacity-0 pointer-events-none overflow-hidden -z-50">
-                {isYouTube && (
-                    <ReactPlayer
-                        ref={ytPlayerRef}
-                        url={currentTrackUrl || ""}
-                        playing={isPlaying}
-                        volume={volume}
-                        width="10px"
-                        height="10px"
-                        config={{
-                            youtube: {
-                                playerVars: {
-                                    playsinline: 1, // Forces audio to play without fullscreening on mobile
-                                    autoplay: 1,
-                                }
-                            }
-                        }}
-                        onProgress={(s) => {
-                            setCurrentTimeStr(formatTime(s.playedSeconds));
-                            if (progressRef.current) progressRef.current.style.width = `${s.played * 100}%`;
-                        }}
-                        onReady={() => setIsLoading(false)}
-                    />
-                )}
+                
+                <audio
+                    ref={nativeAudioRef}
+                    src={(!isYouTube && currentTrackUrl) ? currentTrackUrl : ""}
+                    preload="auto"
+                    crossOrigin="anonymous"
+                    onTimeUpdate={handleNativeTimeUpdate}
+                    onLoadedMetadata={(e) => {
+                        setDurationSec(e.currentTarget.duration);
+                        setDuration(formatTime(e.currentTarget.duration));
+                    }}
+                    onWaiting={() => setIsLoading(true)}
+                    onPlaying={() => setIsLoading(false)}
+                    onCanPlay={() => setIsLoading(false)}
+                    onEnded={() => setIsPlaying(false)}
+                />
+
+                <ReactPlayer
+                    ref={ytPlayerRef}
+                    url={(isYouTube && currentTrackUrl) ? currentTrackUrl : ""}
+                    playing={isPlaying}
+                    volume={volume}
+                    width="10px"
+                    height="10px"
+                    config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } }}
+                    onProgress={handleYtProgress}
+                    onDuration={(d: number) => {
+                        setDurationSec(d);
+                        setDuration(formatTime(d));
+                    }}
+                    onReady={() => setIsLoading(false)}
+                    onEnded={() => setIsPlaying(false)}
+                />
             </div>
+
             {children}
         </AudioEngineContext.Provider>
     );
 }
-
 
 export const useAudioEngine = () => {
     const context = useContext(AudioEngineContext);
