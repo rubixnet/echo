@@ -4,9 +4,15 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { Play, Pause, Music } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 export default function LikedSongsPage() {
-  const likedSongs = useQuery(api.library.getMyLikes);
+  const user = useUser();
+
+  const likedSongs = useQuery(
+    api.likes.getMyLikes,
+    user?._id ? { userId: user._id } : "skip"
+  );
   const { loadTrack, currentTrackUrl, isPlaying, togglePlay } = useAudioEngine();
 
   if (likedSongs === undefined) return <div className="text-neutral-400 p-8">Loading...</div>;
@@ -22,8 +28,8 @@ export default function LikedSongsPage() {
         likedSongs.map((track) => {
           const isCurrent = currentTrackUrl === track.audioUrl && isPlaying;
           return (
-            <div 
-              key={track._id} 
+            <div
+              key={track._id}
               className="flex items-center justify-between p-3 rounded-xl hover:bg-neutral-50 cursor-pointer"
               onClick={() => {
                 if (isCurrent) togglePlay();
