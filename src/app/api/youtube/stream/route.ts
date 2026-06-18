@@ -1,31 +1,48 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
+import { spawn } from "child_process";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
+  
+
   if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-  try {
-    const { stdout, stderr } = await execAsync(`yt-dlp -g -f bestaudio "https://www.youtube.com/watch?v=${id}"`);
-    
-    const streamUrl = stdout.trim().split('\n')[0];
-    if (!streamUrl) {
-      return NextResponse.json({ 
-        error: "yt-dlp returned no URL", 
-        details: stderr 
-      }, { status: 500 });
-    }
+  const ytDlp = spawn('yt-dlp', [
+    '-f', '140', 
+    '-o', '-',   
+    `https://www.youtube.com/watch?v=${id}`
+  ]);
 
-    return NextResponse.json({ url: streamUrl });
-  } catch (e: any) {
-    console.error("YTDLP Extraction Error:", e);
-    return NextResponse.json({ 
-      error: "Stream extraction failed on the server.",
-      details: e.message || "Unknown system error"
-    }, { status: 500 });
-  }
+  const stream = new ReadableStream({
+    start(controller) {
+      ytDlp.stdout.on('data', (chunk) => {
+        controller.enqueue(chunk); 
+      });
+
+      ytDlp.stdout.on('end', () => {
+        controller.close(); 
+      });
+
+      ytDlp.stderr.on('data', (data) => {
+        console.warn(`yt-dlp info: ${data}`);
+      });
+
+      ytDlp.on('error', (error) => {
+        console.error(`yt-dlp error: ${error.message}`);
+        controller.error(error);
+      });
+    },
+    cancel() {
+      ytDlp.kill(); 
+    }
+  });
+
+  return new NextResponse(stream, {
+    headers: {
+      'Content-Type': 'audio/mp4',
+      'Transfer-Encoding': 'chunked',
+      'Cache-Control': 'no-cache',
+    },
+  });
 }

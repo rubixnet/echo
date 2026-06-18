@@ -33,10 +33,10 @@ export default function LoginPage() {
     return () => clearInterval(timer);
   }, [slides.length]);
 
-  const onGoogleLogin = () => {
-    const authUrl = new URL("/api/auth/google", window.location.origin);
-    window.location.href = authUrl.toString();
-  }
+    const onGoogleLogin = () => {
+      const authUrl = new URL("/api/auth/google", window.location.origin);
+      window.location.href = authUrl.toString();
+    }
 
   return (
     <div className="flex min-h-screen bg-[#fcfcfc] font-sans">
@@ -88,9 +88,7 @@ export default function LoginPage() {
             >
               {slides.map((slide, index) =>
                 <div key={index} className="min-w-full  h-full flex flex-col justify-center px-2">
-                  <div className=" bg-white/60 backdrop-blur-3xl border w-full border-white px-4 py-6 gap-2 rounded-[2rem] ">
-
-                    <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-neutral-100 flex items-center justify-center text-emerald-500 mb-8">
+                  <div className=" bg-white/60 backdrop-blur-3xl border w-full border-white px-4 py-6 gap-2 rounded-[2rem] ">                     <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-neutral-100 flex items-center justify-center text-emerald-500 mb-8">
                       <slide.icon size={28} strokeWidth={2.5} />
                     </div>
                     <h3 className="text-3xl font-extrabold tracking-tight text-neutral-900 mb-4">
