@@ -161,26 +161,6 @@ export default function SearchPage() {
         </button>
       </form>
 
-      <div className="bg-emerald-50 border border-emerald-200/60 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-         <div>
-            <h3 className="font-black text-emerald-800 text-sm tracking-tight">Direct Stream Test</h3>
-            <p className="text-xs font-medium text-emerald-600/80 mt-0.5">Adele - Hello (YQHsXMglC9A)</p>
-         </div>
-         <button 
-            onClick={() => handlePlayYouTube({
-              url: "https://www.youtube.com/watch?v=YQHsXMglC9A",
-              title: "Adele - Hello",
-              uploaderName: "AdeleVEVO",
-              thumbnail: "https://i.ytimg.com/vi/YQHsXMglC9A/hqdefault.jpg",
-              duration: 367
-            })}
-            className="h-10 px-5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20"
-         >
-            {loadingId === "YQHsXMglC9A" ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} fill="currentColor" />} 
-            Test Binary Pipe
-         </button>
-      </div>
-
       <div className="space-y-10">
         {ytResults.length > 0 && (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">

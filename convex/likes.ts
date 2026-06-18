@@ -45,21 +45,11 @@ export const toggleLike = mutation({
 });
 
 export const getMyLikes = query({
-    args: {},
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) return [];
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("workosId", (q) => q.eq("workosId", identity.subject))
-            .unique();
-
-        if (!user) return [];
-
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {  
         return await ctx.db
             .query("likedSongs")
-            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .withIndex("by_user", (q) => q.eq("userId", args.userId)) 
             .order("desc")
             .collect();
     },
