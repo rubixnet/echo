@@ -60,6 +60,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
     { name: "My Library", href: "/dashboard/library", icon: Library },
   ];
 
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -300,7 +301,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                     <h4 className="text-sm font-bold text-neutral-950 truncate tracking-tight">{activeMetadata.title}</h4>
                     <p className="text-xs font-medium text-neutral-500 truncate mt-0.5">{activeMetadata.artist}</p>
                   </div>
-                  {/* LIKE BUTTON */}
                   <button 
                     onClick={handleLike}
                     className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors"
@@ -322,7 +322,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
             )}
           </div>
 
-          {/* MIDDLE: Playback Controls */}
           <div className="flex flex-col items-center justify-center w-2/4 md:w-1/3 gap-2.5">
             <div className="flex items-center gap-5 md:gap-8">
               <button className="text-neutral-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all">
