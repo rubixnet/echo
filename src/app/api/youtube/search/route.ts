@@ -1,62 +1,55 @@
 import { NextResponse } from "next/server";
+import { exec } from "child_process";
+import { promisify } from "util";
 
-const PIPED_INSTANCES = [
-  "https://api.piped.projectsegfau.lt",
-  "https://pipedapi.smnz.de",
-  "https://pipedapi.kavin.rocks",
-  "https://pipedapi.linustransit.net"
-];
+const execAsync = promisify(exec);
 
-const INVIDIOUS_INSTANCES = [
-  "https://invidious.perennialte.ch",
-  "https://vid.puffyan.us",
-  "https://invidious.flokinet.to"
-];
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
-
-  if (!query) return NextResponse.json({ items: [] }, { status: 400 });
-
-  for (const instance of INVIDIOUS_INSTANCES) {
+  
+  if (!query) return NextResponse.json({ items: [] });
     try {
-      const res = await fetch(`${instance}/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
-      if (res.ok) {
-        const rawItems = await res.json();
-
-        const normalizedItems = rawItems.map((item: any) => ({
-          type: "stream",
-          url: `/watch?v=${item.videoId}`,
-          title: item.title,
-          thumbnail: item.videoThumbnails?.find((t: any) => t.quality === "medium")?.url || item.videoThumbnails?.[0]?.url,
-          uploaderName: item.author,
-          duration: item.lengthSeconds
-        }));
-        return NextResponse.json({ items: normalizedItems });
-      }
-    } catch (e) {
-      console.warn(`Invidious instance down: ${instance}`);
-    }
-  }
-
-  console.log("Invidious network exhausted. Dropping back to Piped search matrix...");
-
-  for (const instance of PIPED_INSTANCES) {
+    const safeQuery = query.replace(/"/g, ''); 
+    
+    let stdoutString = "";
+    
     try {
-      const res = await fetch(`${instance}/search?q=${encodeURIComponent(query)}&filter=music_songs`, {
-        next: { revalidate: 300 }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.items && data.items.length > 0) {
-          return NextResponse.json(data);
+        const { stdout } = await execAsync(`yt-dlp --no-warnings --ignore-errors -j "ytsearch10:${safeQuery}"`, {
+            maxBuffer: 10 * 1024 * 1024 
+        });
+
+        stdoutString = stdout;
+    } catch (err: any) {
+        if (err.stdout) {
+            stdoutString = err.stdout;
+        } else {
+            throw err;  
         }
-      }
-    } catch (e) {
-      console.warn(`Piped instance down: ${instance}`);
     }
-  }
+    
+    const results = stdoutString.trim().split('\n').map((line) => {
+      try {
+        if (!line) return null;
+        const data = JSON.parse(line);
+        return {
+          id: data.id,
+          title: data.title,
+          uploaderName: data.uploader,
+          url: data.webpage_url || `https://www.youtube.com/watch?v=${data.id}`,
+          thumbnail: data.thumbnail,
+          duration: data.duration,
+          type: "stream"
+        };
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean); 
 
-  return NextResponse.json({ error: "All media networks currently busy" }, { status: 502 });
+    return NextResponse.json({ items: results });
+  } catch (e: any) {
+    console.error("Pure Search Error:", e.message);
+    return NextResponse.json({ error: "Search failed", items: [] }, { status: 500 });
+  }
 }

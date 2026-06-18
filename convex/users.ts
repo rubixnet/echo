@@ -21,7 +21,6 @@ export const completedOnboarding = mutation({
             favoriteGenres: args.genres,
             onboarded: true,
         })
-
         return { status: "success" }
     }
 })
