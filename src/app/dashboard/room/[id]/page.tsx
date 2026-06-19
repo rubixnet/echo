@@ -33,7 +33,6 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         console.error("Missing User ID. Cannot sync playback.");
         return;
     }
-
     const willPlay = !room.isPlaying; 
     await syncPlayback({
       roomId: room._id,
@@ -70,4 +69,4 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       </div>
     </div>
   );
-}
+} 

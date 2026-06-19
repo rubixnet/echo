@@ -25,8 +25,8 @@ export default function LoginPage() {
       title: "Premium Audio",
       desc: "We host our own high-fidelity audio tracks via our edge network. Zero buffering, no data tracking, just pure uninterrupted sound.",
     }];
-
-  useEffect(() => {
+    
+    useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);

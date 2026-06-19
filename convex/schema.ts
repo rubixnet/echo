@@ -42,5 +42,6 @@ export default defineSchema({
     pausePosition: v.number(),
     listeners: v.array(v.id("users")),
     isPublic: v.boolean(),
+    lastActiveAt: v.number(),
   }),
 });

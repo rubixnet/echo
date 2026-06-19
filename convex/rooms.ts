@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getRoom = query({
@@ -13,6 +13,18 @@ export const getRoom = query({
     },
 });
 
+export const getMyHosterRooms = query({
+    args: {userId: v.optional(v.id("users"))},
+    handler: async (ctx, args) => {
+        if (!args.userId) return null;
+
+        return await ctx.db
+            .query("rooms")
+            .filter((q) => q.eq(q.field("hostId"), args.userId))
+            .first(); 
+    }
+})
+
 export const getPublicRooms = query({
     args: {},
     handler: async (ctx) => {
@@ -21,8 +33,6 @@ export const getPublicRooms = query({
             .collect();
     }
 });
-
-
 
 export const createRoom = mutation({
     args: {
@@ -41,6 +51,7 @@ export const createRoom = mutation({
             pausePosition: 0,
             listeners: [user._id],
             isPublic: args.isPublic,
+            lastActiveAt: Date.now(),
         });
 
         return roomId;
@@ -106,16 +117,37 @@ export const syncPlayback = mutation({
     },
 });
 
-export const deleteRoom = mutation({
-    args: {
-        roomId: v.id("rooms"),
-        userId: v.id("users"),
-    },
+export const keepRoomAlive = mutation({
+    args: { roomId: v.id("rooms") },
     handler: async (ctx, args) => {
-        const room = await ctx.db.get(args.roomId)
-        if (!room) return;
-        if (room.hostId === args.userId) {
-            await ctx.db.delete(args.roomId);
+        await ctx.db.patch(args.roomId, { lastActiveAt: Date.now() });
+    }
+});
+
+export const clearExpiredRooms = internalMutation({
+    args: {},
+    handler: async (ctx) => {
+        const cutoff = Date.now() - 30000;
+
+        const zombies = await ctx.db
+            .query("rooms")
+            .filter((q) => q.lt(q.field("lastActiveAt"), cutoff))
+            .collect();
+
+        for (const room of zombies) {
+            await ctx.db.delete(room._id);
         }
+    }
+});
+
+export const updateRoomTract = mutation({
+    args: { roomId: v.id("rooms"), trackId: v.optional(v.id("tracks")), },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.roomId, {
+            currentTrackId: args.trackId,
+            isPlaying: true,
+            pausePosition: 0,
+            serverStartTime: Date.now()
+        })
     }
 })
