@@ -21,6 +21,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isAudioReady, setIsAudioReady] = useState(false); 
+    
     const [durationSec, setDurationSec] = useState(0);
     const [duration, setDuration] = useState("0:00");
     const [currentTimeStr, setCurrentTimeStr] = useState("0:00");
@@ -66,6 +68,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             return;
         }
         setIsLoading(true);
+        setIsAudioReady(false); 
         setCurrentTrackUrl(url);
         setActiveMetadata(metadata || null);
         setIsPlaying(true);
@@ -95,6 +98,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
+        // Note: This function is largely replaced by the new isAudioReady logic in the RoomPage, 
+        // but kept here for compatibility if used elsewhere.
         const targetTime = forcePlay && serverStartTime ? (Date.now() - serverStartTime) / 1000 : pausePosition;
         if (isYouTube && ytPlayerRef.current) {
             if (Math.abs((ytPlayerRef.current.getCurrentTime() || 0) - targetTime) > 0.5) {
@@ -110,7 +115,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AudioEngineContext.Provider value={{
-            progressRef, isPlaying, isLoading, currentTimeStr, duration,
+            progressRef, isPlaying, isLoading, 
+            isAudioReady, // 🔥 Expose the new flag
+            currentTimeStr, duration,
             currentTrackUrl, activeMetadata, volume,
             setActiveMetadata, setIsLoading, setVolume: setVolumeState,
             loadTrack, togglePlay, seek, getCurrentTime, forceSync
@@ -130,9 +137,24 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     setDurationSec(e.currentTarget.duration);
                     setDuration(formatTime(e.currentTarget.duration));
                 }}
-                onWaiting={() => { if (!isYouTube) setIsLoading(true); }}
-                onPlaying={() => { if (!isYouTube) setIsLoading(false); }}
-                onCanPlay={() => { if (!isYouTube) setIsLoading(false); }}
+                onWaiting={() => { 
+                    if (!isYouTube) {
+                        setIsLoading(true); 
+                        setIsAudioReady(false); // 🔥 Buffering...
+                    }
+                }}
+                onPlaying={() => { 
+                    if (!isYouTube) {
+                        setIsLoading(false); 
+                        setIsAudioReady(true); // 🔥 Ready!
+                    }
+                }}
+                onCanPlay={() => { 
+                    if (!isYouTube) {
+                        setIsLoading(false); 
+                        setIsAudioReady(true); // 🔥 Ready!
+                    }
+                }}
                 onEnded={() => { if (!isYouTube) setIsPlaying(false); }}
                 className="hidden"
             />
@@ -145,18 +167,23 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     volume={volume}
                     width="10px"
                     height="10px"
-                    config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } }}
-                    onProgress={(state) => {
+                    config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } as any }}
+                    onProgress={((state: any) => {
                         if (!isYouTube) return;
                         setCurrentTimeStr(formatTime(state.playedSeconds));
                         if (progressRef.current) progressRef.current.style.width = `${state.played * 100}%`;
-                    }}
-                    onDuration={(d: number) => {
+                    }) as any}
+                    onDuration={((d: number) => {
                         if (!isYouTube) return;
                         setDurationSec(d);
                         setDuration(formatTime(d));
+                    }) as any}
+                    onReady={() => { 
+                        if (isYouTube) {
+                            setIsLoading(false); 
+                            setIsAudioReady(true); 
+                        }
                     }}
-                    onReady={() => { if (isYouTube) setIsLoading(false); }}
                     onEnded={() => { if (isYouTube) setIsPlaying(false); }}
                 />
             </div>
