@@ -14,7 +14,7 @@ export default function DashboardPage() {
   const user = useUser();
   const router = useRouter();
   const { loadTrack, togglePlay, currentTrackUrl, isPlaying } = useAudioEngine();
-  
+
   const trendingTracks = useQuery(api.tracks.search, { searchQuery: "" });
   const liveRooms = useQuery(api.rooms.getPublicRooms);
   const createRoom = useMutation(api.rooms.createRoom);
@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-12 pb-32 text-neutral-900 selection:bg-emerald-200 selection:text-emerald-900 animate-in fade-in duration-500">
-      
+
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-neutral-200/40 pb-6">
         <div>
           <h1 className="text-3xl md:text-4xl font-black tracking-tight text-neutral-950 mb-1">
@@ -59,31 +59,31 @@ export default function DashboardPage() {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <div className="lg:col-span-2 bg-white border border-neutral-200/60 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-sm flex flex-col justify-between group">
           <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-50 rounded-bl-full pointer-events-none transition-all duration-500 group-hover:scale-110" />
-          
+
           <div className="space-y-4 max-w-md relative z-10">
             <h2 className="text-2xl md:text-3xl font-black text-neutral-950 tracking-tight leading-none">
               Broadcast Studio Workspace
             </h2>
             <p className="text-xs md:text-sm text-neutral-400 font-medium leading-relaxed">
-              Start streaming songs with your frineds and invite them to listen to the music at the same time. 
+              Start streaming songs with your frineds and invite them to listen to the music at the same time.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-8 relative z-10">
-            <button 
+            <button
               onClick={handleLaunchStudio}
               className="flex items-center justify-center gap-2 bg-neutral-950 text-white px-6 h-12 rounded-xl font-bold shadow-sm hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs"
             >
               <Plus size={16} strokeWidth={2.5} />
               Launch Active Channel
             </button>
-            <Link 
-              href="/dashboard/rooms" 
+            <Link
+              href="/dashboard/rooms"
               className={cn(
-                buttonVariants({ variant: "outline" }), 
+                buttonVariants({ variant: "outline" }),
                 "h-12 border-neutral-200 hover:border-neutral-400 bg-white hover:bg-neutral-50 px-6 rounded-xl font-bold text-xs text-neutral-600 hover:text-neutral-900 transition-all flex items-center justify-center gap-1.5"
               )}
             >
@@ -92,7 +92,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-200/60 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+        {/* <div className="bg-white border border-neutral-200/60 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-50 border border-neutral-200/50 text-neutral-500 text-[10px] font-black uppercase tracking-widest">
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                 </span>
               )}
             </div>
-            
+
             <h3 className="text-lg font-black tracking-tight text-neutral-950">Calibrated Tuning</h3>
             <p className="text-xs text-neutral-400 font-medium leading-relaxed">
               Your algorithmic recommendation vector is calibrated to your preferred genre settings.
@@ -130,11 +130,11 @@ export default function DashboardPage() {
 
           <div className="border-t border-neutral-100 pt-4 mt-6 flex items-center justify-between text-xs text-neutral-400 font-bold">
             <span className="flex items-center gap-1">
-              <Radio size={14} className="text-neutral-300" /> 
+              <Radio size={14} className="text-neutral-300" />
               {liveRooms ? `${liveRooms.length} Public Streams` : "Checking network..."}
             </span>
           </div>
-        </div>
+        </div> */}
 
       </div>
 
@@ -143,7 +143,7 @@ export default function DashboardPage() {
           <h3 className="text-lg font-black tracking-tight text-neutral-950">Heavy Rotation</h3>
           <div className="h-px flex-1 bg-neutral-200/60" />
         </div>
-
+{/* 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {trendingTracks === undefined ? (
             Array.from({ length: 6 }).map((_, idx) => (
@@ -161,19 +161,19 @@ export default function DashboardPage() {
           ) : (
             trendingTracks.map((track) => {
               const isThisTrackPlaying = currentTrackUrl === track.audioUrl && isPlaying;
-              
+
               return (
                 <div key={track._id} className="group cursor-pointer flex flex-col space-y-3">
-                  <div 
+                  <div
                     onClick={() => handlePlayTrack(track.audioUrl)}
                     className="relative aspect-square bg-neutral-100 border border-neutral-200/60 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-neutral-300"
                   >
-                    <img 
-                      src={track.coverUrl} 
-                      alt={track.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" 
+                    <img
+                      src={track.coverUrl}
+                      alt={track.title}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
-                    
+
                     <div className={cn(
                       "absolute inset-0 bg-neutral-950/20 backdrop-blur-[2px] flex items-center justify-center transition-opacity duration-300",
                       isThisTrackPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -203,7 +203,7 @@ export default function DashboardPage() {
               );
             })
           )}
-        </div>
+        </div> */}
       </section>
 
     </div>
