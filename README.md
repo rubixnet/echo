@@ -12,3 +12,5 @@
 - option to loop song, one at a time, shuffle, repeat, random play order. 
 
 - now liking song works, metadata is only passed from the search page, no other page shares it like the library and liked and homepage. 
+
+- we have same home page recommendations for everyone.
