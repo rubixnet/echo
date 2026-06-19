@@ -14,11 +14,12 @@ import { api } from "../../../convex/_generated/api";
 import { UserProvider } from "@/hooks/useUser";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import GlobalPlayer from "@/components/GlobalPlayerUI"; 
+import GlobalPlayer from "@/components/GlobalPlayerUI";
+import { keepRoomAlive } from "../../../convex/rooms";
 
 export default function ClientLayout({ children, user }: { children: React.ReactNode; user: any; }) {
   return (
-    <UserProvider user={user}>  
+    <UserProvider user={user}>
       <AudioProvider>
         <DashboardShell user={user}>{children}</DashboardShell>
       </AudioProvider>
@@ -30,6 +31,8 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
   const pathname = usePathname();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const keepRoomAlive = useMutation(api.rooms.keepRoomAlive);
 
   const createRoom = useMutation(api.rooms.createRoom);
   const deleteRoom = useMutation(api.rooms.deleteRoom);
@@ -46,12 +49,17 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
   ];
 
   useEffect(() => {
+
+    if (!activeRoom || !user?._id) return;
+
+    const intervalId = setInterval(() => { keepRoomAlive({ roomId: activeRoom.id as any }); }, 10000);
+
     return () => {
-      if (activeRoom && user?._id) {
-        deleteRoom({ roomId: activeRoom.id as any, userId: user._id }).catch(() => {});
-      }
+      clearInterval(intervalId);
+      deleteRoom({ roomId: activeRoom.id as any, userId: user._id }).catch(() => { });
     };
-  }, [activeRoom, user, deleteRoom]);
+  }, [activeRoom, user, deleteRoom, keepRoomAlive]);
+
 
   const handleCreateRoom = async () => {
     if (!roomNameInput.trim()) return;

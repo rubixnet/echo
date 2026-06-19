@@ -29,7 +29,7 @@ export const createProfile = mutation({
     args: {
         workosId: v.string(),
         email: v.string(),
-        name: v.string(), 
+        name: v.optional(v.string())
     },
     handler: async (ctx, args) => {
         const existingUser = await ctx.db
@@ -42,7 +42,7 @@ export const createProfile = mutation({
         return await ctx.db.insert("users", {
             workosId: args.workosId,
             email: args.email,
-            name: args.name,
+            name: args.name || "", 
             onboarded: false, 
         });
     }
