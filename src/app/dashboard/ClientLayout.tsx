@@ -33,9 +33,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const keepRoomAlive = useMutation(api.rooms.keepRoomAlive);
-
   const createRoom = useMutation(api.rooms.createRoom);
-  const deleteRoom = useMutation(api.rooms.deleteRoom);
 
   const [activeRoom, setActiveRoom] = useState<{ id: string; name: string; listenerCount: number } | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -56,9 +54,8 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
 
     return () => {
       clearInterval(intervalId);
-      deleteRoom({ roomId: activeRoom.id as any, userId: user._id }).catch(() => { });
     };
-  }, [activeRoom, user, deleteRoom, keepRoomAlive]);
+  }, [activeRoom, user, keepRoomAlive]);
 
 
   const handleCreateRoom = async () => {
@@ -212,7 +209,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                     )}
                   >
                     <Plus size={18} strokeWidth={2.5} />
-                    {!isCollapsed && <span>Create Channel</span>}
+                    {!isCollapsed && <span>Create Live Room</span>}
                   </Button>
                 )}
               </div>
