@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useRef, useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 
-const DEFAULT_TRACK = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3";
+const Player = ReactPlayer as any;
 
 export interface TrackMetadata {
     id?: string;
@@ -15,7 +15,7 @@ export interface TrackMetadata {
 const AudioEngineContext = createContext<any>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-    const ytPlayerRef = useRef<ReactPlayer | null>(null);
+    const ytPlayerRef = useRef<any>(null);
     const nativeAudioRef = useRef<HTMLAudioElement | null>(null);
     const progressRef = useRef<HTMLDivElement | null>(null);
 
@@ -25,6 +25,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     
     const [durationSec, setDurationSec] = useState(0);
     const [duration, setDuration] = useState("0:00");
+    const [currentTimeSec, setCurrentTimeSec] = useState(0); 
     const [currentTimeStr, setCurrentTimeStr] = useState("0:00");
     const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
     const [volume, setVolumeState] = useState(0.8);
@@ -40,6 +41,26 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
+        if ("mediaSession" in navigator && activeMetadata) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: activeMetadata.title || "Unknown Track",
+                artist: activeMetadata.artist || "Unknown Artist",
+                album: "Broadcast Studio",
+                artwork: [
+                    { 
+                        src: activeMetadata.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=512&auto=format&fit=crop", 
+                        sizes: "512x512", 
+                        type: "image/jpeg" 
+                    }
+                ]
+            });
+
+            navigator.mediaSession.setActionHandler("play", () => setIsPlaying(true));
+            navigator.mediaSession.setActionHandler("pause", () => setIsPlaying(false));
+        }
+    }, [activeMetadata]);
+
+    useEffect(() => {
         if (!nativeAudioRef.current) return;
         
         if (isYouTube) {
@@ -47,8 +68,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
-        if (currentTrackUrl && nativeAudioRef.current.src !== currentTrackUrl) {
-            nativeAudioRef.current.src = currentTrackUrl;
+        const currentSrc = nativeAudioRef.current.getAttribute("src");
+        if (currentTrackUrl && currentSrc !== currentTrackUrl) {
+            nativeAudioRef.current.setAttribute("src", currentTrackUrl);
             nativeAudioRef.current.load();
         }
 
@@ -63,6 +85,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }, [isPlaying, currentTrackUrl, volume, isYouTube]);
 
     const loadTrack = (url: string, metadata?: TrackMetadata) => {
+        setActiveMetadata(metadata || null);
+        
         if (currentTrackUrl === url) {
             setIsPlaying(true);
             return;
@@ -70,24 +94,31 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(true);
         setIsAudioReady(false); 
         setCurrentTrackUrl(url);
-        setActiveMetadata(metadata || null);
         setIsPlaying(true);
     };
 
     const togglePlay = () => {
-        if (!currentTrackUrl) return loadTrack(DEFAULT_TRACK, { title: "System Ready", artist: "Audio Engine", coverUrl: "" });
+        if (!currentTrackUrl) return; 
         setIsPlaying(!isPlaying);
+    };
+
+    const seekToTime = (seconds: number) => {
+        if (isYouTube && ytPlayerRef.current) {
+            ytPlayerRef.current.seekTo(seconds, "seconds");
+        } else if (!isYouTube && nativeAudioRef.current) {
+            nativeAudioRef.current.currentTime = seconds;
+        }
+        setCurrentTimeSec(seconds);
+        setCurrentTimeStr(formatTime(seconds));
     };
 
     const seek = (e: React.MouseEvent<HTMLDivElement>) => {
         const bounds = e.currentTarget.getBoundingClientRect();
         const percent = Math.max(0, Math.min(1, (e.clientX - bounds.left) / bounds.width));
         
-        if (isYouTube && ytPlayerRef.current) {
-            ytPlayerRef.current.seekTo(percent, "fraction");
-        } else if (!isYouTube && nativeAudioRef.current && durationSec > 0) {
-            nativeAudioRef.current.currentTime = percent * durationSec;
-        }
+        const targetTime = percent * durationSec;
+        seekToTime(targetTime); 
+
         if (progressRef.current) progressRef.current.style.width = `${percent * 100}%`;
     };
 
@@ -98,29 +129,21 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
 
     const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
-        // Note: This function is largely replaced by the new isAudioReady logic in the RoomPage, 
-        // but kept here for compatibility if used elsewhere.
         const targetTime = forcePlay && serverStartTime ? (Date.now() - serverStartTime) / 1000 : pausePosition;
-        if (isYouTube && ytPlayerRef.current) {
-            if (Math.abs((ytPlayerRef.current.getCurrentTime() || 0) - targetTime) > 0.5) {
-                ytPlayerRef.current.seekTo(targetTime, "seconds");
-            }
-        } else if (!isYouTube && nativeAudioRef.current) {
-            if (Math.abs(nativeAudioRef.current.currentTime - targetTime) > 0.5) {
-                nativeAudioRef.current.currentTime = targetTime;
-            }
-        }
+        seekToTime(targetTime);
         setIsPlaying(forcePlay);
     };
 
     return (
         <AudioEngineContext.Provider value={{
             progressRef, isPlaying, isLoading, 
-            isAudioReady, // 🔥 Expose the new flag
+            isAudioReady, 
             currentTimeStr, duration,
+            currentTimeSec, 
+            durationSec,    
             currentTrackUrl, activeMetadata, volume,
             setActiveMetadata, setIsLoading, setVolume: setVolumeState,
-            loadTrack, togglePlay, seek, getCurrentTime, forceSync
+            loadTrack, togglePlay, seek, seekToTime, getCurrentTime, forceSync 
         }}>
             
             <audio
@@ -129,6 +152,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 onTimeUpdate={() => {
                     if (isYouTube || !nativeAudioRef.current) return;
                     const current = nativeAudioRef.current.currentTime;
+                    setCurrentTimeSec(current); 
                     setCurrentTimeStr(formatTime(current));
                     if (progressRef.current && durationSec > 0) progressRef.current.style.width = `${(current / durationSec) * 100}%`;
                 }}
@@ -140,19 +164,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                 onWaiting={() => { 
                     if (!isYouTube) {
                         setIsLoading(true); 
-                        setIsAudioReady(false); // 🔥 Buffering...
+                        setIsAudioReady(false); 
                     }
                 }}
                 onPlaying={() => { 
                     if (!isYouTube) {
                         setIsLoading(false); 
-                        setIsAudioReady(true); // 🔥 Ready!
+                        setIsAudioReady(true); 
                     }
                 }}
                 onCanPlay={() => { 
                     if (!isYouTube) {
                         setIsLoading(false); 
-                        setIsAudioReady(true); // 🔥 Ready!
+                        setIsAudioReady(true); 
                     }
                 }}
                 onEnded={() => { if (!isYouTube) setIsPlaying(false); }}
@@ -160,24 +184,25 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             />
 
             <div className="fixed top-[-9999px] left-[-9999px] w-[1px] h-[1px] opacity-0 pointer-events-none -z-50">
-                <ReactPlayer
+                <Player
                     ref={ytPlayerRef}
                     url={isYouTube ? (currentTrackUrl || "") : ""}
                     playing={isYouTube && isPlaying}
                     volume={volume}
                     width="10px"
                     height="10px"
-                    config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } as any }}
-                    onProgress={((state: any) => {
+                    config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } }}
+                    onProgress={(state: any) => {
                         if (!isYouTube) return;
+                        setCurrentTimeSec(state.playedSeconds); 
                         setCurrentTimeStr(formatTime(state.playedSeconds));
                         if (progressRef.current) progressRef.current.style.width = `${state.played * 100}%`;
-                    }) as any}
-                    onDuration={((d: number) => {
+                    }}
+                    onDuration={(d: number) => {
                         if (!isYouTube) return;
                         setDurationSec(d);
                         setDuration(formatTime(d));
-                    }) as any}
+                    }}
                     onReady={() => { 
                         if (isYouTube) {
                             setIsLoading(false); 
