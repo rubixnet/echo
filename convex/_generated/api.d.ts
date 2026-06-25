@@ -11,6 +11,7 @@
 import type * as crons from "../crons.js";
 import type * as library from "../library.js";
 import type * as likes from "../likes.js";
+import type * as playlists from "../playlists.js";
 import type * as rooms from "../rooms.js";
 import type * as tracks from "../tracks.js";
 import type * as users from "../users.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   library: typeof library;
   likes: typeof likes;
+  playlists: typeof playlists;
   rooms: typeof rooms;
   tracks: typeof tracks;
   users: typeof users;
