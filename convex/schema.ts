@@ -44,4 +44,18 @@ export default defineSchema({
     isPublic: v.boolean(),
     lastActiveAt: v.number(),
   }),
+
+  playlists: defineTable({
+    name: v.string(),
+    userId: v.id('users'),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+  playlistTracks: defineTable({
+    playlistId: v.id('playlists'),
+    trackId: v.id('tracks'),
+    addedAt: v.number(),
+  })
+    .index("by_playlist", ["playlistId"])
+    .index("by_playlist_and_track", ["playlistId", "trackId"])
 });

@@ -15,7 +15,6 @@ import { UserProvider } from "@/hooks/useUser";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import GlobalPlayer from "@/components/GlobalPlayerUI";
-import { keepRoomAlive } from "../../../convex/rooms";
 
 export default function ClientLayout({ children, user }: { children: React.ReactNode; user: any; }) {
   return (
@@ -45,18 +44,6 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
     { name: "Global Vault", href: "/dashboard/search", icon: Search },
     { name: "My Library", href: "/dashboard/library", icon: Library },
   ];
-
-  useEffect(() => {
-
-    if (!activeRoom || !user?._id) return;
-
-    const intervalId = setInterval(() => { keepRoomAlive({ roomId: activeRoom.id as any }); }, 10000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [activeRoom, user, keepRoomAlive]);
-
 
   const handleCreateRoom = async () => {
     if (!roomNameInput.trim()) return;
@@ -230,7 +217,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                     </div>
                   )}
                 </div>
-                <Link
+                <a
                   href="/api/auth/logout"
                   className={cn(
                     buttonVariants({ variant: "ghost", size: "icon" }),
@@ -238,8 +225,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                   )}
                 >
                   <LogOut size={16} />
-                </Link>
-              </div>
+                </a>              </div>
             </div>
           </div>
         </aside>
