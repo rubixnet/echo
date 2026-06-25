@@ -13,15 +13,25 @@ export const getRoom = query({
     },
 });
 
+export const deleteRoom = mutation({
+    args: { roomId: v.id("rooms"), userId: v.id("users") },
+    handler: async (ctx, args) => { 
+        const room = await ctx.db.get(args.roomId);
+        if (room && room.hostId === args.userId) {
+            await ctx.db.delete(args.roomId);
+        }
+    }
+})
+
 export const getMyHosterRooms = query({
-    args: {userId: v.optional(v.id("users"))},
+    args: { userId: v.optional(v.id("users")) },
     handler: async (ctx, args) => {
         if (!args.userId) return null;
 
         return await ctx.db
             .query("rooms")
             .filter((q) => q.eq(q.field("hostId"), args.userId))
-            .first(); 
+            .first();
     }
 })
 

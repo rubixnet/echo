@@ -13,7 +13,7 @@ export default function LibraryLayout({ children }: { children: React.ReactNode 
   ];
 
   return (
-    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-8">
+    <div className="p-6 md:p-10 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-black tracking-tighter text-neutral-900">Your Library</h1>
       </div>
@@ -24,7 +24,7 @@ export default function LibraryLayout({ children }: { children: React.ReactNode 
             key={tab.name}
             onClick={() => router.push(tab.href)}
             className={cn(
-              "pb-3 text-sm font-bold transition-all border-b-2",
+              "pb-2 text-sm font-bold transition-all border-b-2",
               pathname === tab.href 
                 ? "text-emerald-600 border-emerald-600" 
                 : "text-neutral-400 border-transparent hover:text-neutral-900"
@@ -35,7 +35,7 @@ export default function LibraryLayout({ children }: { children: React.ReactNode 
         ))}
       </div>
 
-      <div className="pt-2 animate-in fade-in duration-300">
+      <div className=" animate-in fade-in duration-300">
         {children}
       </div>
     </div>

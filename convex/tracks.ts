@@ -7,7 +7,7 @@ export const ensureYoutubeTrack = mutation({
         title: v.string(),
         artist: v.string(),
         audioUrl: v.string(),
-        coverUrl: v.string(),
+        coverUrl: v.optional(v.string()),
         duration: v.string(),
     },
     handler: async (ctx, args) => {
@@ -25,7 +25,7 @@ export const ensureYoutubeTrack = mutation({
             artist: args.artist,
             duration: args.duration,
             audioUrl: args.audioUrl,
-            coverUrl: args.coverUrl,
+            coverUrl: args.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
             source: "youtube",
             youtubeId: args.youtubeId,
         });
