@@ -1,19 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
-import { Plus, Play, Pause, Radio, Music, Sparkles, ArrowUpRight, Disc } from "lucide-react";
+import { Plus, Play, Pause, Radio, Music, Sparkles, ArrowUpRight, Disc, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 
 export default function DashboardPage() {
   const user = useUser();
   const router = useRouter();
-  const { loadTrack, togglePlay, currentTrackUrl, isPlaying } = useAudioEngine();
+
+  const { currentTrackUrl, isPlaying } = useAudioEngine();
+  const { playTrack } = useGlobalPlayback();
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const trendingTracks = useQuery(api.tracks.search, { searchQuery: "" });
   const liveRooms = useQuery(api.rooms.getPublicRooms);
@@ -25,6 +30,7 @@ export default function DashboardPage() {
     if (hrs < 18) return "Good afternoon";
     return "Good evening";
   };
+
   const handleLaunchStudio = async () => {
     if (!user?._id) return;
     try {
@@ -39,10 +45,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handlePlayTrack = (trackUrl: string) => {
-    if (currentTrackUrl === trackUrl) return togglePlay();
-    loadTrack(trackUrl);
-  };
+
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-12 pb-32 text-neutral-900 selection:bg-emerald-200 selection:text-emerald-900 animate-in fade-in duration-500">
@@ -68,7 +71,7 @@ export default function DashboardPage() {
               Broadcast Studio Workspace
             </h2>
             <p className="text-xs md:text-sm text-neutral-400 font-medium leading-relaxed">
-              Start streaming songs with your frineds and invite them to listen to the music at the same time.
+              Start streaming songs with your friends and invite them to listen to the music at the same time.
             </p>
           </div>
 
@@ -92,50 +95,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* <div className="bg-white border border-neutral-200/60 rounded-3xl p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-50 border border-neutral-200/50 text-neutral-500 text-[10px] font-black uppercase tracking-widest">
-                <Disc size={10} className={cn(isPlaying && "animate-spin")} /> Profile Frequency
-              </span>
-              {liveRooms && liveRooms.length > 0 && (
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-lg font-black tracking-tight text-neutral-950">Calibrated Tuning</h3>
-            <p className="text-xs text-neutral-400 font-medium leading-relaxed">
-              Your algorithmic recommendation vector is calibrated to your preferred genre settings.
-            </p>
-
-            <div className="flex flex-wrap gap-1.5 pt-2">
-              {user?.favoriteGenres && user.favoriteGenres.length > 0 ? (
-                user.favoriteGenres.map((genre: string) => (
-                  <span key={genre} className="text-[10px] font-bold px-2.5 py-1 bg-neutral-50 border border-neutral-200/60 text-neutral-600 rounded-lg">
-                    {genre}
-                  </span>
-                ))
-              ) : (
-                ["Indie Pop", "Lo-Fi", "Synthwave"].map((genre) => (
-                  <span key={genre} className="text-[10px] font-bold px-2.5 py-1 bg-neutral-50 border border-neutral-200/60 text-neutral-400 rounded-lg">
-                    {genre}
-                  </span>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="border-t border-neutral-100 pt-4 mt-6 flex items-center justify-between text-xs text-neutral-400 font-bold">
-            <span className="flex items-center gap-1">
-              <Radio size={14} className="text-neutral-300" />
-              {liveRooms ? `${liveRooms.length} Public Streams` : "Checking network..."}
-            </span>
-          </div>
-        </div> */}
-
       </div>
 
       <section className="space-y-6">
@@ -143,7 +102,7 @@ export default function DashboardPage() {
           <h3 className="text-lg font-black tracking-tight text-neutral-950">Heavy Rotation</h3>
           <div className="h-px flex-1 bg-neutral-200/60" />
         </div>
-{/* 
+
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
           {trendingTracks === undefined ? (
             Array.from({ length: 6 }).map((_, idx) => (
@@ -160,12 +119,14 @@ export default function DashboardPage() {
             </div>
           ) : (
             trendingTracks.map((track) => {
-              const isThisTrackPlaying = currentTrackUrl === track.audioUrl && isPlaying;
+              const videoId = track.youtubeId || track.audioUrl?.split("id=")[1];
+              const isLoading = loadingId === videoId;
+              const isThisTrackPlaying = currentTrackUrl?.includes(videoId) && isPlaying;
 
               return (
                 <div key={track._id} className="group cursor-pointer flex flex-col space-y-3">
                   <div
-                    onClick={() => handlePlayTrack(track.audioUrl)}
+                    onClick={() => playTrack(track, setLoadingId)}
                     className="relative aspect-square bg-neutral-100 border border-neutral-200/60 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-neutral-300"
                   >
                     <img
@@ -179,7 +140,9 @@ export default function DashboardPage() {
                       isThisTrackPlaying ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                     )}>
                       <button className="w-11 h-11 bg-white text-neutral-950 rounded-full flex items-center justify-center shadow-xl transform transition-all duration-300 hover:scale-110 active:scale-95">
-                        {isThisTrackPlaying ? (
+                        {isLoading ? (
+                          <Loader2 size={18} className="animate-spin text-neutral-900" />
+                        ) : isThisTrackPlaying ? (
                           <Pause size={16} fill="currentColor" />
                         ) : (
                           <Play size={16} fill="currentColor" className="ml-0.5" />
@@ -203,7 +166,7 @@ export default function DashboardPage() {
               );
             })
           )}
-        </div> */}
+        </div>
       </section>
 
     </div>
