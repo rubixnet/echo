@@ -8,11 +8,14 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as http from "../http.js";
 import type * as library from "../library.js";
 import type * as likes from "../likes.js";
 import type * as playlists from "../playlists.js";
 import type * as rooms from "../rooms.js";
+import type * as search from "../search.js";
 import type * as tracks from "../tracks.js";
 import type * as users from "../users.js";
 
@@ -23,11 +26,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   crons: typeof crons;
+  http: typeof http;
   library: typeof library;
   likes: typeof likes;
   playlists: typeof playlists;
   rooms: typeof rooms;
+  search: typeof search;
   tracks: typeof tracks;
   users: typeof users;
 }>;
@@ -58,4 +64,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  workOSAuthKit: import("@convex-dev/workos-authkit/_generated/component.js").ComponentApi<"workOSAuthKit">;
+};
