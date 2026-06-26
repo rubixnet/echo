@@ -9,7 +9,7 @@ export default function LibraryLayout({ children }: { children: React.ReactNode 
 
   const tabs = [
     { name: "Liked Songs", href: "/dashboard/library/liked" },
-    { name: "Playlists", href: "/dashboard/library/playlists" },
+    { name: "Playlists", href: "/dashboard/library/" },
   ];
 
   return (
