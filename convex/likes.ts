@@ -1,17 +1,23 @@
-import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { mutation, query } from "./_generated/server"
 
 export const toggleLike = mutation({
-    args: { trackId: v.id("tracks") },
+    args: {
+        userId: v.optional(v.id("users")),
+        trackId: v.id("tracks"),
+    },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
+        let user = args.userId ? await ctx.db.get(args.userId) : null;
 
-        if (!identity) throw new Error("Not logged in");
+        if (!user) {
+            const identity = await ctx.auth.getUserIdentity();
+            if (!identity) throw new Error("Not logged in");
 
-        const user = await ctx.db
-            .query("users")
-            .withIndex("workosId", (q) => q.eq("workosId", identity.subject))
-            .unique();
+            user = await ctx.db
+                .query("users")
+                .withIndex("workosId", (q) => q.eq("workosId", identity.subject))
+                .unique();
+        }
 
         if (!user) throw new Error("User not found");
 
@@ -44,13 +50,14 @@ export const toggleLike = mutation({
     }
 });
 
+
 export const getMyLikes = query({
     args: { userId: v.id("users") },
-    handler: async (ctx, args) => {  
+    handler: async (ctx, args) => {
         return await ctx.db
             .query("likedSongs")
-            .withIndex("by_user", (q) => q.eq("userId", args.userId)) 
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .order("desc")
             .collect();
-    },
+    }
 });

@@ -33,6 +33,14 @@ export default defineSchema({
   }).index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
+
+  searchHistory: defineTable({
+    userId: v.id("users"),
+    searchQuery: v.string(),
+    searchedAt: v.number(),
+  }).index("by_user", ["userId"])
+    .index("by_user_and_query", ["userId", "searchQuery"]),
+
   rooms: defineTable({
     name: v.string(),
     hostId: v.id("users"),
