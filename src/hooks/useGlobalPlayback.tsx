@@ -5,7 +5,7 @@ import { useUser } from "@/hooks/useUser"
 
 export function useGlobalPlayback() {
     const user = useUser();
-    const { loadTrack, currentTractUrl, togglePlay, setActiveMetadata, setIsLoading } = useAudioEngine();
+    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading } = useAudioEngine();
 
     const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack)
 
@@ -25,17 +25,23 @@ export function useGlobalPlayback() {
 
         try {
             const pipeUrl = `/api/youtube/stream?id=${videoId}`;
+            const coverUrl = typeof ytTrack.thumbnails === "string"
+                ? ytTrack.thumbnails
+                : ytTrack.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop";
 
-            if (currentTractUrl === pipeUrl) {
+            if (currentTrackUrl === pipeUrl) {
                 togglePlay();
                 return;
             }
 
-            loadTrack(pipeUrl, {
+            const metadata = {
                 title: ytTrack.title,
-                artist: ytTrack.uploaderName || ytTrack.artist,
-                coverUrl: ytTrack.thumbnails || ytTrack.coverUrl,
-            })
+                artist: ytTrack.uploaderName || ytTrack.artist || "Unknown Artist",
+                coverUrl,
+                audioUrl: pipeUrl,
+            };
+
+            loadTrack(pipeUrl, metadata);
 
             const durationStr = typeof ytTrack.duration === "number"
                 ? `${Math.floor(ytTrack.duration / 60)}:${Math.floor(ytTrack.duration % 60).toString().padStart(2, '0')}`
@@ -45,13 +51,13 @@ export function useGlobalPlayback() {
             const trackId = await ensureYoutubeTrack({
                 youtubeId: videoId,
                 title: ytTrack.title,
-                artist: ytTrack.uploaderName || ytTrack.artist,
+                artist: ytTrack.uploaderName || ytTrack.artist || "Unknown Artist",
                 audioUrl: pipeUrl,
-                coverUrl: ytTrack.thumbnails || ytTrack.coverUrl,
+                coverUrl,
                 duration: durationStr
             });
 
-            setActiveMetadata(trackId ? { id: trackId } : null);
+            setActiveMetadata(trackId ? { ...metadata, id: trackId } : metadata);
             if (myRoom) {
                 await updateRoomTrack({ roomId: myRoom._id, trackId: trackId }).catch(console.error);
             }

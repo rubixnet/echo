@@ -33,22 +33,18 @@ export default function GlobalPlayer({ user }: { user?: any }) {
     }, []);
 
     const userId = user?._id;
-    const isLiked = useQuery(api.tracks.checkLiked, 
-        (userId && activeMetadata?.id) ? { userId: userId, trackId: activeMetadata.id as any } : "skip"
+    const likedSongs = useQuery(api.likes.getMyLikes, userId ? { userId } : "skip");
+    const isLiked = Boolean(
+        activeMetadata?.id && likedSongs?.some((song: any) => song.trackId === activeMetadata.id)
     );
-    const toggleLikeMutation = useMutation(api.tracks.toggleLike);
+    const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
     const handleLike = async () => {
         if (!activeMetadata?.id || !userId) return;
         try {
             await toggleLikeMutation({
-                userId: userId,
+                userId: userId as any,
                 trackId: activeMetadata.id as any,
-                title: activeMetadata.title,
-                artist: activeMetadata.artist,
-                coverUrl: activeMetadata.coverUrl,
-                duration: duration,
-                audioUrl: activeMetadata.audioUrl || "", 
             });
         } catch (error) {
             console.error("Failed to like song:", error);
