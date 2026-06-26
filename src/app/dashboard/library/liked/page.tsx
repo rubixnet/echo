@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { Play, Pause, Music, Loader2 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { cn } from "@/lib/utils";
+import { Trash2 } from "lucide-react";
 
 export default function LikedSongsPage() {
   const user = useUser();
@@ -15,13 +16,33 @@ export default function LikedSongsPage() {
   const { playTrack } = useGlobalPlayback();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  const toggleLike = useMutation(api.likes.toggleLike);
   const likedSongs = useQuery(
     api.likes.getMyLikes,
     user?._id ? { userId: user._id } : "skip"
   );
 
   if (likedSongs === undefined) return <div className="text-neutral-400 p-8">Loading...</div>;
-  
+
+  const handleRemoveFromLikes = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    track: any
+  ) => {
+    e.stopPropagation();
+    if (!user?._id) return;
+
+    try {
+      console.log("track in remove handler:", track);
+      console.log("trackId being sent:", track?.trackId);
+      await toggleLike({
+        userId: user._id,
+        trackId: track.trackId,
+      });
+    } catch (error) {
+      console.error("Failed to remove song from likes", error);
+    }
+  }
+
   return (
     <div className="max-w-4xl">
       {likedSongs.length === 0 ? (
@@ -74,6 +95,9 @@ export default function LikedSongsPage() {
                 </div>
                 <span className="text-xs font-mono font-bold text-neutral-400 group-hover:text-neutral-600 transition-colors">
                   {track.duration}
+                  <button onClick={(e) => handleRemoveFromLikes(e, track)} className=" bg-neutral-50 p-1 text-neutral-400 hover:bg-neutral-100 transition-colors">
+                    <Trash2 size={16} className="text-neutral-400 hover:text-neutral-900 transition-colors" />
+                  </button>
                 </span>
               </div>
             );

@@ -127,6 +127,7 @@ export default function PlaylistPage({
                             </div>
 
                             {tracks.map((track, index) => {
+                                if (!track) return null;
                                 const videoId = track.audioUrl?.split("id=")[1] || track.youtubeId;
                                 const isLoading = loadingId === videoId;
                                 const isCurrent = currentTrackUrl?.includes(videoId) && isPlaying;
