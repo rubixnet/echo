@@ -10,6 +10,7 @@ export interface TrackMetadata {
     title: string;
     artist: string;
     coverUrl: string;
+    audioUrl?: string;
 }
 
 const AudioEngineContext = createContext<any>(null);
@@ -85,14 +86,27 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }, [isPlaying, currentTrackUrl, volume, isYouTube]);
 
     const loadTrack = (url: string, metadata?: TrackMetadata) => {
-        setActiveMetadata(metadata || null);
-        
+        const nextMetadata: TrackMetadata = metadata
+            ? {
+                ...metadata,
+                audioUrl: metadata.audioUrl || url,
+                coverUrl: metadata.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
+            }
+            : {
+                title: "Unknown Track",
+                artist: "Unknown Artist",
+                coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
+                audioUrl: url,
+            };
+
+        setActiveMetadata(nextMetadata);
+
         if (currentTrackUrl === url) {
             setIsPlaying(true);
             return;
         }
         setIsLoading(true);
-        setIsAudioReady(false); 
+        setIsAudioReady(false);
         setCurrentTrackUrl(url);
         setIsPlaying(true);
     };
@@ -198,13 +212,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                         setCurrentTimeStr(formatTime(state.playedSeconds));
                         if (progressRef.current) progressRef.current.style.width = `${state.played * 100}%`;
                     }}
-                    onDuration={(d: number) => {
-                        if (!isYouTube) return;
-                        setDurationSec(d);
-                        setDuration(formatTime(d));
-                    }}
                     onReady={() => { 
                         if (isYouTube) {
+                            const duration = ytPlayerRef.current?.getDuration?.();
+                            if (typeof duration === "number") {
+                                setDurationSec(duration);
+                                setDuration(formatTime(duration));
+                            }
                             setIsLoading(false); 
                             setIsAudioReady(true); 
                         }
