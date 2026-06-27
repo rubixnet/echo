@@ -5,23 +5,30 @@ import { useUser } from "@/hooks/useUser"
 
 export function useGlobalPlayback() {
     const user = useUser();
-    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading } = useAudioEngine();
+    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading, queue, queueIndex, setQueue, setQueueIndex, currentTimeSec, seekToTime } = useAudioEngine();
 
     const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack)
 
     const myRoom = useQuery(api.rooms.getMyHosterRooms, user?._id ? { userId: user._id } : "skip");
     const updateRoomTrack = useMutation(api.rooms.updateRoomTract)
 
-    const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void) => {
+    const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number,) => {
 
         const videoId = ytTrack.url?.split("?v=")[1]
             || ytTrack.url?.split("/v/")[1]
             || ytTrack.url?.split("youtu.be/")[1]
             || ytTrack.youtubeId
             || "YQHsXMglC9A";
-
         setIsLoading(true);
         if (setLoadingId) setLoadingId(videoId);
+
+        if (queueList && newQueueIndex !== undefined) {
+            setQueue(queueList);
+            setQueueIndex(newQueueIndex);
+        } else if (!queueList) {
+            setQueue([ytTrack]);
+            setQueueIndex(0);
+        }
 
         try {
             const pipeUrl = `/api/youtube/stream?id=${videoId}`;
@@ -70,5 +77,24 @@ export function useGlobalPlayback() {
         }
     };
 
-    return { playTrack };
+    const playNext = () => {
+        if (queue && queueIndex < queue.length - 1) {
+            const nextIndex = queueIndex + 1;
+            playTrack(queue[nextIndex], undefined, queue, nextIndex);
+        }
+    }
+
+    const playPrevious = () => {
+        if (currentTimeSec > 3) {
+            seekToTime(0);
+            return;
+        } else {
+            if (queue && queueIndex > 0) {
+                const prevIndex = queueIndex - 1;
+                playTrack(queue[prevIndex], undefined, queue, prevIndex);
+            }
+        }
+    }
+
+    return { playTrack, playPrevious, playNext };
 }

@@ -9,7 +9,6 @@ import { Play, Pause, Music, Loader2, ArrowLeft, Clock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useUser } from "@/hooks/useUser"
-import { tooltip } from "@/components/ui/tooltip"
 import { Trash2 } from "lucide-react"
 
 export default function PlaylistPage({
@@ -62,6 +61,7 @@ export default function PlaylistPage({
     const hasTracks = tracks.length > 0;
     const showGrid = tracks.length >= 4
 
+
     return (
         <div className="p-6 md:p-10 max-w-7xl mx-auto pb-32 text-neutral-900 animate-in fade-in duration-500">
 
@@ -102,7 +102,7 @@ export default function PlaylistPage({
 
                         {hasTracks && (
                             <button
-                                onClick={() => playTrack({ ...tracks[0], youtubeId: tracks[0].audioUrl?.split("id=")[1] || tracks[0].youtubeId }, setLoadingId)}
+                                onClick={() => playTrack({ ...tracks[0], youtubeId: tracks[0].audioUrl?.split("id=")[1] || tracks[0].youtubeId }, setLoadingId, tracks, 0)}
                                 className="w-full h-14 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/20"
                             >
                                 <Play size={20} fill="currentColor" /> Play All

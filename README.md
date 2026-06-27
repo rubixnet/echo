@@ -16,3 +16,8 @@
 
 - we have same home page recommendations for everyone.
 - later share playlists option with friends, import playlists and more
+
+- revamping sidebar, adding playlist and forming queues with songs on search page and from library as well. 
+- also adding songs to playlist and likes from the search page. 
+
+- make info consistent, playlist name in bold, description in sub bold and count in uppercase nujmber bad! 

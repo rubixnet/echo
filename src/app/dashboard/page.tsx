@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <div className="lg:col-span-2 bg-white border border-neutral-200/60 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-sm flex flex-col justify-between group">
+        <div className="lg:col-span-2 bg-white border border-neutral-200/60 big-squircle p-6 md:p-8 relative overflow-hidden shadow-sm flex flex-col justify-between group">
           <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-50 rounded-bl-full pointer-events-none transition-all duration-500 group-hover:scale-110" />
 
           <div className="space-y-4 max-w-md relative z-10">
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-8 relative z-10">
             <button
               onClick={handleLaunchStudio}
-              className="flex items-center justify-center gap-2 bg-neutral-950 text-white px-6 h-12 rounded-xl font-bold shadow-sm hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs"
+              className="flex items-center select-none justify-center gap-2 bg-neutral-950 text-white px-6 h-12 squircle font-bold shadow-sm hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs"
             >
               <Plus size={16} strokeWidth={2.5} />
               Launch Active Channel
@@ -87,7 +87,7 @@ export default function DashboardPage() {
               href="/dashboard/rooms"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-12 border-neutral-200 hover:border-neutral-400 bg-white hover:bg-neutral-50 px-6 rounded-xl font-bold text-xs text-neutral-600 hover:text-neutral-900 transition-all flex items-center justify-center gap-1.5"
+                "h-12 border-neutral-200 hover:border-neutral-400 bg-white hover:bg-neutral-50 px-6 squircle font-bold text-xs text-neutral-600 hover:text-neutral-900 transition-all flex items-center justify-center gap-1.5"
               )}
             >
               Explore Live Channels <ArrowUpRight size={14} />
@@ -132,7 +132,7 @@ export default function DashboardPage() {
                     <img
                       src={track.coverUrl}
                       alt={track.title}
-                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      className="w-full h-full object-cover select-none transition-transform duration-700 ease-out group-hover:scale-105"
                     />
 
                     <div className={cn(

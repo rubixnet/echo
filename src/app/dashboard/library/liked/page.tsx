@@ -53,7 +53,7 @@ export default function LikedSongsPage() {
         </div>
       ) : (
         <div className="divide-y divide-neutral-100/50">
-          {likedSongs.map((track) => {
+          {likedSongs.map((track, index) => {
             const videoId = track.audioUrl?.split("id=")[1];
             const isLoading = loadingId === videoId;
             const isCurrent = currentTrackUrl?.includes(videoId) && isPlaying;
@@ -65,7 +65,7 @@ export default function LikedSongsPage() {
                 onClick={() => playTrack({
                   ...track,
                   youtubeId: videoId
-                }, setLoadingId)}
+                }, setLoadingId, likedSongs, index)}
               >
                 <div className="flex items-center gap-4">
                   <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-neutral-200/50">
