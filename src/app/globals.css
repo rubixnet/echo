@@ -83,6 +83,16 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+.squircle {
+  border-radius: 24px;
+  corner-shape: squircle;
+}
+
+.big-squircle {
+  border-radius: 48px;
+  corner-shape: squircle;
+}
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
@@ -121,9 +131,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
