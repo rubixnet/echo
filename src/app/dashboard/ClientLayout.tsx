@@ -79,7 +79,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
       <div className="flex flex-1 overflow-hidden relative">
 
         <aside className={cn(
-          "bg-white/60 backdrop-blur-xl border-r border-neutral-200/50 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out shrink-0 z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.02)]",
+          "bg-neutral-50 backdrop-blur-xl border-r border-neutral-200/50 flex flex-col justify-between hidden md:flex transition-all duration-300 ease-in-out shrink-0 z-30 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.02)]",
           isCollapsed ? "w-20" : "w-64"
         )}>
           <div className="flex flex-col h-full">
@@ -103,10 +103,10 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                   const isActive = pathname === item.href;
                   return (
                     <Link key={item.name} href={item.href} className={cn(
-                      "flex items-center rounded-xl text-sm font-bold transition-all h-11",
+                      "flex items-center squircle text-sm font-bold transition-all h-11",
                       isCollapsed ? "justify-center px-0" : "gap-3 px-4",
                       isActive
-                        ? "bg-white text-neutral-950 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-neutral-200/60"
+                        ? "bg-neutral-white text-neutral-800 shadow-inner border border-neutral-200/60"
                         : "text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/50"
                     )}>
                       <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} className={cn("shrink-0", isActive && "text-emerald-600")} />
@@ -120,7 +120,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                 {!isCollapsed && <p className="px-4 text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-3">Community</p>}
                 <nav className="space-y-1">
                   <Link href="/dashboard/room" className={cn(
-                    "flex items-center rounded-xl text-sm font-bold transition-all h-11",
+                    "flex items-center squircle text-sm font-bold transition-all h-11",
                     isCollapsed ? "justify-center px-0" : "gap-3 px-4",
                     pathname === "/dashboard/rooms"
                       ? "bg-white text-neutral-950 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-neutral-200/60"
@@ -153,7 +153,7 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                         </p>
 
                         <div className="flex items-center gap-2">
-                          <Button variant="secondary" onClick={handleCopyInvite} className="h-8 text-xs font-bold rounded-xl flex-1 bg-white/10 hover:bg-white/20 text-white border-0 shadow-none">
+                          <Button variant="secondary" onClick={handleCopyInvite} className="h-8 text-xs font-bold squircle flex-1 bg-white/10 hover:bg-white/20 text-white border-0 shadow-none">
                             {shareCopied ? <Check size={14} className="text-emerald-400" /> : <Link2 size={14} />}
                             {shareCopied ? "Copied" : "Share"}
                           </Button>
@@ -163,25 +163,25 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                         </div>
                       </>
                     ) : (
-                      <Button variant="destructive" size="icon" onClick={handleCloseRoom} className="h-10 w-10 rounded-xl bg-neutral-800 text-rose-400 hover:bg-rose-500 hover:text-white border-0 shadow-none">
+                      <Button variant="destructive" size="icon" onClick={handleCloseRoom} className="h-10 w-10 squircle bg-neutral-800 text-rose-400 hover:bg-rose-500 hover:text-white border-0 shadow-none">
                         <Radio size={18} className="animate-pulse" />
                       </Button>
                     )}
                   </div>
                 ) : isCreating ? (
-                  <div className="bg-white border border-neutral-200/80 rounded-2xl p-3 space-y-3 shadow-sm">
+                  <div className="bg-white border border-neutral-200/80 squircle p-3 space-y-3 shadow-sm">
                     <input
                       type="text"
                       placeholder="Name your channel..."
                       value={roomNameInput}
                       onChange={(e) => setRoomNameInput(e.target.value)}
-                      className="w-full text-sm font-medium px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-900/5 transition-all"
+                      className="w-full text-sm font-medium px-3 py-2 bg-neutral-50 border border-neutral-200 squircle outline-none focus:border-neutral-400 focus:ring-4 focus:ring-neutral-900/5 transition-all"
                     />
                     <div className="flex items-center gap-2">
-                      <Button onClick={handleCreateRoom} className="h-9 text-xs font-bold flex-1 bg-neutral-950 text-white hover:bg-neutral-800 rounded-xl shadow-md">
+                      <Button onClick={handleCreateRoom} className="h-9 text-xs font-bold flex-1 bg-neutral-950 text-white hover:bg-neutral-800 squircle shadow-md">
                         Start Session
                       </Button>
-                      <Button variant="ghost" onClick={() => setIsCreating(false)} className="h-9 w-9 p-0 rounded-xl text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100">
+                      <Button variant="ghost" onClick={() => setIsCreating(false)} className="h-9 w-9 p-0 squircle text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100">
                         <X size={16} />
                       </Button>
                     </div>
