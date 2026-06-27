@@ -38,8 +38,8 @@ export default function LiveRoomsPage() {
       </div>
 
       {liveRooms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center border border-dashed border-neutral-300 rounded-2xl p-16 text-center max-w-xl mx-auto mt-12 bg-white/50 backdrop-blur-sm shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-400 mb-4">
+        <div className="flex flex-col items-center justify-center border border-dashed border-neutral-300 squircle p-16 text-center max-w-xl mx-auto mt-12 bg-white/50 backdrop-blur-sm shadow-sm">
+          <div className="w-12 h-12 squircle bg-neutral-100 flex items-center justify-center text-neutral-400 mb-4">
             <Radio size={22} />
           </div>
           <h3 className="text-base font-bold text-neutral-900">The airwaves are quiet</h3>
