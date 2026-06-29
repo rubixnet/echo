@@ -31,6 +31,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
     const [volume, setVolumeState] = useState(0.8);
     const [activeMetadata, setActiveMetadata] = useState<TrackMetadata | null>(null);
+    
+    const [isOnLoop, setIsOnLoop] = useState(false);
 
     const isYouTube = currentTrackUrl ? (currentTrackUrl.includes("youtube.com") || currentTrackUrl.includes("youtu.be")) : false;
     const [queue, setQueue] = useState<any[]>([])
@@ -169,7 +171,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             currentTrackUrl, activeMetadata, volume,
             setActiveMetadata, setIsLoading, setVolume: setVolumeState,
             loadTrack, togglePlay, seek, seekToTime, getCurrentTime, forceSync, 
-            queue, setQueue, queueIndex, setQueueIndex, onTrackEndRef, setOnTrackEnd
+            queue, setQueue, queueIndex, setQueueIndex, onTrackEndRef, setOnTrackEnd, 
+            isOnLoop, setIsOnLoop
         }}>
 
             <audio
