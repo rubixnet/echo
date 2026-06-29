@@ -3,13 +3,13 @@
 - show playlists in library, option to create new playlist in library, 
 
 - live rooms will be removed if host closes the room, leaves the site, if offline, and if host starts another room. 
+- fix need for the bug here, bug not good closes the room automatically in between if we stop sonog
 
 - updated music player with menu, like button, save to library etc.! 
-- use users avatar, disable prefetching get route for logout button or users will be logged out.
-- saving past searches of the user as well! 
+- use users avatar
 
-- dashboard, liked page.
-- responsive on mobile, search history, autocomplete, recommendation algorithm,
+- responsive on mobile, recommendation algorithm,
+
 - option to loop song, one at a time, shuffle, repeat, random play order. 
 
 - now liking song works, metadata is only passed from the search page, no other page shares it like the library and liked and homepage. 
@@ -20,4 +20,4 @@
 - revamping sidebar, adding playlist and forming queues with songs on search page and from library as well. 
 - also adding songs to playlist and likes from the search page. 
 
-- make info consistent, playlist name in bold, description in sub bold and count in uppercase nujmber bad! 
+- make info consistent, playlist name in bold, description in sub bold and count in uppercase nujmber bad!

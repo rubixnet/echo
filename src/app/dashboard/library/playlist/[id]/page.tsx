@@ -103,14 +103,14 @@ export default function PlaylistPage({
                         {hasTracks && (
                             <button
                                 onClick={() => playTrack({ ...tracks[0], youtubeId: tracks[0].audioUrl?.split("id=")[1] || tracks[0].youtubeId }, setLoadingId, tracks, 0)}
-                                className="w-full h-14 bg-emerald-600 text-white rounded-2xl font-black text-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/20"
+                                className="w-full h-14 bg-emerald-600 text-white squircle font-black text-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-lg shadow-emerald-600/20"
                             >
                                 <Play size={20} fill="currentColor" /> Play All
                             </button>
                         )}
                     </div>
                 </div>
-                        
+                                        
                 <div className="flex-1 min-w-0">
                     {!hasTracks ? (
                         <div className="py-20 text-center border border-dashed border-neutral-200 rounded-3xl bg-neutral-50/50">
@@ -136,7 +136,7 @@ export default function PlaylistPage({
                                     <div
                                         key={track._id}
                                         className="grid grid-cols-[1fr_auto] sm:grid-cols-[16px_1fr_60px] items-center gap-4 py-3 px-2 sm:px-4 -mx-2 sm:mx-0 group rounded-xl hover:bg-neutral-100/60 cursor-pointer transition-colors"
-                                        onClick={() => playTrack({ ...track, youtubeId: videoId }, setLoadingId)}
+                                        onClick={() => playTrack({ ...track, youtubeId: videoId,  }, setLoadingId, tracks, index)}
                                     >
                                         <span className="hidden sm:block text-xs font-mono font-bold text-neutral-300 group-hover:text-neutral-500 text-center w-4 shrink-0">
                                             {index + 1}

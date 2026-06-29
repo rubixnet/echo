@@ -4,31 +4,32 @@ import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
-  
-  if (!query) return NextResponse.json({ items: [] });
-    try {
-    const safeQuery = query.replace(/"/g, ''); 
-    
-    let stdoutString = "";
-    
-    try {
-        const { stdout } = await execAsync(`yt-dlp --no-warnings --ignore-errors -j "ytsearch10:${safeQuery}"`, {
-            maxBuffer: 10 * 1024 * 1024 
-        });
+  const limit = searchParams.get("limit") || "10";
 
-        stdoutString = stdout;
+  if (!query) return NextResponse.json({ items: [] });
+
+  try {
+    const safeQuery = query.replace(/"/g, '');
+
+    let stdoutString = "";
+
+    try {
+      const { stdout } = await execAsync(`yt-dlp --no-warnings --ignore-errors -j "ytsearch${limit}:${safeQuery}"`, {
+        maxBuffer: 10 * 1024 * 1024
+      });
+
+      stdoutString = stdout;
     } catch (err: any) {
-        if (err.stdout) {
-            stdoutString = err.stdout;
-        } else {
-            throw err;  
-        }
+      if (err.stdout) {
+        stdoutString = err.stdout;
+      } else {
+        throw err;
+      }
     }
-    
+
     const results = stdoutString.trim().split('\n').map((line) => {
       try {
         if (!line) return null;
@@ -45,11 +46,11 @@ export async function GET(request: Request) {
       } catch (e) {
         return null;
       }
-    }).filter(Boolean); 
+    }).filter(Boolean);
 
     return NextResponse.json({ items: results });
   } catch (e: any) {
-    console.error("Pure Search Error:", e.message);
+    console.error("Search Error:", e.message);
     return NextResponse.json({ error: "Search failed", items: [] }, { status: 500 });
   }
 }
