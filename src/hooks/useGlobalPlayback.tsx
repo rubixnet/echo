@@ -5,7 +5,7 @@ import { useUser } from "@/hooks/useUser"
 
 export function useGlobalPlayback() {
     const user = useUser();
-    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading, queue, queueIndex, setQueue, setQueueIndex, currentTimeSec, seekToTime } = useAudioEngine();
+    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading, queue, queueIndex, setQueue, setQueueIndex, currentTimeSec, seekToTime, isOnLoop, setIsOnLoop } = useAudioEngine();
 
     const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack)
 
@@ -14,11 +14,13 @@ export function useGlobalPlayback() {
 
     const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number,) => {
 
-        const videoId = ytTrack.url?.split("?v=")[1]
+        const videoId = ytTrack.youtubeId
+            || ytTrack.audioUrl?.split("id=")[1]
+            || ytTrack.url?.split("?v=")[1]
             || ytTrack.url?.split("/v/")[1]
             || ytTrack.url?.split("youtu.be/")[1]
-            || ytTrack.youtubeId
             || "YQHsXMglC9A";
+
         setIsLoading(true);
         if (setLoadingId) setLoadingId(videoId);
 
@@ -84,6 +86,17 @@ export function useGlobalPlayback() {
         }
     }
 
+    
+    const playNextPriority = (track: any) => {
+        if (!queue || queue.length === 0) {
+            playTrack(track);
+            return;
+        }
+        const newQueue = [...queue];
+        newQueue.splice(queueIndex + 1, 0, track);
+        setQueue(newQueue);
+    };
+    
     const playPrevious = () => {
         if (currentTimeSec > 3) {
             seekToTime(0);
@@ -96,5 +109,18 @@ export function useGlobalPlayback() {
         }
     }
 
-    return { playTrack, playPrevious, playNext };
+    if (isOnLoop) {
+        playNextPriority(queue[queueIndex]);
+    }
+    
+    const addToQueue = (track: any) => {
+        if (!queue || queue.length === 0) {
+            playTrack(track);
+            return;
+        }
+        setQueue([...queue, track]);
+    };
+
+
+    return { playTrack, playPrevious, playNext, playNextPriority, addToQueue };
 }

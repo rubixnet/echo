@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
+import { EllipsisVertical } from "lucide-react"
+import { ActionsModal } from "@/components/ActionsModal";
+import { Track } from "@/components/TrackComponent";
 
 export default function SearchPage() {
   const user = useUser();
@@ -34,6 +37,8 @@ export default function SearchPage() {
 
   const { currentTrackUrl, isPlaying } = useAudioEngine();
   const { playTrack } = useGlobalPlayback();
+  const [selectedTrackForModal, setSelectedTrackForModal] = useState<any>(null);
+
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -84,12 +89,24 @@ export default function SearchPage() {
 
   const executeSearch = async (queryToSearch: string) => {
     if (!queryToSearch.trim()) return;
+
     setIsSearchingYt(true);
+    setYtResults([]);
+
     try {
+      const fastRes = await fetch(`/api/youtube/search?q=${encodeURIComponent(queryToSearch)}&limit=2`);
+      const fastData = await fastRes.json()
+
+      if (fastData.items && fastData.items.length > 0) {
+        setYtResults(fastData.items.filter((item: any) => item.type === "stream"));
+      }
+
       const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(queryToSearch)}`);
       const data = await res.json().catch(() => ({ items: [] }));
-      if (!res.ok || !data.items) return setYtResults([]);
-      setYtResults(data.items.filter((item: any) => item.type === "stream").slice(0, 10));
+
+      if (res.ok && data.items) {
+        setYtResults(data.items.filter((item: any) => item.type === "stream").slice(0, 10));
+      }
     } catch (error) {
       setYtResults([]);
     } finally {
@@ -187,7 +204,7 @@ export default function SearchPage() {
             disabled={isSearchingYt}
             className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-950 transition-colors disabled:opacity-50"
           >
-            {isSearchingYt ? <Loader2 size={16} className="animate-spin text-neutral-500" /> : <SearchIcon size={19 } className="hover:scale-105" />}
+            {isSearchingYt ? <Loader2 size={16} className="animate-spin text-neutral-500" /> : <SearchIcon size={19} className="hover:scale-105" />}
           </button>
         </form>
 
@@ -233,7 +250,7 @@ export default function SearchPage() {
                   }}
                   className="flex cursor-pointer items-center gap-1.5 text-[10px] font-black text-neutral-400 hover:text-neutral-600 uppercase tracking-widest transition-colors"
                 >
-                   Clear Search History
+                  Clear Search History
                 </button>
               </div>
             )}
@@ -243,15 +260,39 @@ export default function SearchPage() {
       </div>
 
       <div className="space-y-10">
-        {isSearchingYt ? (
-          <div className="space-y-3 animate-in fade-in duration-300">
+        {(ytResults.length > 0 || isSearchingYt) && (
+          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="flex items-center justify-between border-b border-neutral-100 pb-2 px-1">
-              <div className="h-3 w-32 bg-neutral-200/60 rounded animate-pulse" />
+              <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest flex items-center gap-2">
+                <Globe size={13} className="text-emerald-500" />
+                {isSearchingYt ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={12} className="animate-spin text-neutral-400" /> Searching Globally...
+                  </span>
+                ) : "Global Results"}
+              </h3>
             </div>
 
             <div className="divide-y divide-neutral-100/50">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center justify-between py-2.5 px-2 -mx-2">
+
+              {ytResults.map((track, index) => {
+                const videoId = track.url?.split("?v=")[1] || track.youtubeId || track.id;
+
+                return (
+                  <Track
+                    key={videoId}
+                    track={track}
+                    index={index}
+                    variant="row"
+                    loadingId={loadingId}
+                    setLoadingId={setLoadingId}
+                    onOpenActionMenu={() => setSelectedTrackForModal(track)}
+                  />
+                );
+              })}
+
+              {isSearchingYt && Array.from({ length: Math.max(0, 10 - ytResults.length) }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="flex items-center justify-between py-2.5 px-2 -mx-2 opacity-60">
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
                     <div className="w-4 h-4 bg-neutral-100 rounded animate-pulse shrink-0" />
                     <div className="w-11 h-11 rounded-xl bg-neutral-100 animate-pulse shrink-0" />
@@ -263,58 +304,17 @@ export default function SearchPage() {
                   <div className="w-8 h-3 bg-neutral-100 rounded animate-pulse shrink-0" />
                 </div>
               ))}
-            </div>
-          </div>
-        ) : ytResults.length > 0 && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="flex items-center justify-between border-b border-neutral-100 pb-2 px-1">
-              <h3 className="text-[11px] font-black text-neutral-400 uppercase tracking-widest flex items-center gap-2">
-                <Globe size={13} className="text-emerald-500" /> Global Vault Results
-              </h3>
-            </div>
 
-            <div className="divide-y divide-neutral-100/50">
-              {ytResults.map((track, index) => {
-                const videoId = track.url.split("?v=")[1];
-                const isLoading = loadingId === videoId;
-                const isCurrent = currentTrackUrl?.includes(videoId) && isPlaying;
-
-                return (
-                  <div key={videoId} onClick={() => playTrack(track, setLoadingId)} className="flex items-center justify-between py-2.5 group cursor-pointer hover:bg-neutral-100/40 px-2 -mx-2 rounded-xl transition-all">
-
-                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                      <span className="w-4 text-xs font-mono font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
-                        {(index + 1).toString().padStart(2, "0")}
-                      </span>
-
-                      <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-neutral-200/40 shadow-sm bg-neutral-50 p-0.5">
-                        <img src={track.thumbnail} className="w-full h-full object-cover rounded-[10px] select-none" alt="" />
-                        <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl", isCurrent ? "bg-black/30 opacity-100" : "bg-neutral-950/20 opacity-0 group-hover:opacity-100")}>
-                          {isLoading ? <Loader2 size={14} className="text-white animate-spin" /> : isCurrent ? <Pause size={14} className="text-white fill-white" /> : <Play size={14} className="text-white fill-white ml-0.5" />}
-                        </div>
-                      </div>
-
-                      <div className="min-w-0 flex-1 pr-4">
-                        <p className={cn("text-sm font-bold truncate tracking-tight leading-snug", isCurrent ? "text-emerald-600" : "text-neutral-900")}>
-                          {track.title}
-                        </p>
-                        <p className="text-xs font-medium text-neutral-400 truncate mt-0.5 leading-none">
-                          {track.uploaderName}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-neutral-600 transition-colors">
-                      {Math.floor(track.duration / 60)}:{(track.duration % 60).toString().padStart(2, "0")}
-                    </div>
-
-                  </div>
-                );
-              })}
             </div>
           </div>
         )}
       </div>
+
+      <ActionsModal
+        isOpen={!!selectedTrackForModal}
+        onClose={() => setSelectedTrackForModal(null)}
+        track={selectedTrackForModal}
+      />
     </div>
   );
 }

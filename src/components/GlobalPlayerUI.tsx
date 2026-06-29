@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Heart, Loader2, Music, MoreHorizontal, ListPlus } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Heart, Loader2, Music, EllipsisVertical, MoreHorizontal, ListPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -13,7 +13,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
     const {
         isPlaying, isLoading, togglePlay, activeMetadata,
         currentTimeSec, durationSec, currentTimeStr, duration,
-        seekToTime, volume, setVolume, setOnTrackEnd,
+        seekToTime, volume, setVolume, setOnTrackEnd, queue, queueIndex
     } = useAudioEngine();
 
     const { playNext, playPrevious } = useGlobalPlayback();
@@ -110,14 +110,14 @@ export default function GlobalPlayer({ user }: { user?: any }) {
 
                     <div className="flex flex-col items-center justify-center w-2/4 md:w-1/3 gap-2.5">
                         <div className="flex items-center gap-5 md:gap-8">
-                            <button onClick={playPrevious} className="text-neutral-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all">
+                            <button onClick={playPrevious} disabled={!queue || queueIndex <= 0 && currentTimeSec <= 3} className="text-neutral-500 hover:text-neutral-700 active:scale-95 transition-all">
                                 <SkipBack size={20} fill="currentColor" />
                             </button>
 
                             <button
                                 onClick={togglePlay}
                                 disabled={!activeMetadata}
-                                className="w-12 h-12 bg-neutral-950 text-white rounded-full flex items-center justify-center hover:bg-neutral-800 hover:scale-105 active:scale-95 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none"
+                                className="w-11 h-11 bg-neutral-950 text-white rounded-full flex items-center justify-center hover:bg-neutral-800 transition-all shadow-[0_4px_12px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:hover:scale-100 disabled:shadow-none"
                             >
                                 {isLoading ? (
                                     <Loader2 size={20} className="animate-spin text-white" />
@@ -128,7 +128,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                                 )}
                             </button>
 
-                            <button onClick={playNext} className="text-neutral-400 hover:text-neutral-900 hover:scale-110 active:scale-95 transition-all">
+                            <button onClick={playNext} disabled={!queue || queueIndex >= queue.length - 1} className="text-neutral-500 hover:text-neutral-700 transition-all">
                                 <SkipForward size={20} fill="currentColor" />
                             </button>
                         </div>
@@ -188,9 +188,8 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                                 disabled={!activeMetadata?.id}
                                 className="w-8 h-8 flex items-center justify-center text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-full transition-colors disabled:opacity-50"
                             >
-                                <MoreHorizontal size={20} />
+                                <EllipsisVertical size={20} />
                             </button>
-
                             {isMenuOpen && (
                                 <div className="absolute bottom-full right-0 mb-3 w-48 bg-white border border-neutral-200/60 rounded-2xl shadow-xl overflow-hidden py-1.5 z-50 animate-in fade-in slide-in-from-bottom-2">
                                     <button
