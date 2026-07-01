@@ -31,7 +31,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [currentTrackUrl, setCurrentTrackUrl] = useState<string | null>(null);
     const [volume, setVolumeState] = useState(0.8);
     const [activeMetadata, setActiveMetadata] = useState<TrackMetadata | null>(null);
-    
+
     const [isOnLoop, setIsOnLoop] = useState(false);
 
     const isYouTube = currentTrackUrl ? (currentTrackUrl.includes("youtube.com") || currentTrackUrl.includes("youtu.be")) : false;
@@ -131,7 +131,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setCurrentTimeStr(formatTime(seconds));
     };
 
-    const onTrackEndRef = useRef<() => void>(() => {});
+    const onTrackEndRef = useRef<() => void>(() => { });
 
     const setOnTrackEnd = useCallback((callback: () => void) => {
         onTrackEndRef.current = callback;
@@ -153,8 +153,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return 0;
     };
 
-    
-
     const forceSync = (serverStartTime?: number, pausePosition = 0, forcePlay = false) => {
         const targetTime = forcePlay && serverStartTime ? (Date.now() - serverStartTime) / 1000 : pausePosition;
         seekToTime(targetTime);
@@ -170,11 +168,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             durationSec,
             currentTrackUrl, activeMetadata, volume,
             setActiveMetadata, setIsLoading, setVolume: setVolumeState,
-            loadTrack, togglePlay, seek, seekToTime, getCurrentTime, forceSync, 
-            queue, setQueue, queueIndex, setQueueIndex, onTrackEndRef, setOnTrackEnd, 
+            loadTrack, togglePlay, seek, seekToTime, getCurrentTime, forceSync,
+            queue, setQueue, queueIndex, setQueueIndex, onTrackEndRef, setOnTrackEnd,
             isOnLoop, setIsOnLoop
         }}>
-
             <audio
                 ref={nativeAudioRef}
                 crossOrigin="anonymous"
@@ -202,13 +199,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                         setIsAudioReady(true);
                     }
                 }}
-                onCanPlay={() => {
+                onCanPlay={(e) => {
                     if (!isYouTube) {
                         setIsLoading(false);
                         setIsAudioReady(true);
+                        if (isPlaying) {
+                            const playing = e.currentTarget.play();
+                            if (playing !== undefined) playing.catch(() => { });
+                        }
                     }
                 }}
-                onEnded={() => onTrackEndRef.current()}
+                onEnded={() => { if (!isYouTube) { setIsPlaying(false); onTrackEndRef.current(); } }}
                 className="hidden"
             />
 
@@ -238,7 +239,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                             setIsAudioReady(true);
                         }
                     }}
-                    onEnded={() => onTrackEndRef.current()} 
+                    onEnded={() => onTrackEndRef.current()}
                 />
             </div>
 
