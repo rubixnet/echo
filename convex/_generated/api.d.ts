@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as history from "../history.js";
 import type * as http from "../http.js";
 import type * as library from "../library.js";
 import type * as likes from "../likes.js";
@@ -28,6 +29,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   crons: typeof crons;
+  history: typeof history;
   http: typeof http;
   library: typeof library;
   likes: typeof likes;

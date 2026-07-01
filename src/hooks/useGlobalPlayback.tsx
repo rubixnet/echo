@@ -1,18 +1,22 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { useUser } from "@/hooks/useUser"
+import { useUser } from "@/hooks/useUser";
 
 export function useGlobalPlayback() {
     const user = useUser();
-    const { loadTrack, currentTrackUrl, togglePlay, setActiveMetadata, setIsLoading, queue, queueIndex, setQueue, setQueueIndex, currentTimeSec, seekToTime, isOnLoop, setIsOnLoop } = useAudioEngine();
+    const {
+        forceSync, loadTrack, currentTrackUrl, togglePlay, setActiveMetadata,
+        setIsLoading, queue, queueIndex, setQueue, setQueueIndex,
+        currentTimeSec, seekToTime, isOnLoop
+    } = useAudioEngine();
 
-    const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack)
+    const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
 
     const myRoom = useQuery(api.rooms.getMyHosterRooms, user?._id ? { userId: user._id } : "skip");
-    const updateRoomTrack = useMutation(api.rooms.updateRoomTract)
+    const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
 
-    const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number,) => {
+    const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number) => {
 
         const videoId = ytTrack.youtubeId
             || ytTrack.audioUrl?.split("id=")[1]
@@ -34,9 +38,20 @@ export function useGlobalPlayback() {
 
         try {
             const pipeUrl = `/api/youtube/stream?id=${videoId}`;
-            const coverUrl = typeof ytTrack.thumbnails === "string"
-                ? ytTrack.thumbnails
-                : ytTrack.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop";
+
+            let coverUrl = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop";
+
+            if (ytTrack.thumbnail) {
+                coverUrl = ytTrack.thumbnail;
+            } else if (ytTrack.coverUrl) {
+                coverUrl = ytTrack.coverUrl;
+            } else if (typeof ytTrack.thumbnails === "string") {
+                coverUrl = ytTrack.thumbnails;
+            } else if (Array.isArray(ytTrack.thumbnails) && ytTrack.thumbnails.length > 0) {
+                coverUrl = ytTrack.thumbnails[0].url || ytTrack.thumbnails[0];
+            } else if (ytTrack.image) {
+                coverUrl = ytTrack.image;
+            }
 
             if (currentTrackUrl === pipeUrl) {
                 togglePlay();
@@ -79,14 +94,17 @@ export function useGlobalPlayback() {
         }
     };
 
-    const playNext = () => {
+    const playNext = (isAutomatic: boolean = false) => {
+        if (isAutomatic && isOnLoop) {
+            forceSync(undefined, 0, true);
+            return;
+        }
         if (queue && queueIndex < queue.length - 1) {
             const nextIndex = queueIndex + 1;
             playTrack(queue[nextIndex], undefined, queue, nextIndex);
         }
-    }
+    };
 
-    
     const playNextPriority = (track: any) => {
         if (!queue || queue.length === 0) {
             playTrack(track);
@@ -96,7 +114,7 @@ export function useGlobalPlayback() {
         newQueue.splice(queueIndex + 1, 0, track);
         setQueue(newQueue);
     };
-    
+
     const playPrevious = () => {
         if (currentTimeSec > 3) {
             seekToTime(0);
@@ -107,12 +125,8 @@ export function useGlobalPlayback() {
                 playTrack(queue[prevIndex], undefined, queue, prevIndex);
             }
         }
-    }
+    };
 
-    if (isOnLoop) {
-        playNextPriority(queue[queueIndex]);
-    }
-    
     const addToQueue = (track: any) => {
         if (!queue || queue.length === 0) {
             playTrack(track);
@@ -120,7 +134,6 @@ export function useGlobalPlayback() {
         }
         setQueue([...queue, track]);
     };
-
 
     return { playTrack, playPrevious, playNext, playNextPriority, addToQueue };
 }

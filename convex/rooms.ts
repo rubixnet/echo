@@ -150,7 +150,7 @@ export const clearExpiredRooms = internalMutation({
     }
 });
 
-export const updateRoomTract = mutation({
+export const updateRoomTrack = mutation({
     args: { roomId: v.id("rooms"), trackId: v.optional(v.id("tracks")), },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.roomId, {

@@ -3,7 +3,7 @@
 import { useQuery } from "convex/react"
 import { api } from "../../../../convex/_generated/api"
 import { useUser } from "@/hooks/useUser"
-import { Heart, Music, ListMusic, ChevronRight, Loader2 } from "lucide-react"
+import { Heart, Music, ListMusic, ChevronRight, History,   Loader2 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +12,7 @@ export default function LibraryPage() {
 
   const likedSongs = useQuery(api.likes.getMyLikes, user?._id ? { userId: user._id } : "skip");
   const playlists = useQuery(api.playlists.getUserPlaylists, user?._id ? { userId: user._id } : "skip")
+  const history = useQuery(api.history.getHistory, user?._id ? { userId: user._id } : "skip")
 
   return (
     <div className="p-6 md:p-10 mx-auto max-w-7xl space-y-12 pb-32 text-neutral-900 animate-in fade-in duration-500">
@@ -38,6 +39,26 @@ export default function LibraryPage() {
                 <Loader2 size={14} className="animate-spin" />
               ) : (
                 `${likedSongs.length} saved tracks`
+              )}
+            </p>
+          </div>
+        </Link>
+
+        <Link
+          href="/dashboard/library/history"
+          className="group relative h-48 md:h-64 col-span-1 md:col-span-2 lg:col-span-1 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col justify-end p-6"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-emerald-500 group-hover:scale-105 transition-transform duration-700 ease-out" />
+          <div className="absolute inset-0 bg-black/20" />
+
+          <div className="relative z-10 text-white">
+            <History size={32} className="mb-4  text-white drop-shadow-md" />
+            <h2 className="text-2xl font-black tracking-tight drop-shadow-sm">History</h2>
+            <p className="text-white/80 font-medium text-sm mt-1 flex items-center gap-2">
+              {history === undefined ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                `${history.length} saved tracks`
               )}
             </p>
           </div>

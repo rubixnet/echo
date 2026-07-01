@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Heart, Loader2, Music, EllipsisVertical, MoreHorizontal, ListPlus } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Repeat, Heart, Loader2, Music, EllipsisVertical, ListPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -13,7 +13,8 @@ export default function GlobalPlayer({ user }: { user?: any }) {
     const {
         isPlaying, isLoading, togglePlay, activeMetadata,
         currentTimeSec, durationSec, currentTimeStr, duration,
-        seekToTime, volume, setVolume, setOnTrackEnd, queue, queueIndex
+        seekToTime, volume, setVolume, setOnTrackEnd, queue, queueIndex,
+        isOnLoop, setIsOnLoop
     } = useAudioEngine();
 
     const { playNext, playPrevious } = useGlobalPlayback();
@@ -24,7 +25,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
 
     useEffect(() => {
         if (setOnTrackEnd) {
-            setOnTrackEnd(() => playNextRef.current());
+            setOnTrackEnd(() => playNextRef.current(true));
         }
     }, [setOnTrackEnd]);
 
@@ -52,6 +53,10 @@ export default function GlobalPlayer({ user }: { user?: any }) {
     );
     const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
+    const handleToggleLoop = () => {
+        setIsOnLoop(!isOnLoop);
+    }
+
     const handleLike = async () => {
         if (!activeMetadata?.id || !userId) return;
         try {
@@ -71,7 +76,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
 
     return (
         <>
-            <div className="absolute bottom-0 left-0 md:left-64 right-0 px-4 md:px-8 pb-4 md:pb-6 z-[999] pointer-events-none transition-all duration-300">
+            <div className="absolute bottom-0 left-0 md:left-20 lg:left-64 right-0 px-4 md:px-8 pb-4 md:pb-6 z-[999] pointer-events-none transition-all duration-300">
                 <div className="h-[88px] w-full bg-white/80 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-3xl flex items-center justify-between px-4 md:px-6 pointer-events-auto">
 
                     <div className="flex items-center gap-4 w-1/4 md:w-1/3 min-w-0">
@@ -113,7 +118,6 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                             <button onClick={playPrevious} disabled={!queue || queueIndex <= 0 && currentTimeSec <= 3} className="text-neutral-500 hover:text-neutral-700 active:scale-95 transition-all">
                                 <SkipBack size={20} fill="currentColor" />
                             </button>
-
                             <button
                                 onClick={togglePlay}
                                 disabled={!activeMetadata}
@@ -128,7 +132,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                                 )}
                             </button>
 
-                            <button onClick={playNext} disabled={!queue || queueIndex >= queue.length - 1} className="text-neutral-500 hover:text-neutral-700 transition-all">
+                            <button onClick={() => playNext(false)} disabled={!queue || queueIndex >= queue.length - 1} className="text-neutral-500 hover:text-neutral-700 transition-all">
                                 <SkipForward size={20} fill="currentColor" />
                             </button>
                         </div>
@@ -181,7 +185,17 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                                 className="w-16 md:w-20 h-1.5 bg-neutral-200 rounded-full appearance-none cursor-pointer accent-neutral-950 opacity-70 group-hover:opacity-100 transition-opacity"
                             />
                         </div>
-
+                        <div>
+                            <button onClick={handleToggleLoop}
+                                disabled={!activeMetadata}
+                                className={cn(
+                                    "relative transition-colors",
+                                    isOnLoop ? "text-emerald-500 hover:text-emerald-600" : "text-neutral-400 hover:text-neutral-900"
+                                )}>
+                                <Repeat size={18} />
+                                {isOnLoop && <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-emerald-500 rounded-full" />}
+                            </button>
+                        </div>
                         <div className="relative ml-2" ref={menuRef}>
                             <button
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}

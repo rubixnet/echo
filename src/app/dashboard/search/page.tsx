@@ -4,12 +4,11 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { Search as SearchIcon, Play, Pause, Loader2, Globe, History, Trash2, Search } from "lucide-react";
+import { Search as SearchIcon, Loader2, Globe, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
-import { EllipsisVertical } from "lucide-react"
 import { ActionsModal } from "@/components/ActionsModal";
 import { Track } from "@/components/TrackComponent";
 
@@ -282,7 +281,7 @@ export default function SearchPage() {
                   <Track
                     key={videoId}
                     track={track}
-                    index={index}
+                    index={index + 1}
                     variant="row"
                     loadingId={loadingId}
                     setLoadingId={setLoadingId}
