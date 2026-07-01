@@ -225,7 +225,8 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
                   )}
                 >
                   <LogOut size={16} />
-                </a>              </div>
+                </a>
+              </div>
             </div>
           </div>
         </aside>

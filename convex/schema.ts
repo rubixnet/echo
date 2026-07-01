@@ -21,6 +21,19 @@ export default defineSchema({
   }).index("by_youtubeId", ["youtubeId"])
     .searchIndex("search_title", { searchField: "title" }),
 
+
+  history: defineTable({
+    userId: v.id("users"), 
+    trackId: v.id("tracks"), 
+    title: v.string(), 
+    artist: v.string(), 
+    coverUrl: v.string(), 
+    duration: v.optional(v.string()), 
+    audioUrl: v.string(),
+    playedAt: v.number(),  
+  }).index("by_user", ["userId"])
+  .index("by_user_and_track", ["userId", "trackId"]),
+  
   likedSongs: defineTable({
     userId: v.id("users"),
     trackId: v.id("tracks"),
