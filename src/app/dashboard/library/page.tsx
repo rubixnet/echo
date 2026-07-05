@@ -12,7 +12,7 @@ export default function LibraryPage() {
 
   const likedSongs = useQuery(api.likes.getMyLikes, user?._id ? { userId: user._id } : "skip");
   const playlists = useQuery(api.playlists.getUserPlaylists, user?._id ? { userId: user._id } : "skip")
-  const history = useQuery(api.history.getHistory, user?._id ? { userId: user._id } : "skip")
+  const history = useQuery(api.history.getUserHistory, user?._id ? { userId: user._id } : "skip")
 
   return (
     <div className="p-6 md:p-10 mx-auto max-w-7xl space-y-12 pb-32 text-neutral-900 animate-in fade-in duration-500">

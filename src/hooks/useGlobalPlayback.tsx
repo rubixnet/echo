@@ -8,13 +8,15 @@ export function useGlobalPlayback() {
     const {
         forceSync, loadTrack, currentTrackUrl, togglePlay, setActiveMetadata,
         setIsLoading, queue, queueIndex, setQueue, setQueueIndex,
-        currentTimeSec, seekToTime, isOnLoop
+        currentTimeSec, seekToTime, isOnLoop, activeMetadata
     } = useAudioEngine();
 
     const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
 
     const myRoom = useQuery(api.rooms.getMyHosterRooms, user?._id ? { userId: user._id } : "skip");
     const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
+
+    const songsList: any[] = [];
 
     const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number) => {
 
@@ -94,7 +96,7 @@ export function useGlobalPlayback() {
         }
     };
 
-    const playNext = (isAutomatic: boolean = false) => {
+    const playNext = async (isAutomatic: boolean = false) => {
         if (isAutomatic && isOnLoop) {
             forceSync(undefined, 0, true);
             return;
@@ -102,6 +104,43 @@ export function useGlobalPlayback() {
         if (queue && queueIndex < queue.length - 1) {
             const nextIndex = queueIndex + 1;
             playTrack(queue[nextIndex], undefined, queue, nextIndex);
+            return;
+        }
+
+        if (activeMetadata) {
+            setIsLoading(true);
+            const currentId = activeMetadata.youtubeId || activeMetadata.audioUrl?.split("id=")[1];
+
+            try {
+                const res = await fetch(`/api/youtube/related?id=${currentId}`);
+                const data = await res.json();
+
+                console.log(data)
+
+                for (const item of data.items) {
+                    songsList.push(item)
+                }
+
+                console.log(songsList as any)
+
+                if (data.items && data.items.length > 0) {
+                    const validSongs = data.items.filter((item: any) =>
+                        item.id !== currentId && item.youtubeId !== currentId
+                    );
+
+                    const nextSong = validSongs[Math.floor(Math.random() * Math.min(validSongs.length, 3))] || data.items[0];
+
+                    const currentQueue = queue || [activeMetadata];
+                    const nextIndex = currentQueue.length;
+
+                    playTrack(nextSong, undefined, [...currentQueue, nextSong], nextIndex);
+                } else {
+                    setIsLoading(false);
+                }
+            } catch (error) {
+                console.error("Algorithm failed to fetch related track:", error);
+                setIsLoading(false);
+            }
         }
     };
 

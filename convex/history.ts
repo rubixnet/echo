@@ -1,7 +1,7 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
-export const getHistory = query({
+export const getUserHistory = query({
     args: { userId: v.id('users'), },
     handler: async (ctx, args) => {
         return await ctx.db
@@ -44,6 +44,13 @@ export const addToHistory = mutation({
             .collect()
 
         searchHisotry.sort((a, b) => b.playedAt - a.playedAt)
+    }
+})
+
+export const removeHistoryItem = mutation({
+    args: { historyId: v.id('history') },
+    handler: async (ctx, args) => {
+        await ctx.db.delete(args.historyId)
     }
 })
 

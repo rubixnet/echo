@@ -1,7 +1,9 @@
 "use client";
-
 import React, { createContext, useContext, useCallback, useRef, useState, useEffect } from "react";
 import ReactPlayer from "react-player";
+import { useMutation } from "convex/react";
+import { useUser } from "@/hooks/useUser"
+import { api } from "../../convex/_generated/api";
 
 const Player = ReactPlayer as any;
 
@@ -37,6 +39,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const isYouTube = currentTrackUrl ? (currentTrackUrl.includes("youtube.com") || currentTrackUrl.includes("youtu.be")) : false;
     const [queue, setQueue] = useState<any[]>([])
     const [queueIndex, setQueueIndex] = useState(-1)
+    const [isInRoom, setIsInRoom] = useState(false)
+    const isSavedToHistory = useRef(false)
+    const user = useUser()
 
 
     const formatTime = (time: number) => {
@@ -110,6 +115,9 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setIsPlaying(true);
             return;
         }
+
+        isSavedToHistory.current = false;
+
         setIsLoading(true);
         setIsAudioReady(false);
         setCurrentTrackUrl(url);
@@ -159,6 +167,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setIsPlaying(forcePlay);
     };
 
+    const addToHistory = useMutation(api.history.addToHistory);
+
     return (
         <AudioEngineContext.Provider value={{
             progressRef, isPlaying, isLoading,
@@ -170,7 +180,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setActiveMetadata, setIsLoading, setVolume: setVolumeState,
             loadTrack, togglePlay, seek, seekToTime, getCurrentTime, forceSync,
             queue, setQueue, queueIndex, setQueueIndex, onTrackEndRef, setOnTrackEnd,
-            isOnLoop, setIsOnLoop
+            isOnLoop, setIsOnLoop, isInRoom, setIsInRoom
         }}>
             <audio
                 ref={nativeAudioRef}
@@ -181,6 +191,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
                     setCurrentTimeSec(current);
                     setCurrentTimeStr(formatTime(current));
                     if (progressRef.current && durationSec > 0) progressRef.current.style.width = `${(current / durationSec) * 100}%`;
+                    if (current > 15 && !isInRoom && !isSavedToHistory.current) {
+                        if (user?._id && activeMetadata?.id) {
+                            addToHistory({
+                                userId: user._id,
+                                trackId: activeMetadata.id as any
+                            }).catch(console.error);
+
+                            isSavedToHistory.current = true;
+                        }
+                    }
                 }}
                 onLoadedMetadata={(e) => {
                     if (isYouTube) return;
