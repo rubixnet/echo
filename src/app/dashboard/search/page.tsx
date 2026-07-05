@@ -3,11 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useAudioEngine } from "@/components/AudioProvider";
 import { Search as SearchIcon, Loader2, Globe, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
 import { ActionsModal } from "@/components/ActionsModal";
 import { Track } from "@/components/TrackComponent";
@@ -34,8 +32,6 @@ export default function SearchPage() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const { currentTrackUrl, isPlaying } = useAudioEngine();
-  const { playTrack } = useGlobalPlayback();
   const [selectedTrackForModal, setSelectedTrackForModal] = useState<any>(null);
 
 
@@ -309,11 +305,6 @@ export default function SearchPage() {
         )}
       </div>
 
-      <ActionsModal
-        isOpen={!!selectedTrackForModal}
-        onClose={() => setSelectedTrackForModal(null)}
-        track={selectedTrackForModal}
-      />
     </div>
   );
 }
