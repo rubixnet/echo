@@ -86,7 +86,6 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <div className="flex flex-col items-center justify-center h-full w-full bg-[#FAFAFA] text-neutral-900 pt-8 pb-32">
-
       <div className="flex items-center gap-3 mb-12">
         <div className="px-4 py-1.5 bg-white border border-neutral-200/80 rounded-full flex items-center gap-2 shadow-sm">
           <Radio size={14} className={cn("text-emerald-500", room.isPlaying && "animate-pulse")} />
