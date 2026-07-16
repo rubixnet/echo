@@ -1,4 +1,4 @@
-
+- hover effect to shrink the cover url bit when the user scrolls and show the name beside it! 
 - work on my library, adding songs to the library, liked music, add to playlist option. 
 - show playlists in library, option to create new playlist in library, 
 
@@ -15,6 +15,8 @@
 
 - fixing player ons mall screen, introducing being screen play of song to show title, artist, cover, duration and play and other options for mobile or desktop. adding lycrics options, songs options and more stuff. 
 
+- play a song automatically 
+
 - now liking song works, metadata is only passed from the search page, no other page shares it like the library and liked and homepage. 
 
 - we have same home page recommendations for everyone.
@@ -26,3 +28,5 @@
 - make info consistent, playlist name in bold, description in sub bold and count in uppercase nujmber bad!
 
 - option to control audioplayer with keyboard keys.
+
+- fix scroll if the user moves with arrow keys scroll below as well! 

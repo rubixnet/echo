@@ -1,55 +1,56 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server"
+import { mutation, query } from "./_generated/server";
+
+export const checkLiked = query({
+    args: { userId: v.id("users"), trackId: v.optional(v.id("tracks")) },
+    handler: async (ctx, args) => {
+        if (!args.trackId) return false;
+        const like = await ctx.db
+            .query("likedSongs")
+            .withIndex("by_user_and_track", (q) =>
+                q.eq("userId", args.userId).eq("trackId", args.trackId!)
+            )
+            .first();
+        return !!like;
+    }
+});
 
 export const toggleLike = mutation({
     args: {
-        userId: v.optional(v.id("users")),
+        userId: v.id("users"),
         trackId: v.id("tracks"),
+        title: v.optional(v.string()),
+        artist: v.optional(v.string()),
+        coverUrl: v.optional(v.string()),
+        duration: v.optional(v.string()),
+        audioUrl: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        let user = args.userId ? await ctx.db.get(args.userId) : null;
-
-        if (!user) {
-            const identity = await ctx.auth.getUserIdentity();
-            if (!identity) throw new Error("Not logged in");
-
-            user = await ctx.db
-                .query("users")
-                .withIndex("workosId", (q) => q.eq("workosId", identity.subject))
-                .unique();
-        }
-
-        if (!user) throw new Error("User not found");
-
-        const existingLike = await ctx.db
+        const existing = await ctx.db
             .query("likedSongs")
             .withIndex("by_user_and_track", (q) =>
-                q.eq("userId", user._id).eq("trackId", args.trackId)
+                q.eq("userId", args.userId).eq("trackId", args.trackId)
             )
-            .unique();
+            .first();
 
-        if (existingLike) {
-            await ctx.db.delete(existingLike._id);
+        if (existing) {
+            await ctx.db.delete(existing._id);
             return { status: "unliked" };
         } else {
-            const track = await ctx.db.get(args.trackId);
-            if (!track) throw new Error("Track not found");
-
             await ctx.db.insert("likedSongs", {
-                userId: user._id,
+                userId: args.userId,
                 trackId: args.trackId,
                 likedAt: Date.now(),
-                title: track.title,
-                artist: track.artist,
-                coverUrl: track.coverUrl,
-                duration: track.duration || "0:00",
-                audioUrl: track.audioUrl,
+                title: args.title || "Unknown",
+                artist: args.artist || "Unknown",
+                coverUrl: args.coverUrl || "",
+                duration: args.duration || "0:00",
+                audioUrl: args.audioUrl || "",
             });
             return { status: "liked" };
         }
     }
 });
-
 
 export const getMyLikes = query({
     args: { userId: v.id("users") },

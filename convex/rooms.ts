@@ -8,7 +8,7 @@ export const getRoom = query({
         if (!room) throw new Error("Room not found");
 
         const track = room.currentTrackId ? await ctx.db.get(room.currentTrackId) : null;
-
+            
         return { ...room, track };
     },
 });

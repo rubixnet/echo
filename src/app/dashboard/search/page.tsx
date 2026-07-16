@@ -7,8 +7,9 @@ import { Search as SearchIcon, Loader2, Globe, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
-import { ActionsModal } from "@/components/ActionsModal";
 import { Track } from "@/components/TrackComponent";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 
 export default function SearchPage() {
   const user = useUser();
@@ -170,86 +171,88 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-2xl mx-auto space-y-12 pb-32 text-neutral-900 antialiased">
+    <div className="p-2 max-w-2xl mx-auto space-y-12 text-neutral-900 antialiased">
       <div ref={searchContainerRef} className="relative w-full z-40" >
         <form onSubmit={handleSearchSubmit} className="relative w-full group">
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search tracks, artists, global vault..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setShowHistoryPopover(true);
-              setSelectedIndex(-1);
-            }}
-            onFocus={() => setShowHistoryPopover(true)}
-            onKeyDown={handleInputKeyDown}
-            className="w-full h-12 pl-4 pr-20 bg-white/20 border border-neutral-200/50 rounded-xl font-medium focus:outline-none focus:bg-white focus:border-neutral-300 focus:ring-4 focus:ring-neutral-200/20 transition-all placeholder:text-neutral-400"
-          />
+          <LiquidContainer radius="50px" className="w-full h-12 transition-shadow">
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search tracks, artists, global vault..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setShowHistoryPopover(true);
+                setSelectedIndex(-1);
+              }}
+              onFocus={() => setShowHistoryPopover(true)}
+              onKeyDown={handleInputKeyDown}
+              className="relative z-30 w-full h-full bg-transparent pl-4 pr-24 font-medium text-foreground placeholder:text-foreground/40 focus:outline-none"
+            />
 
-          <div className="absolute inset-y-0 right-10 flex items-center pointer-events-none">
-            <div className="hidden sm:flex items-center justify-center px-1.5 h-5 bg-neutral-100/60 border border-neutral-300/50 rounded text-[10px] font-mono font-bold text-neutral-400">
-              /
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-30 pointer-events-none">
+              <div className="hidden sm:flex items-center justify-center mr-3 px-1.5 h-5 bg-foreground/10 border border-foreground/20 rounded text-[10px] font-mono font-bold text-foreground/50">
+                /
+              </div>
+              <button
+                type="submit"
+                className="pointer-events-auto p-1.5 text-foreground/40 hover:text-foreground transition-colors"
+              >
+                <SearchIcon size={18} />
+              </button>
             </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSearchingYt}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-950 transition-colors disabled:opacity-50"
-          >
-            {isSearchingYt ? <Loader2 size={16} className="animate-spin text-neutral-500" /> : <SearchIcon size={19} className="hover:scale-105" />}
-          </button>
+          </LiquidContainer>
         </form>
 
         {showHistoryPopover && combinedList.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-neutral-200/60 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="p-1.5 space-y-0.5 max-h-[300px] overflow-y-auto">
-              {combinedList.map((item, index) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={(e) => handleSearchSubmit(e, item.text)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left group",
-                    index === selectedIndex ? "bg-neutral-100" : "hover:bg-neutral-100/60"
-                  )}
-                >
-                  <div className="flex items-center gap-3 text-neutral-500 group-hover:text-neutral-950 transition-colors">
-                    {item.type === "history" ? (
-                      <History size={16} className="text-emerald-500" />
-                    ) : (
-                      <SearchIcon size={16} className="text-neutral-400" />
-                    )}
-                    <span className={cn(
-                      "text-sm font-medium text-neutral-700 group-hover:text-neutral-950"
-                    )}>
-                      {item.text}
-                    </span>
-                  </div>
-                  {item.type === "history" && (
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Past</span>
-                  )}
-                </button>
-              ))}
-            </div>
+          <div className="absolute top-full left-0 right-0 mt-3 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+            <LiquidPanel radius="24px" className="w-full shadow-2xl shadow-black/40">
 
-            {searchTerm.trim().length === 0 && (
-              <div className="flex items-center justify-end px-3 py-1 bg-neutral-50/50 border-b border-neutral-100/80">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (user?._id) clearSearchHistory({ userId: user._id });
-                    setShowHistoryPopover(false);
-                  }}
-                  className="flex cursor-pointer items-center gap-1.5 text-[10px] font-black text-neutral-400 hover:text-neutral-600 uppercase tracking-widest transition-colors"
-                >
-                  Clear Search History
-                </button>
+              <div className="p-2">
+                <div className="space-y-0.5 max-h-[300px] overflow-y-auto liquid-scroll pr-1 mr-1">
+                  {combinedList.map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={(e) => handleSearchSubmit(e, item.text)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-[16px] transition-colors text-left group",
+                        index === selectedIndex ? "bg-foreground/10" : "hover:bg-foreground/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 text-foreground/50 group-hover:text-foreground transition-colors">
+                        {item.type === "history" ? (
+                          <History size={16} className="text-primary" />
+                        ) : (
+                          <SearchIcon size={16} className="text-foreground/40" />
+                        )}
+                        <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">
+                          {item.text}
+                        </span>
+                      </div>
+                      {item.type === "history" && (
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Past</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
 
+              {searchTerm.trim().length === 0 && (
+                <div className="flex items-center justify-end px-4 py-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (user?._id) clearSearchHistory({ userId: user._id });
+                      setShowHistoryPopover(false);
+                    }}
+                    className="flex cursor-pointer items-center gap-1.5 text-[10px] font-black text-foreground/40 hover:text-foreground/70 uppercase tracking-widest transition-colors"
+                  >
+                    Clear Search History
+                  </button>
+                </div>
+              )}
+            </LiquidPanel>
           </div>
         )}
       </div>
@@ -286,25 +289,25 @@ export default function SearchPage() {
                 );
               })}
 
+
               {isSearchingYt && Array.from({ length: Math.max(0, 10 - ytResults.length) }).map((_, i) => (
                 <div key={`skeleton-${i}`} className="flex items-center justify-between py-2.5 px-2 -mx-2 opacity-60">
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className="w-4 h-4 bg-neutral-100 rounded animate-pulse shrink-0" />
-                    <div className="w-11 h-11 rounded-xl bg-neutral-100 animate-pulse shrink-0" />
+                    <div className="hidden md:blockw-4 h-4 bg-neutral-100 rounded animate-pulse shrink-0" />
+                    <div className="w-11 h-11 rounded-sm bg-neutral-100 animate-pulse shrink-0" />
                     <div className="min-w-0 flex-1 pr-4 space-y-2">
                       <div className="h-3.5 bg-neutral-200/60 rounded w-3/4 animate-pulse" />
                       <div className="h-2.5 bg-neutral-100 rounded w-1/2 animate-pulse" />
                     </div>
                   </div>
-                  <div className="w-8 h-3 bg-neutral-100 rounded animate-pulse shrink-0" />
+                  <div className="w-8 h-3 bg-neutral-100 rounded mr-4 animate-pulse shrink-0" />
+                  <div className="w-2 h-6 bg-neutral-100 rounded animate-pulse shrink-0 mr-2" />
                 </div>
               ))}
-
             </div>
           </div>
         )}
       </div>
-
     </div>
   );
 }

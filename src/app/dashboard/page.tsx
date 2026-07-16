@@ -3,19 +3,22 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api"
-import { useAudioEngine } from "@/components/AudioProvider";
+import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Search as SearchIcon, History, Sparkles, Loader2, Play, Pause, MoreHorizontal } from "lucide-react";
+import { Search as SearchIcon, History, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { ActionsModal } from "@/components/ActionsModal";
+import { useTheme } from "next-themes";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
+import Sidebar  from "@/components/Sidebar";
 
 export default function DashboardPage() {
   const user = useUser();
   const router = useRouter();
-  const searchInputRef = useRef(null);
-  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const { theme, setTheme } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -25,7 +28,6 @@ export default function DashboardPage() {
   const clearSearchHistory = useMutation(api.search.clearSearchHistory);
   const saveSearch = useMutation(api.search.saveSearch);
   const searchHistory = useQuery(api.search.getRecent, user?._id ? { userId: user._id } : "skip");
-
 
   useEffect(() => {
     if (!searchTerm.trim()) {
@@ -45,8 +47,6 @@ export default function DashboardPage() {
     }, 150);
 
     return () => clearTimeout(delayDebounceFn);
-
-
   }, [searchTerm]);
 
   useEffect(() => {
@@ -88,8 +88,10 @@ export default function DashboardPage() {
     searchInputRef.current?.blur();
 
     router.push(`/dashboard/search?q=${encodeURIComponent(finalQuery)}`);
+  };
 
-
+  const changeTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   const combinedList = useMemo(() => {
@@ -108,8 +110,6 @@ export default function DashboardPage() {
       ...matchedHistory.map(h => ({ text: h.searchQuery, type: "history", id: h._id })),
       ...filteredSuggestions.map(s => ({ text: s, type: "suggestion", id: s }))
     ];
-
-
   }, [searchTerm, searchHistory, suggestions]);
 
   const handleInputKeyDown = (e: React.KeyboardEvent) => {
@@ -129,15 +129,14 @@ export default function DashboardPage() {
       setShowHistoryPopover(false);
       searchInputRef.current?.blur();
     }
-
-
   };
 
   return (
-    <div>
-      <section className="p-6 md:p-10 max-w-2xl mx-auto space-y-12 pb-32 text-neutral-900 antialiased">
-        <div ref={searchContainerRef} className="relative w-full z-40">
-          <form onSubmit={handleSearchSubmit} className="relative w-full group">
+    <section className="p-2 max-w-2xl mx-auto space-y-12 pb-32 text-foreground antialiased relative z-40">
+      <div ref={searchContainerRef} className="relative w-full z-40">
+        <form onSubmit={handleSearchSubmit} className="relative w-full group">
+
+          <LiquidContainer radius="50px" className="w-full h-12 transition-shadow">
             <input
               ref={searchInputRef}
               type="text"
@@ -150,73 +149,75 @@ export default function DashboardPage() {
               }}
               onFocus={() => setShowHistoryPopover(true)}
               onKeyDown={handleInputKeyDown}
-              className="w-full h-12 pl-4 pr-20 bg-white/20 border border-neutral-200/50 rounded-xl font-medium focus:outline-none focus:bg-white focus:border-neutral-300 focus:ring-4 focus:ring-neutral-200/20 transition-all placeholder:text-neutral-400"
+              className="relative z-30 w-full h-full bg-transparent pl-4 pr-24 font-medium text-foreground placeholder:text-foreground/40 focus:outline-none"
             />
 
-            <div className="absolute inset-y-0 right-10 flex items-center pointer-events-none">
-              <div className="hidden sm:flex items-center justify-center px-1.5 h-5 bg-neutral-100/60 border border-neutral-300/50 rounded text-[10px] font-mono font-bold text-neutral-400">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 z-30 pointer-events-none">
+              <div className="hidden sm:flex items-center justify-center mr-3 px-1.5 h-5 bg-foreground/10 border border-foreground/20 rounded text-[10px] font-mono font-bold text-foreground/50">
                 /
               </div>
+              <button
+                type="submit"
+                className="pointer-events-auto p-1.5 text-foreground/40 hover:text-foreground transition-colors"
+              >
+                <SearchIcon size={18} />
+              </button>
             </div>
+          </LiquidContainer>
+        </form>
 
-            <button
-              type="submit"
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-neutral-400 hover:text-neutral-950 transition-colors"
-            >
-              <SearchIcon size={19} className="hover:scale-105 transition-transform" />
-            </button>
-          </form>
+        {showHistoryPopover && combinedList.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-3 slide-in-from-top-2 duration-200 z-50">
+            <LiquidPanel radius="24px" className="w-full shadow-2xl shadow-black/40">
 
-          {showHistoryPopover && combinedList.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-neutral-200/60 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="p-1.5 space-y-0.5 max-h-[300px] overflow-y-auto">
-                {combinedList.map((item, index) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={(e) => handleSearchSubmit(e, item.text)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-left group",
-                      index === selectedIndex ? "bg-neutral-100" : "hover:bg-neutral-100/60"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 text-neutral-500 group-hover:text-neutral-950 transition-colors">
-                      {item.type === "history" ? (
-                        <History size={16} className="text-emerald-500" />
-                      ) : (
-                        <SearchIcon size={16} className="text-neutral-400" />
+              <div className="p-2">
+                <div className="space-y-0.5 max-h-[300px] overflow-y-auto liquid-scroll pr-1 mr-1">
+                  {combinedList.map((item, index) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={(e) => handleSearchSubmit(e, item.text)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-[16px] transition-colors text-left group",
+                        index === selectedIndex ? "bg-foreground/10" : "hover:bg-foreground/5"
                       )}
-                      <span className={cn(
-                        "text-sm font-medium text-neutral-700 group-hover:text-neutral-950"
-                      )}>
-                        {item.text}
-                      </span>
-                    </div>
-                    {item.type === "history" && (
-                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Past</span>
-                    )}
-                  </button>
-                ))}
+                    >
+                      <div className="flex items-center gap-3 text-foreground/50 group-hover:text-foreground transition-colors">
+                        {item.type === "history" ? (
+                          <History size={16} className="text-primary" />
+                        ) : (
+                          <SearchIcon size={16} className="text-foreground/40" />
+                        )}
+                        <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">
+                          {item.text}
+                        </span>
+                      </div>
+                      {item.type === "history" && (
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Past</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {searchTerm.trim().length === 0 && (
-                <div className="flex items-center justify-end px-3 py-1 bg-neutral-50/50 border-b border-neutral-100/80">
+                <div className="flex items-center justify-end px-4 py-3 border-t border-white/10">
                   <button
                     type="button"
                     onClick={() => {
                       if (user?._id) clearSearchHistory({ userId: user._id });
                       setShowHistoryPopover(false);
                     }}
-                    className="flex cursor-pointer items-center gap-1.5 text-[10px] font-black text-neutral-400 hover:text-neutral-600 uppercase tracking-widest transition-colors"
+                    className="flex cursor-pointer items-center gap-1.5 text-[10px] font-black text-foreground/40 hover:text-foreground/70 uppercase tracking-widest transition-colors"
                   >
                     Clear Search History
                   </button>
                 </div>
               )}
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
+            </LiquidPanel>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

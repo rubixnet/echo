@@ -30,7 +30,6 @@ export async function GET(request: Request) {
             }
         }
 
-        // Parse the output line by line
         const results = stdoutString.trim().split('\n').map((line) => {
             try {
                 if (!line) return null;
