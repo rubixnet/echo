@@ -4,39 +4,41 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { ThemeProvider } from "next-themes";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Echo",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
-    >
-      <body className="min-h-full flex flex-col">
-        <ConvexClientProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-        </ConvexClientProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme');
+                const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                const effective = theme === 'system' || !theme ? system : theme;
+                if (effective === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="bg-background text-foreground">
+        <ThemeProvider defaultTheme="system" attribute="class">
+
+          <ConvexClientProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </ConvexClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
