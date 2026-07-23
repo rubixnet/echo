@@ -137,7 +137,7 @@ export const keepRoomAlive = mutation({
 export const clearExpiredRooms = internalMutation({
     args: {},
     handler: async (ctx) => {
-        const cutoff = Date.now() - 30000;
+        const cutoff = Date.now() - 720000;
 
         const zombies = await ctx.db
             .query("rooms")
