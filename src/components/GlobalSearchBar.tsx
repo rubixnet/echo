@@ -7,8 +7,8 @@ import { api } from "../../convex/_generated/api"
 import { useUser } from "@/hooks/useUser";
 import { Search as SearchIcon, History } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
+import { LiquidContainer, LiquidPanel } from "@/components/LiquidGlassCard"
+
 
 export function GlobalSearchBar() {
   const user = useUser();

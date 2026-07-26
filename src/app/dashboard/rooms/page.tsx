@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidContainer } from "@/components/LiquidGlassCard";
 import {Users, Radio} from "lucide-react";
 
 export default function LiveRoomsPage() {
@@ -102,7 +102,6 @@ export default function LiveRoomsPage() {
                                             <h3 className="text-sm font-bold text-foreground truncate">{room.name}</h3>
                                             <p className="text-[10px] text-foreground/50 truncate mt-0.5 font-medium uppercase tracking-wider">Host: {room.hostId.slice(-6)}</p>
                                         </div>
-                                        {/* Status Indicator */}
                                         <div className={cn(
                                             "w-2 h-2 rounded-full shrink-0 mt-1.5 transition-colors duration-500", 
                                             room.isPlaying ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" : "bg-foreground/20"

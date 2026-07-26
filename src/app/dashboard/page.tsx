@@ -5,12 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Search as SearchIcon, History, Sun, Moon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
-import Sidebar  from "@/components/Sidebar";
 
 export default function DashboardPage() {
   const user = useUser();
@@ -18,6 +13,7 @@ export default function DashboardPage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  
   const { theme, setTheme } = useTheme();
 
   const [searchTerm, setSearchTerm] = useState("");

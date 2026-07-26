@@ -5,8 +5,9 @@ import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Repeat, Loader2, Music, EllipsisVertical, ListMusic, Mic2, Shuffle, MonitorSpeaker } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidContainer } from "@/components/LiquidGlassCard";
 import { LikeButton, useDominantColor  } from "./Shared";
+
 
 interface DesktopMiniPlayerProps {
     isDrawerOpen: boolean;
@@ -97,7 +98,6 @@ export function DesktopMiniPlayer({ isDrawerOpen, setIsDrawerOpen, setIsPlaylist
                             <button onClick={() => playNext(false)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"><SkipForward size={24} strokeWidth={1} /></button>
                             <button onClick={() => setIsOnLoop(!isOnLoop)} disabled={!activeMetadata} className={cn("transition-colors shrink-0", isOnLoop ? "text-emerald-500" : "text-foreground/40 hover:text-foreground")}><Repeat size={20} strokeWidth={2} /></button>
                         </div>
-
                         <div className="flex-[1.5] basis-0 flex items-center justify-end gap-3 min-w-0 pl-8">
                             <LikeButton />
                             <button onClick={() => setIsDrawerOpen(true)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><Mic2 size={20} strokeWidth={2} /></button>

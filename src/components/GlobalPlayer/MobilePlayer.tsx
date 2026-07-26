@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { Play, Pause, ChevronDown, Loader2, Music, ListMusic, EllipsisVertical, Mic2, ListPlus } from "lucide-react";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidContainer } from "@/components/LiquidGlassCard";
 import { Timeline, PlaybackControls, LikeButton, useNextInQueue, PlaybackStatus, useDominantColor, VibrantBackground } from "./Shared";
 import { SyncedLyrics } from "@/components/SyncedLyrics";
 import { cn } from "@/lib/utils";

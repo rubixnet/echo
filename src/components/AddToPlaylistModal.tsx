@@ -7,8 +7,8 @@ import { useUser } from "@/hooks/useUser";
 import { X, Plus, Music, Loader2, CheckCircle2, AlertCircle, ListPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidContainer, LiquidPanel } from "@/components/LiquidGlassCard"
+
 
 interface AddToPlaylistModalProps {
   isOpen: boolean;

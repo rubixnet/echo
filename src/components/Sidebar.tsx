@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Search, Radio, Clock, ListPlus, Pin, Music2, Disc, Mic2, ListMusic, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
+import { LiquidDrop } from "@/components/LiquidGlassCard";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
