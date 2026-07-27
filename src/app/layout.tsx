@@ -6,8 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "next-themes";
 
-import { LiquidEngineProvider } from "@/components/LiquidUI/LiquidEngine";
-import { LiquidController } from "@/components/LiquidUI/LiquidController";
+
 
 export const metadata: Metadata = {
   title: "Echo",
@@ -33,15 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-background text-foreground">
         <ThemeProvider defaultTheme="system" attribute="class">
+
           <ConvexClientProvider>
             <TooltipProvider>
-              
-              <LiquidEngineProvider>
-                {children}
-                
-                <LiquidController />
-              </LiquidEngineProvider>
-
+              {children}
             </TooltipProvider>
           </ConvexClientProvider>
         </ThemeProvider>
