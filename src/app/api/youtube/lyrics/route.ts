@@ -14,7 +14,6 @@ export async function GET(request: Request) {
         });
         const html = await response.text();
 
-
         const captionRegex = /"captionTracks":\s*(\[.*?\])/;
         const match = captionRegex.exec(html);
         if (!match) throw new Error("No YouTube Captions");

@@ -8,10 +8,11 @@ export function useGlobalPlayback() {
     const {
         forceSync, loadTrack, currentTrackUrl, togglePlay, setActiveMetadata,
         setIsLoading, queue, queueIndex, setQueue, setQueueIndex,
-        currentTimeSec, seekToTime, isOnLoop, activeMetadata,
+        currentTimeSec, seekToTime, isOnLoop, activeMetadata
     } = useAudioEngine();
 
     const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
+
     const myRoom = useQuery(api.rooms.getMyHosterRooms, user?._id ? { userId: user._id } : "skip");
     const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
 
@@ -106,22 +107,6 @@ export function useGlobalPlayback() {
             return;
         }
 
-        if (currentTimeSec < 30) {
-            // in case I change mind my to update the algo bit if user don't like song. 
-            // or skip songs. 
-            // added a hook here to track how many times the user hasa skipped, by default 0
-            // const [skipCount, setSkipCount] = useState(0);
-
-
-            // and if the user skips now here, or changes the song, 
-            // we will increment it by one,
-
-            // setSkipCount(skipCount + 1); 
-
-            // and if here skipCount > 3, we will 
-            // empthy the queue, fetch related or different songs from a vibe shifter api or different one 
-        }
-
         if (activeMetadata) {
             setIsLoading(true);
             const currentId = activeMetadata.youtubeId || activeMetadata.audioUrl?.split("id=")[1];
@@ -188,5 +173,6 @@ export function useGlobalPlayback() {
         }
         setQueue([...queue, track]);
     };
+
     return { playTrack, playPrevious, playNext, playNextPriority, addToQueue };
 }

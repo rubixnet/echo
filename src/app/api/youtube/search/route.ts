@@ -13,12 +13,14 @@ export async function GET(request: Request) {
 
   try {
     const safeQuery = query.replace(/"/g, '');
+
     let stdoutString = "";
 
     try {
       const { stdout } = await execAsync(`yt-dlp --no-warnings --ignore-errors -j "ytsearch${limit}:${safeQuery}"`, {
         maxBuffer: 10 * 1024 * 1024
       });
+
       stdoutString = stdout;
     } catch (err: any) {
       if (err.stdout) {
@@ -32,27 +34,14 @@ export async function GET(request: Request) {
       try {
         if (!line) return null;
         const data = JSON.parse(line);
-
-        if (data.duration && data.duration > 600) return null;
-
-        const uploaderName = data.uploader ? data.uploader.toLowerCase() : "";
-        const isOfficial =
-          data.channel_is_verified === true ||
-          uploaderName.endsWith("vevo") ||
-          uploaderName.endsWith(" - topic");
-
         return {
           id: data.id,
           title: data.title,
           uploaderName: data.uploader,
-          artist: data.uploader,
           url: data.webpage_url || `https://www.youtube.com/watch?v=${data.id}`,
           thumbnail: data.thumbnail,
-          coverUrl: data.thumbnail,
           duration: data.duration,
-          type: "stream",
-
-          isOfficial: isOfficial
+          type: "stream"
         };
       } catch (e) {
         return null;
