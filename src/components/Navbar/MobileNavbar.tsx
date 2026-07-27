@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, Search, Library, Radio, Settings } from "lucide-react";
-import { LiquidContainer } from "@/components/LiquidGlassCard";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";
 
 export default function MobileNavbar() {
