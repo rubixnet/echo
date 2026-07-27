@@ -68,7 +68,6 @@ export default defineSchema({
 
   playlists: defineTable({
     name: v.string(),
-    isPineed: v.boolean(),
     userId: v.id('users'),
     createdAt: v.number(),
   }).index("by_user", ["userId"]),
