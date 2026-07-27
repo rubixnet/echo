@@ -35,6 +35,8 @@ export default function LibraryHubPage() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
+
+
           {pinnedItems.length > 4 && (
             <button
               onClick={() => setIsPinnedExpanded(!isPinnedExpanded)}

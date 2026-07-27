@@ -2,8 +2,7 @@ import { AudioProvider } from "@/components/AudioProvider";
 import { UserProvider } from "@/hooks/useUser";
 import GlobalPlayer from "@/components/GlobalPlayer/GlobalPlayer";
 import Sidebar from "@/components/Sidebar";
-// import Navbar from "@/components/Navbar/Navbar";
-import Navbar from "@/components/MainNavbar";
+import Navbar from "@/components/Navbar/Navbar";
 
 export default function ClientLayout({ children, user }: { children: React.ReactNode; user: any; }) {
   return (
@@ -19,9 +18,8 @@ function DashboardShell({ children, user }: { children: React.ReactNode; user: a
   return (
     <div className="flex flex-col h-screen w-full bg-background font-sans overflow-hidden text-neutral-900">
       <div className="flex flex-1 overflow-hidden relative">
-        {/* <Navbar />  */}x
-        {/* <Sidebar /> */}
-        <Navbar />
+        <Navbar /> 
+        <Sidebar />
 
         <main className="flex-1 overflow-y-auto relative z-10 pb-32 md:pt-24">
           {children}

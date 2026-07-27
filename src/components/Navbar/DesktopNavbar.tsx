@@ -2,50 +2,46 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Search, Library, Radio, Settings, Bell } from "lucide-react";
+import { Home, Search, Library, Radio, Settings } from "lucide-react";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { GlobalSearchBar } from "../GlobalSearchBar";
 import { cn } from "@/lib/utils";
 
 export default function DesktopNavbar() {
-  const pathname = usePathname();
-  const isSearchPage = pathname.includes("/dashboard/search");
+    const pathname = usePathname();
+    const isSearchPage = pathname.includes("/dashboard/search");
 
-  const NavItem = ({ href, icon: Icon, active, label }: { href: string; icon: any; active?: boolean, label: string }) => (
-    <Link
-      href={href}
-      aria-label={label}
-      className={cn(
-        "relative z-10 flex-1 flex items-center justify-center px-4 py-2.5 rounded-lg transition-colors duration-200 active:scale-[0.98]",
-        active
-          ? "bg-white/20 text-white shadow-sm"
-          : "text-zinc-200 hover:text-white hover:bg-white/15"
-      )}
-    >
-      <Icon size={20} strokeWidth={2.5} className={cn("drop-shadow-sm", active && "drop-shadow-md")} />
-    </Link>
-  );
+    const NavItem = ({ href, icon: Icon, active, label }: { href: string; icon: any; active?: boolean, label: string }) => (
+        <Link
+            href={href}
+            className={cn(
+                "h-9 flex items-center justify-center rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                active
+                    ? "bg-foreground/10 text-primary w-[calc(100%)]"
+                    : "text-foreground/60 hover:text-foreground hover:bg-foreground/5 w-full"
+            )}
+        >
+            <Icon size={18} strokeWidth={2.5} className="shrink-0" />
+        </Link>
+    );
 
-  return (
-    <div className="w-full max-w-[500px] mx-auto px-4 pt-4 flex items-center justify-center gap-3 pointer-events-auto">
-
-      <div className="flex-1 w-full max-w-md">
-        {isSearchPage ? (
-          <div className="w-full">
-            <GlobalSearchBar />
-          </div>
-        ) : (
-          <div className="relative w-full p-2 shadow-2xl flex items-center gap-1 rounded-[16px]">
-
-            <div className="relative z-10 w-full flex items-center justify-between gap-1">
-              <NavItem href="/dashboard" icon={Home} label="Home" active={pathname === "/dashboard"} />
-              <NavItem href="/dashboard/search" icon={Search} label="Search" />
-              <NavItem href="/dashboard/library" icon={Library} label="Library" active={pathname.includes("/library")} />
-              <NavItem href="/dashboard/rooms" icon={Radio} label="Profile" active={pathname.includes("/rooms")} />
-              <NavItem href="/dashboard/settings" icon={Settings} label="Settings" active={pathname.includes("/settings")} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}   
+    return (
+        <div className="w-full max-w-100 mx-auto px-4 pt-2 flex justify-center pointer-events-auto transition-all duration-500">
+            {isSearchPage ? (
+                <div className="w-full">
+                    <GlobalSearchBar />
+                </div>
+            ) : (
+                <LiquidContainer radius="50px" className="w-full h-11 px-1 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="w-full h-full flex items-center justify-between">
+                        <NavItem href="/dashboard" icon={Home} label="Home" active={pathname === "/dashboard"} />
+                        <NavItem href="/dashboard/search" icon={Search} label="Search" />
+                        <NavItem href="/dashboard/library" icon={Library} label="Library" active={pathname.includes("/library")} />
+                        <NavItem href="/dashboard/rooms" icon={Radio} label="Profile" active={pathname.includes("/rooms")} />
+                        <NavItem href="/dashboard/settings" icon={Settings} label="Settings" active={pathname.includes("/settings")} />
+                    </div>
+                </LiquidContainer>
+            )}
+        </div>
+    );
+}

@@ -9,8 +9,7 @@ import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { getPerfectSyncTime } from "@/lib/delay";
-import { LiquidContainer } from "@/components/LiquidGlassCard";
-
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 
 export default function RoomIdPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
