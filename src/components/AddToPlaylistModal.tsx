@@ -85,7 +85,7 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
                 <div className="w-8 h-8 rounded-full  flex items-center justify-center text-foreground/70">
                   <ListPlus size={16} strokeWidth={2} />
                 </div>
-                <h3 className="font-semibold text-lg text-foreground tracking-tight">Add to Playlist</h3>
+                <h3 className="font-semibold text-lg text-foreground tracking-tight">Add to Playlisttt</h3>
               </div>
               <button
                 onClick={onClose}

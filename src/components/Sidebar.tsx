@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Search, Radio, Clock, ListPlus, Pin, Music2, Disc, Mic2, ListMusic, Heart, X } from "lucide-react";
+import { Home, Search, Radio, Clock, ListPlus, Pin, ListMusic, Heart, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
 import { useQuery } from "convex/react";
@@ -36,7 +35,7 @@ export default function Sidebar() {
         return (
             <Button
                 onClick={() => toggleSidebar(true)}
-                className="fixed top-2 hidden md:flex left-4 z-[900] w-4 h-9  rounded-2xl bg-background/80 backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors"
+                className="fixed top-2 hidden md:flex left-4 z-[900] w-1 h-9  rounded-2xl bg-background/80 backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors"
             >
                 <ListMusic size={16} />
             </Button>
