@@ -29,4 +29,9 @@
 
 - option to control audioplayer with keyboard keys.
 
+- extra padding for pages below on mobile as the blur is more! 
+
+- ask for favorite geners during onboarding and then show them on the dashboard top and 
+below other ones as explore! 
+
 - fix scroll if the user moves with arrow keys scroll below as well! 
