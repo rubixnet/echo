@@ -79,8 +79,9 @@ export const getPlaylistTracks = query({
         const relations = await ctx.db
             .query("playlistTracks")
             .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
-            .order("desc") // this manages order of tracks **
+            .order("desc") 
             .collect()
+
 
         const tracks = await Promise.all(
             relations.map(async (relation) => {

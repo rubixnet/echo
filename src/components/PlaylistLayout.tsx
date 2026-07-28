@@ -31,7 +31,7 @@ export type TrackLike = {
   coverUrl?: string;
   audioUrl?: string;
   youtubeId?: string;
-  [key: string]: any; // Allows custom properties without TS errors
+  [key: string]: any; 
 };
 
 type PlaylistLayoutProps = {
@@ -71,7 +71,6 @@ export function PlaylistLayout({
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  // ALWAYS call hooks before any early returns
   const sortedTracks = useMemo(() => {
     if (!tracks) return [];
     const withIndex = tracks.map((t, i) => ({ ...t, originalIndex: i }));
@@ -94,7 +93,6 @@ export function PlaylistLayout({
     });
   }, [tracks, sortColumn, sortOrder]);
 
-  // Early return safely placed AFTER hooks
   if (isLoading || tracks === undefined) {
     return (
       <div className="flex h-full items-center justify-center p-20 bg-background">

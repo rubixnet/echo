@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -22,6 +23,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { OfficialBadge } from "@/components/OfficialBadge";
+import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
 
 interface TrackProps {
   track: any;
@@ -33,6 +35,7 @@ interface TrackProps {
   playlistId?: string;
   showDuration?: boolean;
   className?: string;
+  onOpenActionMenu?: () => void;
 }
 
 export function Track({
@@ -44,16 +47,19 @@ export function Track({
   onOpenPlaylistModal,
   playlistId,
   showDuration = true,
-  className
+  className, 
+  onOpenActionMenu,
 }: TrackProps) {
   const { playTrack, playNextPriority, addToQueue } = useGlobalPlayback();
   const { currentTrackUrl, isPlaying } = useAudioEngine();
   const user = useUser();
 
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+
   const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
-  const actualTrackId = track?.trackId || track?._id;
+  const actualTrackId = track?.trackId || track?._id || track?.youtubeId || track?.id;
 
   const isLiked = useQuery(
     api.likes.checkLiked,
@@ -87,7 +93,7 @@ export function Track({
     if (!user?._id || !actualTrackId) return;
     await toggleLikeMutation({
       userId: user._id as any,
-      trackId: actualTrackId as any, // FIXED: Now uses actualTrackId instead of track._id
+      trackId: actualTrackId as any,
       title,
       artist,
       coverUrl,
@@ -101,9 +107,18 @@ export function Track({
     await removeTrackFromPlaylist({ playlistId: playlistId as any, trackId: actualTrackId });
   };
 
+  const handleOpenPlaylist = (e: any) => {
+    e.stopPropagation();
+    if (onOpenPlaylistModal) {
+      onOpenPlaylistModal(track);
+    } else {
+      setIsPlaylistModalOpen(true);
+    }
+  };
+
   const renderMenuItems = (Item: any, Separator: any) => (
     <>
-      <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className="gap-3 cursor-pointer rounded-xl font-bold  text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
+      <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
         <PlaySquare size={18} /> Play Next
       </Item>
 
@@ -114,7 +129,7 @@ export function Track({
       <Separator className="my-1.5 bg-neutral-100" />
 
       <Item
-        onClick={(e: any) => { e.stopPropagation(); if (onOpenPlaylistModal) onOpenPlaylistModal(track); }}
+        onClick={handleOpenPlaylist}
         className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5"
       >
         <ListPlus size={18} /> Add to Playlist...
@@ -151,85 +166,94 @@ export function Track({
   );
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        {variant === "grid" ? (
-          <div onClick={handlePlay} className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50">
-            <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 shadow-sm">
-              <img src={coverUrl} alt={title} className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
-              <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-300", isCurrent ? "bg-black/40 opacity-100" : "bg-black/0 opacity-0 group-hover:bg-black/20 group-hover:opacity-100")}>
-                <div className={cn("w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500 text-primary shadow-xl transform transition-transform duration-300", isCurrent || isLoading ? "scale-100" : "scale-75 translate-y-4 group-hover:scale-100 group-hover:translate-y-0")}>
-                  {isLoading ? <Loader2 size={24} className="animate-spin" /> : isCurrent ? <Pause size={24} className="fill-white" /> : <Play size={24} className="fill-white ml-1" />}
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          {variant === "grid" ? (
+            <div onClick={handlePlay} className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50">
+              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 shadow-sm">
+                <img src={coverUrl} alt={title} className="w-full h-full object-cover transition-transform group-hover:scale-105" onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
+                <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-300", isCurrent ? "bg-black/40 opacity-100" : "bg-black/0 opacity-0 group-hover:bg-black/20 group-hover:opacity-100")}>
+                  <div className={cn("w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500 text-primary shadow-xl transform transition-transform duration-300", isCurrent || isLoading ? "scale-100" : "scale-75 translate-y-4 group-hover:scale-100 group-hover:translate-y-0")}>
+                    {isLoading ? <Loader2 size={24} className="animate-spin" /> : isCurrent ? <Pause size={24} className="fill-white" /> : <Play size={24} className="fill-white ml-1" />}
+                  </div>
                 </div>
               </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <h3 className={cn("font-bold text-base truncate tracking-tight flex-1", isCurrent ? "text-emerald-600" : "text-neutral-900")}>{title}</h3>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button onClick={(e) => e.stopPropagation()} className="p-1 -mr-1 text-neutral-400 hover:text-neutral-900 transition-colors">
+                        <EllipsisVertical size={16} />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-neutral-100 p-1.5 z-[9999]">
+                      {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                </div>
+                <p className="text-sm font-medium text-neutral-500 truncate">{artist}
+                  <OfficialBadge isOfficial={track.isOfficial} />
+                </p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <h3 className={cn("font-bold text-base truncate tracking-tight flex-1", isCurrent ? "text-emerald-600" : "text-neutral-900")}>{title}</h3>
+          ) : (
+            <div onClick={handlePlay} className={cn(`flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all`+ `${className ? ` ${className}` : ""}`)}>
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                {index > 0 && (
+                  <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
+                    {index.toString().padStart(2, "0")}
+                  </span>
+                )}
+                <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
+                  <img src={coverUrl} className="w-full h-full object-cover select-none rounded-sm" alt={title} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
+                  <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl", isCurrent ? "bg-black/30 opacity-100" : "bg-neutral-950/20 opacity-0 group-hover:opacity-100")}>
+                    {isLoading ? <Loader2 size={14} className="text-primary animate-spin" /> : isCurrent ? <Pause size={14} className="text-primary fill-white" /> : <Play size={14} className="text-primary fill-white ml-0.5" />}
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className={cn("text-sm font-bold truncate tracking-tight leading-snug", isCurrent ? "text-highlight" : "text-primary")}>{title}</p>
+                  <p className="text-xs font-medium text-neutral-400 truncate mt-0.5 leading-none">{artist}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {showDuration && (
+                  <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-primary transition-colors">
+                    {durationStr}
+                  </div>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button onClick={(e) => e.stopPropagation()} className="p-1 -mr-1 text-neutral-400 hover:text-neutral-900 transition-colors">
-                      <EllipsisVertical size={16} />
+                    <button onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors p-1">
+                      <EllipsisVertical size={14} />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-neutral-100 p-1.5 z-[9999]">
                     {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
-              </div>
-              <p className="text-sm font-medium text-neutral-500 truncate">{artist}
-                <OfficialBadge isOfficial={track.isOfficial} />
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div onClick={handlePlay} className={cn(`flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all`+ `${className ? ` ${className}` : ""}`)}>
-            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-              {index > 0 && (
-                <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
-                  {index.toString().padStart(2, "0")}
-                </span>
-              )}
-              <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
-                <img src={coverUrl} className="w-full h-full object-cover select-none rounded-sm" alt={title} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
-                <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl", isCurrent ? "bg-black/30 opacity-100" : "bg-neutral-950/20 opacity-0 group-hover:opacity-100")}>
-                  {isLoading ? <Loader2 size={14} className="text-primary animate-spin" /> : isCurrent ? <Pause size={14} className="text-primary fill-white" /> : <Play size={14} className="text-primary fill-white ml-0.5" />}
-                </div>
-              </div>
-              <div className="min-w-0 flex-1 pr-4">
-                <p className={cn("text-sm font-bold truncate tracking-tight leading-snug", isCurrent ? "text-highlight" : "text-primary")}>{title}</p>
-                <p className="text-xs font-medium text-neutral-400 truncate mt-0.5 leading-none">{artist}</p>
               </div>
             </div>
+          )}
+        </ContextMenuTrigger>
 
+        <ContextMenuContent className="w-64 rounded-lg shadow-xl border-neutral-100 p-1.5 z-[9999]">
+          {renderMenuItems(ContextMenuItem, ContextMenuSeparator)}
+        </ContextMenuContent>
+      </ContextMenu>
 
-            <div className="flex items-center gap-2">
-              {showDuration && (
-                <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-primary transition-colors">
-                  {durationStr}
-                </div>
-              )}
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors p-1">
-                    <EllipsisVertical size={14} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-neutral-100 p-1.5 z-[9999]">
-                  {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        )}
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-64 rounded-lg shadow-xl border-neutral-100 p-1.5 z-[9999]">
-        {renderMenuItems(ContextMenuItem, ContextMenuSeparator)}
-      </ContextMenuContent>
-    </ContextMenu>
+      {isPlaylistModalOpen && (
+        <AddToPlaylistModal
+          track={track}
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+        />
+      )}
+    </>
   );
 }

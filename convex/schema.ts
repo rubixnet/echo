@@ -21,31 +21,29 @@ export default defineSchema({
   }).index("by_youtubeId", ["youtubeId"])
     .searchIndex("search_title", { searchField: "title" }),
 
-
   history: defineTable({
     userId: v.id("users"), 
-    trackId: v.id("tracks"), 
+    trackId: v.string(), 
     title: v.string(), 
     artist: v.string(), 
     coverUrl: v.string(), 
     duration: v.optional(v.string()), 
-    audioUrl: v.string(),
+    audioUrl: v.optional(v.string()), 
     playedAt: v.number(),  
   }).index("by_user", ["userId"])
   .index("by_user_and_track", ["userId", "trackId"]),
   
   likedSongs: defineTable({
     userId: v.id("users"),
-    trackId: v.id("tracks"),
+    trackId: v.string(), 
     likedAt: v.number(),
     title: v.string(),
     artist: v.string(),
     coverUrl: v.string(),
     duration: v.string(),
-    audioUrl: v.string(),
+    audioUrl: v.optional(v.string()), 
   }).index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
-
 
   searchHistory: defineTable({
     userId: v.id("users"),
@@ -57,7 +55,7 @@ export default defineSchema({
   rooms: defineTable({
     name: v.string(),
     hostId: v.id("users"),
-    currentTrackId: v.optional(v.id("tracks")),
+    currentTrackId: v.optional(v.string()), 
     isPlaying: v.boolean(),
     serverStartTime: v.optional(v.number()),
     pausePosition: v.number(),
@@ -74,7 +72,7 @@ export default defineSchema({
 
   playlistTracks: defineTable({
     playlistId: v.id('playlists'),
-    trackId: v.id('tracks'),
+    trackId: v.string(), 
     addedAt: v.number(),
   })
     .index("by_playlist", ["playlistId"])

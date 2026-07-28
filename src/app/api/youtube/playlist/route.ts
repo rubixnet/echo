@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+function formatDuration(seconds?: number): string {
+  if (!seconds || isNaN(seconds)) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,9 +22,22 @@ export async function GET(request: Request) {
   const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
 
   try {
-    const { stdout } = await execAsync(
-      `yt-dlp --flat-playlist -J "${playlistUrl}"`
-    );
+    const args = [
+      "--flat-playlist",
+      "--dump-single-json",
+      "--no-warnings",
+      "--extractor-args",
+      "youtube:player_client=android,web",
+      playlistUrl,
+    ];
+
+    const { stdout } = await execFileAsync("yt-dlp", args, {
+      maxBuffer: 20 * 1024 * 1024,
+    });
+
+    if (!stdout || stdout.trim() === "null") {
+      throw new Error("Empty output from yt-dlp");
+    }
 
     const data = JSON.parse(stdout);
 
@@ -32,22 +52,27 @@ export async function GET(request: Request) {
         thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
       }
 
-      const artist =
+      const rawArtist =
         entry.artist ||
         entry.uploader ||
         entry.channel ||
         entry.uploader_id ||
         "Unknown Artist";
 
+      const artist = rawArtist.replace(" - Topic", "").trim();
+
       return {
+        _id: videoId,
         id: videoId,
         youtubeId: videoId,
         title: entry.title || "Untitled Track",
-        artist: artist.replace(" - Topic", "").trim(),
+        artist,
         thumbnail,
-        duration: entry.duration || 0,
+        coverUrl: thumbnail,
+        duration: formatDuration(entry.duration),
         views: entry.view_count || entry.views || 0,
         url: `https://www.youtube.com/watch?v=${videoId}`,
+        type: "stream",
       };
     });
 
@@ -58,9 +83,9 @@ export async function GET(request: Request) {
       tracks,
     });
   } catch (error: any) {
-    console.error("yt-dlp playlist parsing error:", error);
+    console.error("yt-dlp extraction error:", error?.message || error);
     return NextResponse.json(
-      { error: "Failed to parse playlist using yt-dlp" },
+      { error: "Failed to parse playlist" },
       { status: 500 }
     );
   }

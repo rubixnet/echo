@@ -2,7 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const checkLiked = query({
-    args: { userId: v.id("users"), trackId: v.optional(v.id("tracks")) },
+    args: {
+        userId: v.id("users"),
+        trackId: v.string()
+    },
     handler: async (ctx, args) => {
         if (!args.trackId) return false;
         const like = await ctx.db
@@ -18,7 +21,7 @@ export const checkLiked = query({
 export const toggleLike = mutation({
     args: {
         userId: v.id("users"),
-        trackId: v.id("tracks"),
+        trackId: v.string(),
         title: v.optional(v.string()),
         artist: v.optional(v.string()),
         coverUrl: v.optional(v.string()),
