@@ -2,6 +2,8 @@
 - work on my library, adding songs to the library, liked music, add to playlist option. 
 - show playlists in library, option to create new playlist in library, 
 
+- make sidebar sticky
+
 - live rooms will be removed if host closes the room, leaves the site, if offline, and if host starts another room. 
 - fix need for the bug here, bug not good closes the room automatically in between if we stop sonog
 
