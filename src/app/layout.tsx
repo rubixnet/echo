@@ -32,7 +32,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-background text-foreground">
         <ThemeProvider defaultTheme="system" attribute="class">
-
           <ConvexClientProvider>
             <TooltipProvider>
               {children}
