@@ -1,5 +1,6 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 
 export const getRoom = query({
     args: { roomId: v.id("rooms") },
@@ -7,8 +8,25 @@ export const getRoom = query({
         const room = await ctx.db.get(args.roomId);
         if (!room) throw new Error("Room not found");
 
-        const track = room.currentTrackId ? await ctx.db.get(room.currentTrackId) : null;
-            
+        let track = null;
+
+        if (room.currentTrackId) {
+            const youtubeTrack = await ctx.db
+                .query("tracks")
+                .withIndex("by_youtubeId", (q) => q.eq("youtubeId", room.currentTrackId))
+                .first();
+
+            if (youtubeTrack) {
+                track = youtubeTrack;
+            } else if (room.currentTrackId.length > 15) {
+                try {
+                    track = await ctx.db.get(room.currentTrackId as Id<"tracks">);
+                } catch {
+                    track = null;
+                }
+            }
+        }
+
         return { ...room, track };
     },
 });
@@ -21,7 +39,7 @@ export const deleteRoom = mutation({
             await ctx.db.delete(args.roomId);
         }
     }
-})
+});
 
 export const getMyHosterRooms = query({
     args: { userId: v.optional(v.id("users")) },
@@ -33,7 +51,7 @@ export const getMyHosterRooms = query({
             .filter((q) => q.eq(q.field("hostId"), args.userId))
             .first();
     }
-})
+});
 
 export const getPublicRooms = query({
     args: {},
@@ -93,7 +111,7 @@ export const syncPlayback = mutation({
         roomId: v.id("rooms"),
         isPlaying: v.boolean(),
         clientCurrentTime: v.number(),
-        trackId: v.optional(v.id("tracks")),
+        trackId: v.optional(v.string()), 
         userId: v.id("users")
     },
     handler: async (ctx, args) => {
@@ -151,13 +169,13 @@ export const clearExpiredRooms = internalMutation({
 });
 
 export const updateRoomTrack = mutation({
-    args: { roomId: v.id("rooms"), trackId: v.optional(v.id("tracks")), },
+    args: { roomId: v.id("rooms"), trackId: v.optional(v.string()) }, 
     handler: async (ctx, args) => {
         await ctx.db.patch(args.roomId, {
             currentTrackId: args.trackId,
             isPlaying: true,
             pausePosition: 0,
             serverStartTime: Date.now()
-        })
+        });
     }
-})
+});
