@@ -33,7 +33,14 @@
 
 - extra padding for pages below on mobile as the blur is more! 
 
+- option to delete playlist
+
 - ask for favorite geners during onboarding and then show them on the dashboard top and 
 below other ones as explore! 
 
-- fix scroll if the user moves with arrow keys scroll below as well! 
+- fix scroll if the user moves with arrow keys scroll below as well
+
+- morning tasks to - design playlist pages, setup youtube api, test rooms and join funcitonality, 
+ host lyrics and try hosting app if possible, run bun lint and fix all the errors. update sidebar and library page to show playlist cover. 
+
+- fix layout sidebar. 
