@@ -142,7 +142,7 @@ const ButtonGroup = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "relative isolate inline-flex items-center rounded-full overflow-hidden shadow-xl shadow-black/10 transition-all",
+        "relative isolate inline-flex items-center rounded-full overflow-hidden transition-all",
         className
       )}
       {...props}
