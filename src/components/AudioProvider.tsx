@@ -13,6 +13,11 @@ export interface TrackMetadata {
     artist: string;
     coverUrl: string;
     audioUrl?: string;
+    source? : {
+        type: 'playlist' | 'album' | 'artist';
+        name: string;
+        coverUrl? : string;
+    }
 }
 
 const AudioEngineContext = createContext<any>(null);
@@ -25,7 +30,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isAudioReady, setIsAudioReady] = useState(false);
-
     const [durationSec, setDurationSec] = useState(0);
     const [duration, setDuration] = useState("0:00");
     const [currentTimeSec, setCurrentTimeSec] = useState(0);

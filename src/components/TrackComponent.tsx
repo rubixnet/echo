@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ContextMenu,
   ContextMenuContent,
@@ -19,6 +21,7 @@ import { useUser } from "@/hooks/useUser";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
+import { OfficialBadge } from "@/components/OfficialBadge";
 
 interface TrackProps {
   track: any;
@@ -28,6 +31,8 @@ interface TrackProps {
   setLoadingId: (id: string | null) => void;
   onOpenPlaylistModal?: (track: any) => void;
   playlistId?: string;
+  showDuration?: boolean;
+  className?: string;
 }
 
 export function Track({
@@ -38,12 +43,14 @@ export function Track({
   setLoadingId,
   onOpenPlaylistModal,
   playlistId,
+  showDuration = true,
+  className
 }: TrackProps) {
   const { playTrack, playNextPriority, addToQueue } = useGlobalPlayback();
   const { currentTrackUrl, isPlaying } = useAudioEngine();
   const user = useUser();
 
-  const removeTrackFromPlaylist = useMutation(api.playlists.removeTrack);
+  const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
   const actualTrackId = track?.trackId || track?._id;
@@ -77,10 +84,10 @@ export function Track({
   };
 
   const handleLike = async () => {
-    if (!user?._id || !track._id) return;
+    if (!user?._id || !actualTrackId) return;
     await toggleLikeMutation({
       userId: user._id as any,
-      trackId: track._id as any,
+      trackId: actualTrackId as any, // FIXED: Now uses actualTrackId instead of track._id
       title,
       artist,
       coverUrl,
@@ -89,10 +96,9 @@ export function Track({
     });
   };
 
-
   const handleRemoveFromPlaylist = async () => {
-    if (!playlistId || !track._id) return;
-    await removeTrackFromPlaylist({ playlistId: playlistId as any, trackId: track._id });
+    if (!playlistId || !actualTrackId) return;
+    await removeTrackFromPlaylist({ playlistId: playlistId as any, trackId: actualTrackId });
   };
 
   const renderMenuItems = (Item: any, Separator: any) => (
@@ -101,7 +107,7 @@ export function Track({
         <PlaySquare size={18} /> Play Next
       </Item>
 
-      <Item onClick={handleAddToQueue} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
+      <Item onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
         <ListEnd size={18} /> Add to Queue
       </Item>
 
@@ -114,7 +120,7 @@ export function Track({
         <ListPlus size={18} /> Add to Playlist...
       </Item>
 
-      {track._id && (
+      {actualTrackId && (
         <Item
           onClick={(e: any) => { e.stopPropagation(); handleLike(); }}
           className={cn(
@@ -131,11 +137,10 @@ export function Track({
         <Share2 size={18} /> Share Link
       </Item>
 
-      {playlistId && track._id && (
-        <>
-          <Separator className="my-1.5 bg-neutral-100" />
+      {playlistId && actualTrackId && (
+        <><Separator className="my-1.5 bg-neutral-100" />
           <Item
-            onClick={handleRemoveFromPlaylist}
+            onClick={(e: any) => { e.stopPropagation(); handleRemoveFromPlaylist(); }}
             className="gap-3 cursor-pointer rounded-xl font-bold text-rose-600 text-sm focus:bg-rose-50 focus:text-rose-700 py-2.5"
           >
             <Trash2 size={18} /> Remove from this Playlist
@@ -144,7 +149,6 @@ export function Track({
       )}
     </>
   );
-
 
   return (
     <ContextMenu>
@@ -175,19 +179,21 @@ export function Track({
                 </DropdownMenu>
 
               </div>
-              <p className="text-sm font-medium text-neutral-500 truncate">{artist}</p>
+              <p className="text-sm font-medium text-neutral-500 truncate">{artist}
+                <OfficialBadge isOfficial={track.isOfficial} />
+              </p>
             </div>
           </div>
         ) : (
-          <div onClick={handlePlay} className="flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all">
+          <div onClick={handlePlay} className={cn(`flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all`+ `${className ? ` ${className}` : ""}`)}>
             <div className="flex items-center gap-3.5 min-w-0 flex-1">
               {index > 0 && (
                 <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
                   {index.toString().padStart(2, "0")}
                 </span>
               )}
-              <div className="relative w-11 h-11 overflow-hidden shrink-0 border border-neutral-200 shadow-sm bg-black/50 p-0.5">
-                <img src={coverUrl} className="w-full h-full object-cover select-none" alt={title} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
+              <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
+                <img src={coverUrl} className="w-full h-full object-cover select-none rounded-sm" alt={title} onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256"; }} />
                 <div className={cn("absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl", isCurrent ? "bg-black/30 opacity-100" : "bg-neutral-950/20 opacity-0 group-hover:opacity-100")}>
                   {isLoading ? <Loader2 size={14} className="text-primary animate-spin" /> : isCurrent ? <Pause size={14} className="text-primary fill-white" /> : <Play size={14} className="text-primary fill-white ml-0.5" />}
                 </div>
@@ -198,10 +204,13 @@ export function Track({
               </div>
             </div>
 
+
             <div className="flex items-center gap-2">
-              <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-primary transition-colors">
-                {durationStr}
-              </div>
+              {showDuration && (
+                <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-primary transition-colors">
+                  {durationStr}
+                </div>
+              )}
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
