@@ -1,19 +1,26 @@
 import { cronJobs } from "convex/server";
-import { internal } from "./_generated/api"
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 
-const crons = cronJobs()
+const crons = cronJobs();
 
-// crons.interval("clear-expired-rooms", 
-//     { minutes: 1 }, 
-//     internal.rooms.clearExpiredRooms 
-// ) removing for now becaues it's buggy! 
-
+// crons.interval(
+//   "clear-expired-rooms",
+//   { minutes: 1 },
+//   internal.rooms.clearExpiredRooms
+// );
 
 crons.interval(
-  "sync-youtube-playlists",
-  { hours: 12 },
-  api.playlists.syncAllPlaylists
+  "sync-daily-charts",
+  { hours: 24 },
+  internal.syncPlaylists.syncPlaylistsByFrequency,
+  { frequency: "daily" }
+);
+
+crons.interval(
+  "sync-weekly-genres",
+  { hours: 168 },
+  internal.syncPlaylists.syncPlaylistsByFrequency,
+  { frequency: "weekly" }
 );
 
 export default crons;

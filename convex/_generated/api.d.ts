@@ -16,6 +16,7 @@ import type * as likes from "../likes.js";
 import type * as playlists from "../playlists.js";
 import type * as rooms from "../rooms.js";
 import type * as search from "../search.js";
+import type * as syncPlaylists from "../syncPlaylists.js";
 import type * as tracks from "../tracks.js";
 import type * as users from "../users.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   playlists: typeof playlists;
   rooms: typeof rooms;
   search: typeof search;
+  syncPlaylists: typeof syncPlaylists;
   tracks: typeof tracks;
   users: typeof users;
 }>;

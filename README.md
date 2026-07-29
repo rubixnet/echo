@@ -33,6 +33,8 @@
 
 - extra padding for pages below on mobile as the blur is more! 
 
+- browser or yt dlp script to get the playlist songs and info from browser itself! 
+
 - option to delete playlist
 
 - ask for favorite geners during onboarding and then show them on the dashboard top and 
@@ -44,3 +46,9 @@ below other ones as explore!
  host lyrics and try hosting app if possible, run bun lint and fix all the errors. update sidebar and library page to show playlist cover. 
 
 - fix layout sidebar. 
+
+- playlist image generator with name on top, or gradient if possible ( a particular engine for this) 
+
+- search option in playlist to search in songs! 
+
+- sharing what your friends are listening to, which songs or playlists! 
