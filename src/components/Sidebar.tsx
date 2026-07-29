@@ -35,17 +35,27 @@ export default function Sidebar() {
         return (
             <Button
                 onClick={() => toggleSidebar(true)}
-                className="fixed top-2 hidden md:flex left-4 z-[900] w-1 h-9  rounded-2xl bg-background/80 backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors"
+                className="fixed top-2 hidden md:flex left-4 z-[900] w-1 h-9 rounded-2xl bg-background/80 backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors"
             >
                 <ListMusic size={16} />
             </Button>
         );
     }
 
-    const NavItem = ({ href, icon: Icon, label }: { href: string, icon: any, label: string }) => {
+    const NavItem = ({ 
+        href, 
+        icon: Icon, 
+        visual, 
+        label 
+    }: { 
+        href: string, 
+        icon?: any, 
+        visual?: React.ReactNode, 
+        label: string 
+    }) => {
         return (
             <Link href={href} className={cn("flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium", "text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}>
-                <Icon size={18} strokeWidth={2} />
+                {visual ? visual : (Icon && <Icon size={18} strokeWidth={2} />)}
                 <span className="truncate">{label}</span>
             </Link>
         );
@@ -74,31 +84,43 @@ export default function Sidebar() {
                             <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Library</span>
                             <button className="text-[10px] font-bold text-foreground/50 hover:text-foreground transition-colors">Edit</button>
                         </div>
-                        <NavItem href="/dashboard/history" icon={Clock} label="Recently Played" />
-                        <NavItem href="/dashboard/added" icon={ListPlus} label="Recently Added" />
-                        <NavItem href="/dashboard/pins" icon={Pin} label="Pins" />
+                        
+                        <NavItem 
+                            href="/dashboard/library/history" 
+                            label="Recently Played" 
+                            visual={
+                                <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-sm">
+                                    <Clock size={12} className="text-white" />
+                                </div>
+                            }
+                        />
+                        <NavItem href="/dashboard/library/added" icon={ListPlus} label="Recently Added" />
+                        
+                        <NavItem href="/library#pins" icon={Pin} label="Pins" />
                     </div>
 
                     <div className="flex-1 flex flex-col gap-0.5 min-h-0">
                         <div className="shrink-0 flex items-center justify-between px-3 mb-1">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Playlists</span>
-                            <button className="text-[10px] font-bold text-foreground/50 hover:text-foreground transition-colors">Edit</button>
                         </div>
 
                         <div className="shrink-0">
-                            <NavItem href="/dashboard/playlists" icon={ListMusic} label="All Playlists" />
-                            <NavItem href="/dashboard/liked" icon={Heart} label="Favorite Songs" />
+                            <NavItem href="/dashboard/library" icon={ListMusic} label="All Playlists" />
+                            
+                            <NavItem 
+                                href="/dashboard/library/liked" 
+                                label="Favorite Songs" 
+                                visual={
+                                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+                                        <Heart size={12} className="fill-white text-white" />
+                                    </div>
+                                }
+                            />
                         </div>
-
-                        <div className="mt-2 flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1">
+                    
+                        <div className="mt-2 flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
                             {playlists?.map(p => (
-                                <Link
-                                    key={p._id}
-                                    href={`/dashboard/playlist/${p._id}`}
-                                    className={cn("px-3 py-1.5 rounded-md text-xs font-medium truncate transition-colors", "text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}
-                                >
-                                    {p.name}
-                                </Link>
+                                <SidebarPlaylistItem key={p._id} playlist={p} />
                             ))}
                         </div>
                     </div>
@@ -106,5 +128,35 @@ export default function Sidebar() {
                 </div>
             </LiquidDrop>
         </div>
+    );
+}
+
+function SidebarPlaylistItem({ playlist }: { playlist: any }) {
+    const tracks = useQuery(api.playlists.getPlaylistTracks, {
+        playlistId: playlist._id,
+    });
+    
+    const coverUrl =
+        playlist.coverUrl ||
+        (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
+
+    return (
+        <Link
+            href={`/dashboard/library/playlist/${playlist._id}`}
+            className={cn("flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}
+        >
+            <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
+                {coverUrl ? (
+                    <img
+                        src={coverUrl}
+                        className="w-full h-full object-cover"
+                        alt={playlist.name}
+                    />
+                ) : (
+                    <ListMusic size={12} className="text-foreground/30" />
+                )}
+            </div>
+            <span className="truncate">{playlist.name}</span>
+        </Link>
     );
 }

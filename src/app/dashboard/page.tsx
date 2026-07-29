@@ -1,22 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { TrendingUp, Music, Play } from "lucide-react";
-import { Playlists, Category } from "@/lib/yt-charts";
+import { TrendingUp, Music, Play, Loader2 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+
+export interface Category {
+  _id: string;
+  categoryId: string;
+  name: string;
+  playlistId: string;
+  type: "chart" | "genre" | string;
+  coverUrl?: string;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
 
-  const charts = Playlists.filter((item) => item.type === "chart");
-  const genres = Playlists.filter((item) => item.type === "genre");
+  const categories = useQuery(api.syncPlaylists.getCategories);
 
   const handleNavigate = (id: string) => {
     router.push(`/dashboard/${id}`);
   };
 
+  if (categories === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-foreground/50" />
+      </div>
+    );
+  }
+
+  const charts = categories.filter((item) => item.type === "chart");
+  const genres = categories.filter((item) => item.type === "genre");
+
   return (
     <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto pb-32">
-      
+
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-foreground/80">
           <TrendingUp size={18} />
@@ -25,7 +45,11 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {charts.map((item) => (
-            <PlaylistCard key={item.id} category={item} onClick={() => handleNavigate(item.id)} />
+            <PlaylistCard
+              key={item._id}
+              category={item}
+              onClick={() => handleNavigate(item.categoryId)}
+            />
           ))}
         </div>
       </section>
@@ -38,16 +62,25 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           {genres.map((item) => (
-            <PlaylistCard key={item.id} category={item} onClick={() => handleNavigate(item.id)} />
+            <PlaylistCard
+              key={item._id}
+              category={item}
+              onClick={() => handleNavigate(item.categoryId)}
+            />
           ))}
         </div>
       </section>
-
     </div>
   );
 }
 
-function PlaylistCard({ category, onClick }: { category: Category; onClick: () => void }) {
+function PlaylistCard({
+  category,
+  onClick,
+}: {
+  category: Category;
+  onClick: () => void;
+}) {
   const fallbackImage =
     category.type === "chart"
       ? "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=300"
@@ -60,7 +93,7 @@ function PlaylistCard({ category, onClick }: { category: Category; onClick: () =
     >
       <div className="relative aspect-square w-full rounded-md overflow-hidden bg-foreground/5 shadow-sm mb-3">
         <img
-          src={category.coverNode || fallbackImage}
+          src={category.coverUrl || fallbackImage}
           alt={category.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
