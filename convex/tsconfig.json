@@ -7,7 +7,6 @@
     /* These settings are not required by Convex and can be modified. */
     "allowJs": true,
     "strict": true,
-    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -15,7 +14,7 @@
     /* These compiler options are required by Convex */
     "target": "ESNext",
     "lib": ["ES2023", "dom"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "types": ["node"], 
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",

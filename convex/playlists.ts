@@ -1,5 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server"
+import { action, internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { Id } from "./_generated/dataModel";
 
 export const createPlaylist = mutation({
     args: {
@@ -79,13 +81,12 @@ export const getPlaylistTracks = query({
         const relations = await ctx.db
             .query("playlistTracks")
             .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
-            .order("desc") 
+            .order("desc")
             .collect()
-
 
         const tracks = await Promise.all(
             relations.map(async (relation) => {
-                const track = await ctx.db.get(relation.trackId);
+                const track = await ctx.db.get(relation.trackId as Id<"tracks">);
                 return track;
             })
         )
@@ -113,7 +114,6 @@ export const deletePlaylist = mutation({
         for (const track of tracks) {
             await ctx.db.delete(track._id)
         }
-
-        ctx.db.delete(args.playlistId)
+        await ctx.db.delete(args.playlistId)
     }
 })
