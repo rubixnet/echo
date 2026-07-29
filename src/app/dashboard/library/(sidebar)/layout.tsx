@@ -43,9 +43,15 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       <aside className="hidden lg:block w-72 md:w-80 shrink-0 relative">
         <div className="absolute right-0 top-0 bottom-0 w-px bg-foreground/10 pointer-events-none" />
 
-        <div className="sticky top-[40px] h-[calc(100vh-40px)] overflow-y-auto">
+        {/* 
+          1. h-[calc(100vh-40px)] explicitly locks the height to the viewport so it doesn't stretch down.
+          2. overflow-y-auto turns it into its own independent scrollable container.
+          3. liquid-scroll is added so it maps to any specific CSS class rules you create.
+        */}
+        <div className="sticky top-[40px] h-[calc(100vh-40px)] overflow-y-auto liquid-scroll">
           
-          <div className="flex flex-col w-full px-3 pt-0">
+          <div className="flex flex-col w-full px-3 pb-52 pt-0">
+            
             {historySongs.length > 0 && (
               <>
                 <Link
