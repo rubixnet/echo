@@ -12,8 +12,14 @@
 - responsive on mobile
 - updating recommendations so that the current song doesn't show up in related data, nor the past songs! 
 
+- able to play songs from tab buttonso and scroll down with arrow keys for search results
+
 - option to loop song, one at a time, shuffle, repeat, random play order. 
 - option to connect and check what song are my friends listening to. 
+
+- update dropdownmenu ui! 
+
+- create og image for that particular song with particular link for that use. 
 
 - play a song automatically / or load the past one the user was playing. 
 

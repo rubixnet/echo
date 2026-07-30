@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -9,12 +10,14 @@ import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropodown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function LibraryHubPage() {
   const user = useUser();
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const playlists = useQuery(
     api.playlists.getUserPlaylists,
@@ -62,10 +65,9 @@ export default function LibraryHubPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
           <div
-            // onClick={()}
+            onClick={() => setShowCreateModal(true)}
             className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
           >
-
             <div className="aspect-square w-full rounded-md border-2 border-dashed border-foreground/20 bg-foreground/5 hover:bg-foreground/10 hover:border-foreground/40 flex flex-col items-center justify-center gap-2 shadow-sm mb-3 transition-all">
               <div className="p-3 rounded-full bg-foreground/10 text-foreground">
                 <Plus size={28} />
@@ -88,7 +90,6 @@ export default function LibraryHubPage() {
               </p>
             </div>
           )}
-
 
           {likedSongs.length > 0 && (
             <div
@@ -145,9 +146,11 @@ export default function LibraryHubPage() {
   );
 }
 
-
 function LibraryPlaylistItem({ playlist }: { playlist: any }) {
   const router = useRouter();
+  const user = useUser();
+  const isMobile = useIsMobile();
+
   const [isPending, setIsPending] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -177,9 +180,13 @@ function LibraryPlaylistItem({ playlist }: { playlist: any }) {
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!user?._id) return;
     try {
       setIsPending(true);
-      await deletePlaylist({ playlistId: playlist._id });
+      await deletePlaylist({
+        playlistId: playlist._id,
+        userId: user._id
+      });
     } catch (error) {
       console.error("Failed to delete playlist:", error);
     } finally {
@@ -231,17 +238,24 @@ function LibraryPlaylistItem({ playlist }: { playlist: any }) {
               </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuContent
+              align="end"
+              className={cn("z-[9999]", isMobile ? "w-56 p-4 px-4 rounded-2xl" : "w-44 p-1")}
+            >
               <DropdownMenuItem
                 onClick={handlePinToggle}
                 disabled={isPending}
-                className="cursor-pointer gap-2 focus:bg-foreground/10"
+                className={cn(
+                  "cursor-pointer focus:bg-foreground/10",
+                  isMobile ? "gap-3 rounded-lg text-[15px] py-2.5 px-3" : "gap-2 rounded-md text-[13px] py-1.5 px-2"
+                )}
               >
-                <Pin size={14} className={playlist.isPinned ? "fill-current" : ""} />
+                <Pin size={isMobile ? 18 : 14} className={playlist.isPinned ? "fill-current" : ""} />
                 <span>{playlist.isPinned ? "Unpin Playlist" : "Pin Playlist"}</span>
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className={isMobile ? "my-1.5" : "my-1"} />
+
 
               <DropdownMenuItem
                 onClick={(e) => {
@@ -249,14 +263,18 @@ function LibraryPlaylistItem({ playlist }: { playlist: any }) {
                   setShowDeleteDialog(true);
                 }}
                 disabled={isPending}
-                className="cursor-pointer gap-2 text-primary bg-destructive/20"
+                className={cn(
+                  "cursor-pointer text-primary bg-destructive/20 px-2 focus:bg-destructive/30",
+                  isMobile ? "gap-3 rounded-lg text-[15px] py-2.5 px-3" : "gap-2 rounded-md text-[13px] py-1.5 px-2"
+                )}
               >
-                <Trash2 size={14} />
+                <Trash2 size={isMobile ? 18 : 14} />
                 <span>Delete Playlist</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
       </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

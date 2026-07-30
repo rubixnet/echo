@@ -9,37 +9,6 @@ import { cn } from "@/lib/utils";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import Link from "next/link";
-
-export function SidebarPlaylistItem({ playlist }: { playlist: any }) 
-    const tracks = useQuery(api.playlists.getPlaylistTracks, {
-        playlistId: playlist._id,
-    });
-
-    const coverUrl =
-        playlist.coverUrl ||
-        (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
-
-    return (
-        <Link
-            href={`/dashboard/library/playlist/${playlist._id}`}
-            className={cn("flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}
-        >
-            <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
-                {coverUrl ? (
-                    <img
-                        src={coverUrl}
-                        className="w-full h-full object-cover"
-                        alt={playlist.name}
-                    />
-                ) : (
-                    <ListMusic size={12} className="text-foreground/30" />
-                )}
-            </div>
-            <span className="truncate">{playlist.name}</span>
-        </Link>
-    );
-
 
 function ModalPlaylistItem({ 
   playlist, 
