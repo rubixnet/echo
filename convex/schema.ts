@@ -86,6 +86,7 @@ export default defineSchema({
     name: v.string(),
     userId: v.id('users'),
     createdAt: v.number(),
+    isPinned: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   playlistTracks: defineTable({

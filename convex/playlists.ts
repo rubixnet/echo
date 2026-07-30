@@ -12,7 +12,8 @@ export const createPlaylist = mutation({
         return await ctx.db.insert("playlists", {
             name: args.name,
             userId: args.userId,
-            createdAt: Date.now()
+            createdAt: Date.now(), 
+            isPinned: false
         })
     }
 })
@@ -115,5 +116,21 @@ export const deletePlaylist = mutation({
             await ctx.db.delete(track._id)
         }
         await ctx.db.delete(args.playlistId)
+    }
+})
+
+export const togglePinned = mutation({
+    args: {
+        playlistId: v.id('playlists')
+
+    },
+    handler: async (ctx, args) => {
+        const playlist = await ctx.db.get(args.playlistId)
+
+        if (!playlist) throw new Error("Playlist not found")
+
+        await ctx.db.patch(args.playlistId, {
+            isPinned: !playlist.isPinned
+        })
     }
 })
