@@ -4,11 +4,96 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { X, Plus, Music, Loader2, CheckCircle2, AlertCircle, ListPlus } from "lucide-react";
+import { X, Plus, Music, Loader2, CheckCircle2, AlertCircle, ListPlus, ListMusic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import Link from "next/link";
+
+export function SidebarPlaylistItem({ playlist }: { playlist: any }) 
+    const tracks = useQuery(api.playlists.getPlaylistTracks, {
+        playlistId: playlist._id,
+    });
+
+    const coverUrl =
+        playlist.coverUrl ||
+        (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
+
+    return (
+        <Link
+            href={`/dashboard/library/playlist/${playlist._id}`}
+            className={cn("flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}
+        >
+            <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
+                {coverUrl ? (
+                    <img
+                        src={coverUrl}
+                        className="w-full h-full object-cover"
+                        alt={playlist.name}
+                    />
+                ) : (
+                    <ListMusic size={12} className="text-foreground/30" />
+                )}
+            </div>
+            <span className="truncate">{playlist.name}</span>
+        </Link>
+    );
+
+
+function ModalPlaylistItem({ 
+  playlist, 
+  trackId, 
+  isAdded, 
+  onAdd 
+}: { 
+  playlist: any; 
+  trackId: string | null; 
+  isAdded: boolean; 
+  onAdd: (id: string) => void;
+}) {
+  const tracks = useQuery(api.playlists.getPlaylistTracks, {
+      playlistId: playlist._id,
+  });
+
+  const coverUrl =
+      playlist.coverUrl ||
+      (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
+
+  return (
+    <button
+      onClick={() => onAdd(playlist._id)}
+      disabled={isAdded || !trackId}
+      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-foreground/5 transition-colors group disabled:opacity-100 disabled:hover:bg-transparent"
+    >
+      <div className="flex items-center gap-3">
+        <div className={cn(
+          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors overflow-hidden border border-foreground/10",
+          isAdded ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-foreground/5 text-foreground/40 group-hover:bg-foreground/10 group-hover:text-foreground/60"
+        )}>
+          {coverUrl ? (
+              <img
+                  src={coverUrl}
+                  className="w-full h-full object-cover"
+                  alt={playlist.name}
+              />
+          ) : (
+              <Music size={14} strokeWidth={2} />
+          )}
+        </div>
+        <span className={cn("font-medium text-sm text-left truncate tracking-tight transition-colors", isAdded ? "text-emerald-500" : "text-foreground group-hover:text-foreground")}>
+          {playlist.name}
+        </span>
+      </div>
+
+      {isAdded ? (
+        <CheckCircle2 size={16} className="text-emerald-500 animate-in zoom-in duration-300" />
+      ) : (
+        <Plus size={16} className="text-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+      )}
+    </button>
+  );
+}
 
 interface AddToPlaylistModalProps {
   isOpen: boolean;
@@ -63,10 +148,8 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
   const handleAddToPlaylist = async (playlistId: string) => {
     if (!trackId) return;
     try {
-      const result = await addTrack({ playlistId: playlistId as any, trackId: trackId as any });
-      if (result.success || result.message === "Track already in playlist") {
-        setAddedPlaylists((prev) => new Set(prev).add(playlistId));
-      }
+      await addTrack({ playlistId: playlistId as any, trackId: trackId as any });
+      setAddedPlaylists((prev) => new Set(prev).add(playlistId));
     } catch (error) {
       console.error("Failed to add track", error);
     }
@@ -76,16 +159,16 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative  shadow-[0_8px_40px_rgb(0,0,0,0.12)] w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
+      <div className="relative shadow-[0_8px_40px_rgb(0,0,0,0.12)] w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
         <LiquidPanel radius="24px">
 
           <div className="px-6 pt-6 pb-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full  flex items-center justify-center text-foreground/70">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-foreground/70">
                   <ListPlus size={16} strokeWidth={2} />
                 </div>
-                <h3 className="font-semibold text-lg text-foreground tracking-tight">Add to Playlisttt</h3>
+                <h3 className="font-semibold text-lg text-foreground tracking-tight">Add to Playlist</h3>
               </div>
               <button
                 onClick={onClose}
@@ -117,20 +200,24 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
           </div>
 
           <div className="px-5 pb-5 space-y-5">
-
-            <form onSubmit={handleCreatePlaylist} className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="New playlist..."
-                value={newPlaylistName}
-                onChange={(e) => setNewPlaylistName(e.target.value)}
-                className="flex-1 bg-foreground/5 border border-foreground/10 rounded-xl px-3 h-9 text-sm font-medium text-foreground focus:outline-none focus:border-foreground/30 placeholder:text-foreground/40 transition-colors"
-              />
+            <form onSubmit={handleCreatePlaylist} className="flex w-full items-center gap-2">
+              <div className="flex-1 w-full">
+                <LiquidContainer radius="12px" className="w-full flex-1" style={{ width: '100%' }}>
+                  <input
+                    type="text"
+                    placeholder="New playlist..."
+                    value={newPlaylistName}
+                    onChange={(e) => setNewPlaylistName(e.target.value)}
+                    className="w-full bg-foreground/5 border border-foreground/10 rounded-xl px-3 h-9 text-sm font-medium text-foreground focus:outline-none focus:border-foreground/30 placeholder:text-foreground/40 transition-colors"
+                  />
+                </LiquidContainer>
+              </div>
+              
               <LiquidContainer radius="12px">
                 <button
                   type="submit"
                   disabled={!newPlaylistName.trim() || isCreating}
-                  className="h-9 px-4 bg-foreground roundwed-xl text-background flex items-center justify-center font-semibold text-xs disabled:opacity-50 active:scale-[0.97] transition-transform"
+                  className="h-9 px-4 text-sm font-medium text-primary focus:outline-none disabled:text-primary/80 focus:border-foreground/30 placeholder:text-foreground/40 transition-colors"
                 >
                   {isCreating ? <Loader2 size={14} className="animate-spin" /> : "Create"}
                 </button>
@@ -150,42 +237,19 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
                     No playlists created yet.
                   </div>
                 ) : (
-                  playlists.map((playlist) => {
-                    const isAdded = addedPlaylists.has(playlist._id);
-
-                    return (
-                      <button
-                        key={playlist._id}
-                        onClick={() => handleAddToPlaylist(playlist._id)}
-                        disabled={isAdded || !trackId}
-                        className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-foreground/5 transition-colors group disabled:opacity-100 disabled:hover:bg-transparent"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                            isAdded ? "bg-emerald-500/10 text-emerald-500" : "bg-foreground/5 text-foreground/40 group-hover:bg-foreground/10 group-hover:text-foreground/60"
-                          )}>
-                            <Music size={14} strokeWidth={2} />
-                          </div>
-                          <span className={cn("font-medium text-sm text-left truncate tracking-tight transition-colors", isAdded ? "text-emerald-500" : "text-foreground group-hover:text-foreground")}>
-                            {playlist.name}
-                          </span>
-                        </div>
-
-                        {isAdded ? (
-                          <CheckCircle2 size={16} className="text-emerald-500 animate-in zoom-in duration-300" />
-                        ) : (
-                          <Plus size={16} className="text-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
-                      </button>
-                    );
-                  })
+                  playlists.map((playlist) => (
+                    <ModalPlaylistItem 
+                      key={playlist._id}
+                      playlist={playlist}
+                      trackId={trackId}
+                      isAdded={addedPlaylists.has(playlist._id)}
+                      onAdd={handleAddToPlaylist}
+                    />
+                  ))
                 )}
               </div>
             </div>
-
           </div>
-
         </LiquidPanel>
       </div>
     </div>
