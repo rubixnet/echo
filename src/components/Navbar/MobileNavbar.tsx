@@ -29,19 +29,20 @@ export default function MobileNavbar() {
             />
         </Link>
     );
-
+    
     return (
-        <div className="pb-4.5 mx-3 max-w-md w-full,  items-center">
-            <LiquidContainer radius="50px" className="w-full h-14 shadow-xl animate-in slide-in-from-bottom-10 fade-in duration-500">
-                <div className="w-full h-full flex items-center justify-between px-2">
-                    <NavItem href="/dashboard" icon={Home} active={pathname === "/dashboard"} />
-                    <NavItem href="/dashboard/search" icon={Search} active={pathname.includes("/dashboard/search")} />
-                    <NavItem href="/dashboard/library" icon={Library} active={pathname.includes("/library")} />
-                    <NavItem href="/dashboard/rooms" icon={Radio} active={pathname.includes("/profile")} />
-                    <NavItem href="/dashboard/settings" icon={Settings} active={pathname.includes("/settings")} />
-                </div>
-            </LiquidContainer>  
-            
+        <div className="fixed bottom-0 left-0 w-full flex justify-center pb-4 px-3 z-50 pointer-events-none">
+            <div className="max-w-md w-full pointer-events-auto">
+                <LiquidContainer radius="50px" className="w-full h-14 shadow-xl animate-in slide-in-from-bottom-10 fade-in duration-500">
+                    <div className="w-full h-full flex items-center justify-between px-2">
+                        <NavItem href="/dashboard" icon={Home} active={pathname === "/dashboard"} />
+                        <NavItem href="/dashboard/search" icon={Search} active={pathname.includes("/dashboard/search")} />
+                        <NavItem href="/dashboard/library" icon={Library} active={pathname.includes("/library")} />
+                        <NavItem href="/dashboard/rooms" icon={Radio} active={pathname.includes("/profile")} />
+                        <NavItem href="/dashboard/settings" icon={Settings} active={pathname.includes("/settings")} />
+                    </div>
+                </LiquidContainer>  
+            </div>
         </div>
     );
 }

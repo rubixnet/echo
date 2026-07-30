@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import {
   ContextMenu,
@@ -15,7 +16,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropodown-menu";
-import { Play, Pause, Loader2, PlaySquare, ListEnd, ListPlus, Share2, Trash2, Heart, EllipsisVertical } from "lucide-react";
+import {
+  Play, Pause, Loader2, PlaySquare, ListEnd, ListPlus, Trash2, EllipsisVertical,
+  Star, Bookmark, Plus, Pin, Radio, Music, ShoppingBag, Share
+} from "lucide-react";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
@@ -24,6 +28,24 @@ import { api } from "../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
+
+const MOBILE_BREAKPOINT = 768;
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    };
+    mql.addEventListener("change", onChange);
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return !!isMobile;
+}
 
 interface TrackProps {
   track: any;
@@ -47,14 +69,16 @@ export function Track({
   onOpenPlaylistModal,
   playlistId,
   showDuration = true,
-  className, 
+  className,
   onOpenActionMenu,
 }: TrackProps) {
   const { playTrack, playNextPriority, addToQueue } = useGlobalPlayback();
   const { currentTrackUrl, isPlaying } = useAudioEngine();
   const user = useUser();
-
+  const isMobile = useIsMobile();
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
   const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
@@ -109,6 +133,10 @@ export function Track({
 
   const handleOpenPlaylist = (e: any) => {
     e.stopPropagation();
+    // Force close menus immediately when opening the modal
+    setIsDropdownOpen(false);
+    setIsContextMenuOpen(false);
+
     if (onOpenPlaylistModal) {
       onOpenPlaylistModal(track);
     } else {
@@ -116,58 +144,94 @@ export function Track({
     }
   };
 
+  const itemClassName = cn(
+    "cursor-pointer font-medium focus:bg-white/15 focus:text-white text-white/90 outline-none border-none",
+    isMobile ? "gap-3 rounded-lg text-[15px] py-2.5 px-3" : "gap-2.5 rounded-md text-[13px] py-1.5 px-2.5"
+  );
+
+  const iconSize = isMobile ? 18 : 16;
+  const menuContainerClass = cn(
+    "shadow-2xl border border-white/10 bg-[#1c1c1e]/95 backdrop-blur-xl p-0 z-[9999] overflow-hidden",
+    isMobile ? "w-[260px] rounded-[24px]" : "w-[220px] rounded-2xl"
+  );
+
   const renderMenuItems = (Item: any, Separator: any) => (
-    <>
-      <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
-        <PlaySquare size={18}  /> Play Next
-      </Item>
-
-      <Item onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
-        <ListEnd size={18} /> Add to Queue
-      </Item>
-
-      <Separator className="my-1.5 bg-neutral-100" />
-
-      <Item
-        onClick={handleOpenPlaylist}
-        className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5"
-      >
-        <ListPlus size={18} /> Add to Playlist...
-      </Item>
-
-      {actualTrackId && (
-        <Item
+    <div className="flex flex-col w-full text-white">
+      <div className={cn("flex items-center justify-around border-b border-white/10", isMobile ? "px-6 py-4" : "px-4 py-3")}>
+        <button
           onClick={(e: any) => { e.stopPropagation(); handleLike(); }}
-          className={cn(
-            "gap-3 cursor-pointer rounded-xl font-bold text-sm py-2.5",
-            isLiked ? "text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700" : "text-primary focus:bg-white/90 item focus:text-neutral-900"
-          )}
+          className={cn("hover:scale-110 active:scale-95 transition-all outline-none", isLiked ? "text-primary" : "text-white")}
+          title={isLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
         >
-          <Heart size={18} className={cn(isLiked && "fill-emerald-600")} />
-          {isLiked ? "Remove from Liked Songs" : "Save to Liked Songs"}
+          <Star size={isMobile ? 22 : 18} className={cn(isLiked && "fill-current")} />
+        </button>
+        <button
+          onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }}
+          className="hover:scale-110 active:scale-95 transition-all text-white outline-none"
+          title="Add to Queue"
+        >
+          <Bookmark size={isMobile ? 22 : 18} />
+        </button>
+        <button
+          onClick={handleOpenPlaylist}
+          className="hover:scale-110 active:scale-95 transition-all text-white outline-none"
+          title="Add to Playlist"
+        >
+          <Plus size={isMobile ? 24 : 20} />
+        </button>
+      </div>
+
+      <div className={cn("flex flex-col", isMobile ? "p-2 gap-0.5" : "p-1.5 gap-0.5")}>
+        <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className={itemClassName}>
+          <PlaySquare size={iconSize} className="text-white/70" /> Play Next
         </Item>
-      )}
 
-      <Item onClick={(e: any) => { e.stopPropagation(); handleShare(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
-        <Share2 size={18} /> Share Link
-      </Item>
+        <Item onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }} className={itemClassName}>
+          <ListEnd size={iconSize} className="text-white/70" /> Add to Queue
+        </Item>
 
-      {playlistId && actualTrackId && (
-        <><Separator className="my-1.5 bg-neutral-100" />
-          <Item
-            onClick={(e: any) => { e.stopPropagation(); handleRemoveFromPlaylist(); }}
-            className="gap-3 cursor-pointer rounded-xl font-bold text-rose-600 text-sm focus:bg-rose-50 focus:text-rose-700 py-2.5"
-          >
-            <Trash2 size={18} /> Remove from this Playlist
-          </Item>
-        </>
-      )}
-    </>
+        <Item onClick={handleOpenPlaylist} className={itemClassName}>
+          <ListPlus size={iconSize} className="text-white/70" /> Add to Playlist...
+        </Item>
+
+        <Separator className={cn("bg-white/10 mx-2", isMobile ? "my-1.5" : "my-1")} />
+
+        <Item className={itemClassName}>
+          <Pin size={iconSize} className="text-white/70" /> Pin Song
+        </Item>
+
+        <Item className={itemClassName}>
+          <Radio size={iconSize} className="text-white/70" /> Create Station
+        </Item>
+
+        <Item className={itemClassName}>
+          <Music size={iconSize} className="text-white/70" /> View Song Info
+        </Item>
+
+        <Separator className={cn("bg-white/10 mx-2", isMobile ? "my-1.5" : "my-1")} />
+
+        <Item onClick={(e: any) => { e.stopPropagation(); handleShare(); }} className={itemClassName}>
+          <Share size={iconSize} className="text-white/70" /> Share Link
+        </Item>
+
+        {playlistId && actualTrackId && (
+          <>
+            <Separator className={cn("bg-white/10 mx-2", isMobile ? "my-1.5" : "my-1")} />
+            <Item
+              onClick={(e: any) => { e.stopPropagation(); handleRemoveFromPlaylist(); }}
+              className={cn(itemClassName, "text-rose-500 focus:bg-rose-500/15 focus:text-rose-500")}
+            >
+              <Trash2 size={iconSize} /> Remove from this Playlist
+            </Item>
+          </>
+        )}
+      </div>
+    </div>
   );
 
   return (
     <>
-      <ContextMenu>
+      <ContextMenu open={isContextMenuOpen} onOpenChange={setIsContextMenuOpen}>
         <ContextMenuTrigger asChild>
           {variant === "grid" ? (
             <div onClick={handlePlay} className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50">
@@ -183,13 +247,13 @@ export function Track({
                 <div className="flex items-center justify-between">
                   <h3 className={cn("font-bold text-base truncate tracking-tight flex-1", isCurrent ? "text-emerald-600" : "text-neutral-900")}>{title}</h3>
 
-                  <DropdownMenu>
+                  <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                     <DropdownMenuTrigger asChild>
                       <button onClick={(e) => e.stopPropagation()} className="p-1 -mr-1 text-neutral-400 hover:text-neutral-900 transition-colors">
                         <EllipsisVertical size={16} />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-neutral-100 p-1.5 z-[9999]">
+                    <DropdownMenuContent align="end" className={menuContainerClass}>
                       {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -201,7 +265,7 @@ export function Track({
               </div>
             </div>
           ) : (
-            <div onClick={handlePlay} className={cn(`flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all`+ `${className ? ` ${className}` : ""}`)}>
+            <div onClick={handlePlay} className={cn(`flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all` + `${className ? ` ${className}` : ""}`)}>
               <div className="flex items-center gap-3.5 min-w-0 flex-1">
                 {index > 0 && (
                   <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
@@ -227,13 +291,13 @@ export function Track({
                   </div>
                 )}
 
-                <DropdownMenu>
+                <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                   <DropdownMenuTrigger asChild>
                     <button onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-900 transition-colors p-1">
                       <EllipsisVertical size={14} />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64 rounded-2xl shadow-xl border-neutral-100 p-1.5 z-[9999]">
+                  <DropdownMenuContent align="end" className={menuContainerClass}>
                     {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -242,7 +306,7 @@ export function Track({
           )}
         </ContextMenuTrigger>
 
-        <ContextMenuContent className="w-64 rounded-lg shadow-xl border-neutral-100 p-1.5 z-[9999]">
+        <ContextMenuContent className={menuContainerClass}>
           {renderMenuItems(ContextMenuItem, ContextMenuSeparator)}
         </ContextMenuContent>
       </ContextMenu>
