@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Home, Search, Radio, Clock, ListPlus, Pin, ListMusic, Heart, X } from "lucide-react";
+import { Home, Search, Radio, ListPlus, Pin, ListMusic, Heart, X, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
 import { useQuery } from "convex/react";
@@ -42,16 +42,16 @@ export default function Sidebar() {
         );
     }
 
-    const NavItem = ({ 
-        href, 
-        icon: Icon, 
-        visual, 
-        label 
-    }: { 
-        href: string, 
-        icon?: any, 
-        visual?: React.ReactNode, 
-        label: string 
+    const NavItem = ({
+        href,
+        icon: Icon,
+        visual,
+        label
+    }: {
+        href: string,
+        icon?: any,
+        visual?: React.ReactNode,
+        label: string
     }) => {
         return (
             <Link href={href} className={cn("flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium", "text-foreground/70 hover:bg-foreground/5 hover:text-foreground")}>
@@ -84,18 +84,18 @@ export default function Sidebar() {
                             <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Library</span>
                             <button className="text-[10px] font-bold text-foreground/50 hover:text-foreground transition-colors">Edit</button>
                         </div>
-                        
-                        <NavItem 
-                            href="/dashboard/library/history" 
-                            label="Recently Played" 
+
+                        <NavItem
+                            href="/dashboard/library/history"
+                            label="Recently Played"
                             visual={
-                                <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-sm">
-                                    <Clock size={12} className="text-white" />
+                                <div className="w-5 h-5 shrink-0 rounded-[4px] bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm">
+                                    <History size={12} className="text-white" />
                                 </div>
                             }
                         />
                         <NavItem href="/dashboard/library/added" icon={ListPlus} label="Recently Added" />
-                        
+
                         <NavItem href="/library#pins" icon={Pin} label="Pins" />
                     </div>
 
@@ -106,18 +106,18 @@ export default function Sidebar() {
 
                         <div className="shrink-0">
                             <NavItem href="/dashboard/library" icon={ListMusic} label="All Playlists" />
-                            
-                            <NavItem 
-                                href="/dashboard/library/liked" 
-                                label="Favorite Songs" 
+
+                            <NavItem
+                                href="/dashboard/library/liked"
+                                label="Favorite Songs"
                                 visual={
-                                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
+                                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
                                         <Heart size={12} className="fill-white text-white" />
                                     </div>
                                 }
                             />
                         </div>
-                    
+
                         <div className="mt-2 flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
                             {playlists?.map(p => (
                                 <SidebarPlaylistItem key={p._id} playlist={p} />
@@ -135,7 +135,7 @@ function SidebarPlaylistItem({ playlist }: { playlist: any }) {
     const tracks = useQuery(api.playlists.getPlaylistTracks, {
         playlistId: playlist._id,
     });
-    
+
     const coverUrl =
         playlist.coverUrl ||
         (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
