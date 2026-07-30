@@ -1,41 +1,32 @@
-- hover effect to shrink the cover url bit when the user scrolls and show the name beside it! 
 - work on my library, adding songs to the library, liked music, add to playlist option. 
-- show playlists in library, option to create new playlist in library, 
-
-- make sidebar sticky
 
 - live rooms will be removed if host closes the room, leaves the site, if offline, and if host starts another room. 
-- fix need for the bug here, bug not good closes the room automatically in between if we stop sonog
+- fix need for the bug here, bug not good closes the room automatically in between if we stop song
 
-- updated music player with menu, like button, save to library etc.! 
+
+- disabling controls for the person who joined the room!! only lyrics, volume and options. 
+
+- only showing them when the user leaves the room! 
+
 - use users avatar
-
-- responsive on mobile, recommendation algorithm,
+- responsive on mobile
+- updating recommendations so that the current song doesn't show up in related data, nor the past songs! 
 
 - option to loop song, one at a time, shuffle, repeat, random play order. 
 - option to connect and check what song are my friends listening to. 
 
-- fixing player ons mall screen, introducing being screen play of song to show title, artist, cover, duration and play and other options for mobile or desktop. adding lycrics options, songs options and more stuff. 
-
-- play a song automatically 
+- play a song automatically / or load the past one the user was playing. 
 
 - now liking song works, metadata is only passed from the search page, no other page shares it like the library and liked and homepage. 
 
 - we have same home page recommendations for everyone.
 - later share playlists option with friends, import playlists and more
 
-- revamping sidebar, adding playlist and forming queues with songs on search page and from library as well. 
-- also adding songs to playlist and likes from the search page. 
-
-- make info consistent, playlist name in bold, description in sub bold and count in uppercase nujmber bad!
-
-- option to control audioplayer with keyboard keys.
-
 - extra padding for pages below on mobile as the blur is more! 
 
 - browser or yt dlp script to get the playlist songs and info from browser itself! 
 
-- option to delete playlist
+- to make the descending order default for playlist layout, 
 
 - ask for favorite geners during onboarding and then show them on the dashboard top and 
 below other ones as explore! 
@@ -52,3 +43,6 @@ below other ones as explore!
 - search option in playlist to search in songs! 
 
 - sharing what your friends are listening to, which songs or playlists! 
+- update icons
+
+- fix sidebar layout in library page as a single song becomes scrollable as well, have different scroll container

@@ -118,11 +118,11 @@ export function Track({
 
   const renderMenuItems = (Item: any, Separator: any) => (
     <>
-      <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
-        <PlaySquare size={18} /> Play Next
+      <Item onClick={(e: any) => { e.stopPropagation(); handlePlayNext(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
+        <PlaySquare size={18}  /> Play Next
       </Item>
 
-      <Item onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
+      <Item onClick={(e: any) => { e.stopPropagation(); handleAddToQueue(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
         <ListEnd size={18} /> Add to Queue
       </Item>
 
@@ -130,7 +130,7 @@ export function Track({
 
       <Item
         onClick={handleOpenPlaylist}
-        className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5"
+        className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5"
       >
         <ListPlus size={18} /> Add to Playlist...
       </Item>
@@ -140,7 +140,7 @@ export function Track({
           onClick={(e: any) => { e.stopPropagation(); handleLike(); }}
           className={cn(
             "gap-3 cursor-pointer rounded-xl font-bold text-sm py-2.5",
-            isLiked ? "text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700" : "text-primary focus:bg-neutral-100 focus:text-neutral-900"
+            isLiked ? "text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700" : "text-primary focus:bg-white/90 item focus:text-neutral-900"
           )}
         >
           <Heart size={18} className={cn(isLiked && "fill-emerald-600")} />
@@ -148,7 +148,7 @@ export function Track({
         </Item>
       )}
 
-      <Item onClick={(e: any) => { e.stopPropagation(); handleShare(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-neutral-100 focus:text-neutral-900 py-2.5">
+      <Item onClick={(e: any) => { e.stopPropagation(); handleShare(); }} className="gap-3 cursor-pointer rounded-xl font-bold text-primary text-sm focus:bg-white/90 item focus:text-neutral-900 py-2.5">
         <Share2 size={18} /> Share Link
       </Item>
 

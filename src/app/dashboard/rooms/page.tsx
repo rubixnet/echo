@@ -29,7 +29,7 @@ export default function LiveRoomsPage() {
         try {
             const newRoomId = await createRoom({ name: roomNameInput, isPublic: true, userId: user._id });
             setRoomNameInput("");
-            router.push(`/dashboard/room/${newRoomId}`);
+            router.push(`/dashboard/rooms/${newRoomId}`);
         } catch (error) {
             setIsCreating(false);
         }
@@ -73,11 +73,11 @@ export default function LiveRoomsPage() {
                         onChange={(e) => setRoomNameInput(e.target.value)}
                         className="h-9 px-3 w-48 bg-foreground/5 border border-foreground/10 rounded-lg text-xs font-medium text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-foreground/30 transition-colors"
                     />
-                    <LiquidContainer radius="8px">
+                    <LiquidContainer radius="12px">
                         <button 
                             type="submit"
                             disabled={!roomNameInput.trim() || isCreating}
-                            className="h-9 px-4 text-primary text-xs font-semibold disabled:opacity-70 active:scale-95 disabled:active:scale-100 transition-transform whitespace-nowrap"
+                            className="h-9 px-4 text-primary text-xs font-semibold disabled:opacity-70 active:scale-98 disabled:scale-100 transition-transform whitespace-nowrap"
                         >
                             {isCreating ? "Starting..." : "Start Room"}
                         </button>
@@ -95,14 +95,13 @@ export default function LiveRoomsPage() {
                         const isHost = user?._id === room.hostId;
 
                         return (
-                            <Link href={`/dashboard/room/${room._id}`} key={room._id} className="block group outline-none">
+                            <Link href={`/dashboard/rooms/${room._id}`} key={room._id} className="block group outline-none">
                                 <div className="bg-foreground/[0.02] border border-foreground/10 hover:border-foreground/20 hover:bg-foreground/[0.04] rounded-2xl p-5 flex flex-col justify-between h-40 transition-all duration-300">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex flex-col min-w-0">
                                             <h3 className="text-sm font-bold text-foreground truncate">{room.name}</h3>
                                             <p className="text-[10px] text-foreground/50 truncate mt-0.5 font-medium uppercase tracking-wider">Host: {room.hostId.slice(-6)}</p>
                                         </div>
-                                        {/* Status Indicator */}
                                         <div className={cn(
                                             "w-2 h-2 rounded-full shrink-0 mt-1.5 transition-colors duration-500", 
                                             room.isPlaying ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" : "bg-foreground/20"
@@ -117,13 +116,13 @@ export default function LiveRoomsPage() {
                                             {isHost && (
                                                 <button 
                                                     onClick={(e) => handleCloseRoom(e, room._id)} 
-                                                    className="h-7 px-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-bold transition-colors"
+                                                    className="h-7 px-3 bg-destructive/5 cursor-pointer text-primary/80 border-destructive/80 border  hover:text-primary hover:bg-destructive rounded-lg text-[10px] font-bold transition-colors"
                                                 >
                                                     Close
                                                 </button>
                                             )}
                                             <LiquidContainer radius="8px">
-                                                <div className="h-7 px-4 bg-foreground/5 group-hover:bg-foreground group-hover:text-background text-foreground text-[11px] font-bold flex items-center justify-center transition-colors">
+                                                <div className="h-7 px-4 bg-foreground/5 rounded-[8px] text-foreground text-[11px] font-bold flex items-center justify-center transition-colors">
                                                     Join
                                                 </div>
                                             </LiquidContainer>
