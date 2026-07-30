@@ -67,7 +67,7 @@ export default function ListeningHistoryPage() {
   };
 
   const coverNode = (
-    <div className="w-full h-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center">
+    <div className="w-full h-full bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center">
       <History size={125} className="text-white" />
     </div>
   );
