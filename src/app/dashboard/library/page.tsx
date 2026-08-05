@@ -1,49 +1,27 @@
 "use client";
-
-import * as React from "react";
-import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { Loader2, Pin, Trash2, MoreVertical, Heart, History, Plus, ListMusic } from "lucide-react";
-import { Track } from "@/components/TrackComponent";
-import { useUser } from "@/hooks/useUser";
 import { useRouter } from "next/navigation";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropodown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { History, Star, ListMusic, Pin, MoreVertical } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
+import { useLibraryData } from "@/hooks/useLibraryData";
+import { PlaylistContextMenu } from "@/components/PlaylistActions";
+import { Track } from "@/components/TrackComponent";
 
 export default function LibraryHubPage() {
   const user = useUser();
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const playlists = useQuery(
-    api.playlists.getUserPlaylists,
-    user?._id ? { userId: user._id } : "skip"
-  );
-  const likedSongs = useQuery(
-    api.likes.getMyLikes,
-    user?._id ? { userId: user._id } : "skip"
-  );
-  const historySongs = useQuery(
-    api.history.getUserHistory,
-    user?._id ? { userId: user._id } : "skip"
-  );
-
-  if (playlists === undefined || likedSongs === undefined || historySongs === undefined) {
-    return (
-      <div className="flex justify-center py-20 bg-background">
-        <Loader2 className="animate-spin text-foreground/50" size={32} />
-      </div>
-    );
-  }
-
+  const { playlists, likedSongs, historySongs, libraryTracks, isLoading } = useLibraryData(user?._id);
   const pinnedPlaylist = playlists.filter((p) => p.isPinned);
 
+  if (isLoading) {
+    return <LibrarySkeleton />;
+  }
+
+
   return (
-    <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
+    <div className="px-6 lg:px-12 py-8 pb-12 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
       {pinnedPlaylist.length > 0 &&
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -64,18 +42,6 @@ export default function LibraryHubPage() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          <div
-            onClick={() => setShowCreateModal(true)}
-            className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-          >
-            <div className="aspect-square w-full rounded-md border-2 border-dashed border-foreground/20 bg-foreground/5 hover:bg-foreground/10 hover:border-foreground/40 flex flex-col items-center justify-center gap-2 shadow-sm mb-3 transition-all">
-              <div className="p-3 rounded-full bg-foreground/10 text-foreground">
-                <Plus size={28} />
-              </div>
-            </div>
-            <h3 className="font-bold text-sm text-foreground truncate">Create New Playlist</h3>
-          </div>
-
           {historySongs.length > 0 && (
             <div
               onClick={() => router.push(`/dashboard/library/history`)}
@@ -97,9 +63,9 @@ export default function LibraryHubPage() {
               className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
             >
               <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
-                <Heart size={56} className="fill-white text-white drop-shadow-md" />
+                <Star size={56} className="fill-white text-white drop-shadow-md" />
               </div>
-              <h3 className="font-bold text-sm text-foreground truncate">Liked Songs</h3>
+              <h3 className="font-bold text-sm text-foreground truncate">Favorite Songs</h3>
               <p className="text-xs font-medium text-foreground/50 mt-0.5">
                 {likedSongs.length === 1 ? "1 song" : `${likedSongs.length} songs`}
               </p>
@@ -118,18 +84,13 @@ export default function LibraryHubPage() {
         )}
       </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight">Recently Saved Songs</h2>
-        </div>
-
-        {likedSongs.length === 0 ? (
-          <div className="py-8 text-sm font-medium text-foreground/50">
-            No songs saved yet.
+      {libraryTracks.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold tracking-tight">Recently Saved Songs</h2>
           </div>
-        ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
-            {likedSongs.map((track, index) => (
+            {libraryTracks.map((track, index) => (
               <Track
                 key={track._id}
                 track={track}
@@ -140,165 +101,117 @@ export default function LibraryHubPage() {
               />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
 
 function LibraryPlaylistItem({ playlist }: { playlist: any }) {
   const router = useRouter();
-  const user = useUser();
-  const isMobile = useIsMobile();
 
-  const [isPending, setIsPending] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const togglePinned = useMutation(api.playlists.togglePinned);
-  const deletePlaylist = useMutation(api.playlists.deletePlaylist);
-
-  const tracks = useQuery(api.playlists.getPlaylistTracks, {
-    playlistId: playlist._id,
-  });
-
-  const trackCount = tracks?.length || 0;
-  const coverUrl =
-    playlist.coverUrl ||
-    (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
-
-  const handlePinToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      setIsPending(true);
-      await togglePinned({ playlistId: playlist._id });
-    } catch (error) {
-      console.error("Failed to toggle pin state:", error);
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user?._id) return;
-    try {
-      setIsPending(true);
-      await deletePlaylist({
-        playlistId: playlist._id,
-        userId: user._id
-      });
-    } catch (error) {
-      console.error("Failed to delete playlist:", error);
-    } finally {
-      setIsPending(false);
-      setShowDeleteDialog(false);
-    }
-  };
+  const trackCount = playlist.trackCount || 0;
+  const coverUrl = playlist.coverUrl;
 
   return (
-    <>
-      <div
-        onClick={() => router.push(`/dashboard/library/playlist/${playlist._id}`)}
-        className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-      >
-        <div className="relative aspect-square w-full rounded-md overflow-hidden bg-foreground/5 border border-foreground/10 flex items-center justify-center shadow-sm mb-3">
-          {coverUrl ? (
-            <img
-              src={coverUrl}
-              className="w-full h-full object-cover"
-              alt={playlist.name}
-            />
-          ) : (
-            <ListMusic size={48} className="text-foreground/30" />
-          )}
+    <div
+      onClick={() => router.push(`/dashboard/library/playlist/${playlist._id}`)}
+      className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
+    >
+      <div className="relative aspect-square w-full rounded-md overflow-hidden bg-foreground/5 border border-foreground/10 flex items-center justify-center shadow-sm mb-3">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            className="w-full h-full object-cover"
+            alt={playlist.name}
+          />
+        ) : (
+          <ListMusic size={48} className="text-foreground/30" />
+        )}
 
-          {playlist.isPinned && (
-            <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-md p-1.5 rounded-full shadow-md text-foreground">
-              <Pin size={12} className="fill-current" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-start justify-between gap-1">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-sm text-foreground truncate">{playlist.name}</h3>
-            <p className="text-xs font-medium text-foreground/50 mt-0.5">
-              {trackCount === 1 ? "1 song" : `${trackCount} songs`}
-            </p>
+        {playlist.isPinned && (
+          <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-md p-1.5 rounded-full shadow-md text-foreground">
+            <Pin size={12} className="fill-current" />
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                onClick={(e) => e.stopPropagation()}
-                className="p-1 -mr-1 text-foreground/50 hover:text-foreground rounded-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
-                aria-label="Playlist options"
-              >
-                <MoreVertical size={16} />
-              </button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className={cn("z-[9999]", isMobile ? "w-56 p-4 px-4 rounded-2xl" : "w-44 p-1")}
-            >
-              <DropdownMenuItem
-                onClick={handlePinToggle}
-                disabled={isPending}
-                className={cn(
-                  "cursor-pointer focus:bg-foreground/10",
-                  isMobile ? "gap-3 rounded-lg text-[15px] py-2.5 px-3" : "gap-2 rounded-md text-[13px] py-1.5 px-2"
-                )}
-              >
-                <Pin size={isMobile ? 18 : 14} className={playlist.isPinned ? "fill-current" : ""} />
-                <span>{playlist.isPinned ? "Unpin Playlist" : "Pin Playlist"}</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator className={isMobile ? "my-1.5" : "my-1"} />
-
-
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteDialog(true);
-                }}
-                disabled={isPending}
-                className={cn(
-                  "cursor-pointer text-primary bg-destructive/20 px-2 focus:bg-destructive/30",
-                  isMobile ? "gap-3 rounded-lg text-[15px] py-2.5 px-3" : "gap-2 rounded-md text-[13px] py-1.5 px-2"
-                )}
-              >
-                <Trash2 size={isMobile ? 18 : 14} />
-                <span>Delete Playlist</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
+        )}
       </div>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete playlist?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &quot;{playlist.name}&quot;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isPending ? <Loader2 size={16} className="animate-spin" /> : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+      <div className="flex items-start justify-between gap-1">
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-sm text-foreground capitalize truncate">{playlist.name}</h3>
+          <p className="text-xs font-medium text-foreground/50 mt-0.5">
+            {trackCount === 1 ? "1 song" : `${trackCount} songs`}
+          </p>
+        </div>
+
+        <PlaylistContextMenu playlist={playlist}>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className="p-1 -mr-1 text-foreground/50 hover:text-foreground rounded-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0"
+            aria-label="Playlist options"
+          >
+            <MoreVertical size={16} />
+          </button>
+        </PlaylistContextMenu>
+      </div>
+    </div>
+  );
+}
+
+function LibrarySkeleton() {
+  return (
+    <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
+      <section className="space-y-4">
+        <div className="h-7 w-20 bg-foreground/10 rounded-md animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <LibraryPlaylistItemSkeleton key={i} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="h-7 w-36 bg-foreground/10 rounded-md animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <LibraryPlaylistItemSkeleton key={i} />
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="h-7 w-52 bg-foreground/10 rounded-md animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TrackRowSkeleton key={i} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function LibraryPlaylistItemSkeleton() {
+  return (
+    <div className="space-y-3">
+      <div className="aspect-square w-full rounded-md bg-foreground/10 animate-pulse" />
+      <div className="h-4 w-3/4 bg-foreground/10 rounded-sm animate-pulse" />
+      <div className="h-3 w-1/3 bg-foreground/10 rounded-sm animate-pulse" />
+    </div>
+  );
+}
+
+function TrackRowSkeleton() {
+  return (
+    <div className="flex items-center gap-4 py-2">
+      <div className="w-10 h-10 rounded-md bg-foreground/10 animate-pulse shrink-0" />
+      <div className="flex-1 space-y-2">
+        <div className="h-4 w-1/2 bg-foreground/10 rounded-sm animate-pulse" />
+        <div className="h-3 w-1/4 bg-foreground/10 rounded-sm animate-pulse" />
+      </div>
+    </div>
   );
 }
