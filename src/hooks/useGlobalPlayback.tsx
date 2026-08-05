@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
+import { normalizeTrack } from "@/lib/trackUtils";
 
 export function useGlobalPlayback() {
     const user = useUser();
@@ -17,23 +18,31 @@ export function useGlobalPlayback() {
 
     const songsList: any[] = [];
 
-    const playTrack = async (ytTrack: any, setLoadingId?: (id: string | null) => void, queueList?: any[], newQueueIndex?: number) => {
+    const playTrack = async (
+        ytTrack: any,
+        setLoadingId?: (id: string | null) => void,
+        queueList?: any[],
+        newQueueIndex?: number
+    ) => {
+        if (!ytTrack) return;
+        const normalized = normalizeTrack(ytTrack);
+        const videoId = normalized.id
 
-        const videoId = ytTrack.youtubeId
-            || ytTrack.audioUrl?.split("id=")[1]
-            || ytTrack.url?.split("?v=")[1]
-            || ytTrack.url?.split("/v/")[1]
-            || ytTrack.url?.split("youtu.be/")[1]
-            || "YQHsXMglC9A";
+        if (!normalized.id) {
+            console.error("[playTrack] Failed to extract valid YouTube ID from track:", ytTrack);
+            return;
+        }
 
         setIsLoading(true);
-        if (setLoadingId) setLoadingId(videoId);
+        if (setLoadingId) setLoadingId(normalized.id);
+
+        loadTrack(normalized.audioUrl, normalized);
 
         if (queueList && newQueueIndex !== undefined) {
             setQueue(queueList);
             setQueueIndex(newQueueIndex);
         } else if (!queueList) {
-            setQueue([ytTrack]);
+            setQueue([normalized]);
             setQueueIndex(0);
         }
 
