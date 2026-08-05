@@ -2,15 +2,16 @@ import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
 
 export const getUserHistory = query({
-    args: { userId: v.id('users'), },
+    args: { userId: v.id('users') },
     handler: async (ctx, args) => {
-        return await ctx.db
+        const history = await ctx.db
             .query('history')
             .withIndex('by_user', (q) => q.eq('userId', args.userId))
-            .order('desc')
-            .collect()
+            .collect();
+
+        return history.sort((a, b) => b.playedAt - a.playedAt);
     }
-})
+});
 
 export const addToHistory = mutation({
     args: { userId: v.id('users'), trackId: v.id('tracks') },
