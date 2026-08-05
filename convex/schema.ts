@@ -4,6 +4,7 @@ import { v } from "convex/values";
 export default defineSchema({
   users: defineTable({
     name: v.string(),
+    displayName: v.optional(v.string()),
     email: v.string(),
     workosId: v.string(),
     onboarded: v.optional(v.boolean()),
@@ -29,6 +30,12 @@ export default defineSchema({
     coverUrl: v.string(),
     duration: v.optional(v.string()),
     audioUrl: v.optional(v.string()),
+    source: v.optional(
+      v.object({
+        type: v.string(),
+        name: v.optional(v.string()),
+      })
+    ),
     playedAt: v.number(),
   }).index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
@@ -42,6 +49,12 @@ export default defineSchema({
     coverUrl: v.string(),
     duration: v.string(),
     audioUrl: v.optional(v.string()),
+    source: v.optional(
+      v.object({
+        type: v.string(),
+        name: v.optional(v.string()),
+      })
+    ),
   }).index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
@@ -89,9 +102,39 @@ export default defineSchema({
     isPinned: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
+  libraryTracks: defineTable({
+    userId: v.id("users"),
+    trackId: v.string(),
+    title: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    source: v.optional(
+      v.object({
+        type: v.string(),
+        name: v.optional(v.string()),
+      })
+    ),
+    savedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_track", ["userId", "trackId"]),
+
   playlistTracks: defineTable({
     playlistId: v.id('playlists'),
     trackId: v.string(),
+    title: v.optional(v.string()),
+    artist: v.optional(v.string()),
+    coverUrl: v.optional(v.string()),
+    duration: v.optional(v.string()),
+    audioUrl: v.optional(v.string()),
+    source: v.optional(
+      v.object({
+        type: v.string(),
+        name: v.optional(v.string()),
+      })
+    ),
     addedAt: v.number(),
   })
     .index("by_playlist", ["playlistId"])

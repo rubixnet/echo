@@ -30,13 +30,11 @@ function cleanPlaylistId(rawId: string): string {
 }
 
 export const CATEGORY_PLAYLISTS = [
-  // 🟢 TRENDING CHARTS (Daily)
   { id: "in-trending", name: "India Top Weekly", playlistId: "PL4fGSI1pDJn4pTWyM3t61lOyZ6_4jcNOw", type: "chart", syncFrequency: "daily" },
   { id: "us", name: "US Top Weekly", playlistId: "PL4fGSI1pDJn6O1LS0XSdF3RyO0Rq_LDeI", type: "chart", syncFrequency: "daily" },
   { id: "global", name: "Global Top Weekly", playlistId: "PL4fGSI1pDJn6puJdseH2Rt9sMvt9E2M4i", type: "chart", syncFrequency: "daily" },
   { id: "uk", name: "UK Top Weekly", playlistId: "PL4fGSI1pDJn6_f5P3MnzXg9l3GDfnSlXa", type: "chart", syncFrequency: "daily" },
 
-  // 🔵 GENRES & MOOD FEEDS (Weekly)
   { id: "alternative-indie-rock", name: "Alternative Indie Rock", playlistId: "PLOhV0FrFphUfHqxfhIBju7zu_2CTqG01F", type: "genre", syncFrequency: "weekly" },
   { id: "classic-rock", name: "Classic Rock", playlistId: "PLBD5pRttJ7N0vCfh4NpEg7Vw47hfeCxuE", type: "genre", syncFrequency: "weekly" },
   { id: "punk-rock", name: "Punk Rock", playlistId: "PLyYSaNJm9DA_W3nklWZXZ3mk1XNWBwkun", type: "genre", syncFrequency: "weekly" },

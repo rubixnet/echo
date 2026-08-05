@@ -11,7 +11,7 @@ export const checkLiked = query({
         const like = await ctx.db
             .query("likedSongs")
             .withIndex("by_user_and_track", (q) =>
-                q.eq("userId", args.userId).eq("trackId", args.trackId!)
+                q.eq("userId", args.userId).eq("trackId", args.trackId)
             )
             .first();
         return !!like;
@@ -27,6 +27,12 @@ export const toggleLike = mutation({
         coverUrl: v.optional(v.string()),
         duration: v.optional(v.string()),
         audioUrl: v.optional(v.string()),
+        source: v.optional(
+            v.object({
+                type: v.string(),
+                name: v.optional(v.string()),
+            })
+        ),
     },
     handler: async (ctx, args) => {
         const existing = await ctx.db
@@ -44,11 +50,12 @@ export const toggleLike = mutation({
                 userId: args.userId,
                 trackId: args.trackId,
                 likedAt: Date.now(),
-                title: args.title || "Unknown",
-                artist: args.artist || "Unknown",
+                title: args.title || "Unknown Track",
+                artist: args.artist || "Unknown Artist",
                 coverUrl: args.coverUrl || "",
                 duration: args.duration || "0:00",
-                audioUrl: args.audioUrl || "",
+                audioUrl: args.audioUrl || `/api/youtube/stream?id=${args.trackId}`,
+                source: args.source || { type: "liked" },
             });
             return { status: "liked" };
         }
