@@ -6,7 +6,7 @@ import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Play, Pause, SkipForward, SkipBack, Radio, ListMusic, Shuffle, Repeat, Heart, Loader2 } from "lucide-react";
+import { Play, Pause, SkipForward, SkipBack, Radio, ListMusic, Shuffle, Repeat, Star, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Timeline({ className }: { className?: string }) {
@@ -82,21 +82,51 @@ export function LikeButton({ className }: { className?: string }) {
     const userId = user?._id;
 
     const likedSongs = useQuery(api.likes.getMyLikes, userId ? { userId } : "skip");
-    const isLiked = Boolean(activeMetadata?.id && likedSongs?.some((song: any) => song.trackId === activeMetadata.id));
+    const isLiked = Boolean(
+        activeMetadata?.id && likedSongs?.some((song: any) => song.trackId === activeMetadata.id)
+    );
     const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
     const handleLike = async () => {
         if (!activeMetadata?.id || !userId) return;
-        try { await toggleLikeMutation({ userId: userId as any, trackId: activeMetadata.id as any }); }
-        catch (error) { console.error(error); }
+
+        const durationStr = typeof activeMetadata.duration === "number"
+            ? `${Math.floor(activeMetadata.duration / 60)}:${(activeMetadata.duration % 60).toString().padStart(2, "0")}`
+            : activeMetadata.duration || "0:00";
+
+        try {
+            await toggleLikeMutation({
+                userId: userId as any,
+                trackId: activeMetadata.id as any,
+                title: activeMetadata.title || "Unknown Track",
+                artist: activeMetadata.artist || activeMetadata.uploaderName || "Unknown Artist",
+                coverUrl: activeMetadata.coverUrl || activeMetadata.thumbnail || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256",
+                duration: durationStr,
+                audioUrl: activeMetadata.audioUrl || "",
+            });
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     return (
-        <button onClick={handleLike} disabled={!activeMetadata} className={cn("p-2 transition-colors disabled:opacity-50", className)}>
-            <Heart size={24} strokeWidth={2} className={cn("transition-colors", isLiked ? "text-emerald-500 fill-emerald-500" : "text-foreground/70 hover:text-foreground")} />
+        <button
+            onClick={handleLike}
+            disabled={!activeMetadata?.id}
+            className={cn("p-2 transition-colors disabled:opacity-50", className)}
+        >
+            <Star
+                size={24}
+                strokeWidth={2}
+                className={cn(
+                    "transition-colors",
+                    isLiked ? "text-emerald-500 fill-emerald-500" : "text-foreground/70 hover:text-foreground"
+                )}
+            />
         </button>
     );
 }
+
 export function useNextInQueue(limit: number = 4) {
     const { queue, queueIndex, setQueue, activeMetadata } = useAudioEngine();
     const [isFetching, setIsFetching] = useState(false);

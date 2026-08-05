@@ -6,7 +6,7 @@ import { api } from "../../../../../../convex/_generated/api";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
 import { Track } from "@/components/TrackComponent";
-import {Heart} from "lucide-react";
+import {Star} from "lucide-react";
 
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 
@@ -54,14 +54,14 @@ export default function LikedSongsPage() {
 
   const coverNode = (
     <div className="w-full h-full bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center">
-      <Heart size={125} className="fill-white text-white" />
+      <Star size={125} className="fill-white text-white" />
     </div>
   );
 
   return (
     <PlaylistLayout
       coverNode={coverNode}
-      title="Liked Songs"
+      title="Favorite Songs"
       metaLine={
         <>
           <span className="text-foreground">{user?.name || "You"}</span>
@@ -74,8 +74,8 @@ export default function LikedSongsPage() {
       tracks={likedSongs as any}
       isLoading={isLoading}
       onPlayFirst={handlePlayFirst}
-      emptyIcon={<Heart className="mx-auto mb-4 text-foreground/30" size={48} />}
-      emptyText="No liked songs yet."
+      emptyIcon={<Star className="mx-auto mb-4 text-foreground/30" size={48} />}
+      emptyText="No favorite songs yet."
       renderTrack={(track, index) => (
         <Track
           key={track._id}

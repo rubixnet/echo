@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Home, Search, Radio, ListPlus, Pin, ListMusic, Heart, X, History } from "lucide-react";
+import { Home, Search, Radio, ListPlus, Pin, ListMusic, Star, X, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
 import { useQuery } from "convex/react";
@@ -29,13 +29,13 @@ export default function Sidebar() {
         localStorage.setItem("sidebar-open", String(state));
     };
 
-    if (!isMounted) return <div className="fixed hidden md:block top-2 left-2 bottom-[80px] w-56 z-[900]" />;
+    if (!isMounted) return <div className="fixed hidden md:block top-3 left-4 bottom-20 w-56 z-900" />;
 
     if (!isOpen) {
         return (
             <Button
                 onClick={() => toggleSidebar(true)}
-                className="fixed top-2 hidden md:flex left-4 z-[900] w-1 h-9 rounded-2xl bg-background/80 backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors"
+                className="fixed top-3 hidden md:flex left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors p-0"
             >
                 <ListMusic size={16} />
             </Button>
@@ -62,7 +62,7 @@ export default function Sidebar() {
     };
 
     return (
-        <div className="fixed hidden md:block top-4 left-4 bottom-[80px] w-56 z-[900] pointer-events-auto">
+        <div className="fixed hidden md:block top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto">
             <LiquidDrop radius="16px" className="w-full h-full overflow-hidden flex flex-col">
 
                 <div className="flex items-center justify-between shrink-0">
@@ -94,9 +94,9 @@ export default function Sidebar() {
                                 </div>
                             }
                         />
-                        <NavItem href="/dashboard/library/added" icon={ListPlus} label="Recently Added" />
+                        <NavItem href="/dashboard/library#added" icon={ListPlus} label="Recently Added" />
 
-                        <NavItem href="/library#pins" icon={Pin} label="Pins" />
+                        <NavItem href="/dashboard/library#pins" icon={Pin} label="Pins" />
                     </div>
 
                     <div className="flex-1 flex flex-col gap-0.5 min-h-0">
@@ -112,13 +112,13 @@ export default function Sidebar() {
                                 label="Favorite Songs"
                                 visual={
                                     <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
-                                        <Heart size={12} className="fill-white text-white" />
+                                        <Star size={12} className="fill-white text-white" />
                                     </div>
                                 }
                             />
                         </div>
 
-                        <div className="mt-2 flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
+                        <div className=" flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
                             {playlists?.map(p => (
                                 <SidebarPlaylistItem key={p._id} playlist={p} />
                             ))}
@@ -156,7 +156,7 @@ function SidebarPlaylistItem({ playlist }: { playlist: any }) {
                     <ListMusic size={12} className="text-foreground/30" />
                 )}
             </div>
-            <span className="truncate">{playlist.name}</span>
+            <span className="truncate capitalize">{playlist.name}</span>
         </Link>
     );
 }

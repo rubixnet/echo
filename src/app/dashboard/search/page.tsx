@@ -8,7 +8,6 @@ import { GlobalSearchBar } from "@/components/GlobalSearchBar";
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
-
   const [ytResults, setYtResults] = useState<any[]>([]);
   const [isSearchingYt, setIsSearchingYt] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -72,7 +71,7 @@ export default function SearchPage() {
       {!query && !isSearchingYt ? (
         <div className="flex flex-col items-center justify-center h-[50vh] text-foreground/40 animate-in fade-in zoom-in-95" />
       ) : (
-        <div className="space-y-10">
+        <div className="space-y-10 pb-10 md:pb-12">
           {(ytResults.length > 0 || isSearchingYt) && (
             <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="items-center hidden md:flex justify-between border-b border-foreground/10 pb-2 px-1">

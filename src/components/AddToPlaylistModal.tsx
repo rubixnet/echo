@@ -4,30 +4,31 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { X, Plus, Music, Loader2, CheckCircle2, AlertCircle, ListPlus, ListMusic } from "lucide-react";
+import { X, Plus, Music, Loader2, CheckCircle2, AlertCircle, ListPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { normalizeTrack } from "@/lib/trackUtils";
 
-function ModalPlaylistItem({ 
-  playlist, 
-  trackId, 
-  isAdded, 
-  onAdd 
-}: { 
-  playlist: any; 
-  trackId: string | null; 
-  isAdded: boolean; 
+function ModalPlaylistItem({
+  playlist,
+  trackId,
+  isAdded,
+  onAdd
+}: {
+  playlist: any;
+  trackId: string | null;
+  isAdded: boolean;
   onAdd: (id: string) => void;
 }) {
   const tracks = useQuery(api.playlists.getPlaylistTracks, {
-      playlistId: playlist._id,
+    playlistId: playlist._id,
   });
 
   const coverUrl =
-      playlist.coverUrl ||
-      (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
+    playlist.coverUrl ||
+    (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
 
   return (
     <button
@@ -41,16 +42,16 @@ function ModalPlaylistItem({
           isAdded ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-foreground/5 text-foreground/40 group-hover:bg-foreground/10 group-hover:text-foreground/60"
         )}>
           {coverUrl ? (
-              <img
-                  src={coverUrl}
-                  className="w-full h-full object-cover"
-                  alt={playlist.name}
-              />
+            <img
+              src={coverUrl}
+              className="w-full h-full object-cover"
+              alt={playlist.name}
+            />
           ) : (
-              <Music size={14} strokeWidth={2} />
+            <Music size={14} strokeWidth={2} />
           )}
         </div>
-        <span className={cn("font-medium text-sm text-left truncate tracking-tight transition-colors", isAdded ? "text-emerald-500" : "text-foreground group-hover:text-foreground")}>
+        <span className={cn("font-medium capitalize text-sm text-left truncate tracking-tight transition-colors", isAdded ? "text-emerald-500" : "text-foreground group-hover:text-foreground")}>
           {playlist.name}
         </span>
       </div>
@@ -67,16 +68,20 @@ function ModalPlaylistItem({
 interface AddToPlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
-  trackId: string | null;
+  trackId?: string | null;
+  track?: any;
 }
 
-export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistModalProps) {
+export function AddToPlaylistModal({ isOpen, onClose, trackId, track }: AddToPlaylistModalProps) {
   const user = useUser();
   const { activeMetadata } = useAudioEngine();
 
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [addedPlaylists, setAddedPlaylists] = useState<Set<string>>(new Set());
+
+  const normalized = normalizeTrack(track || activeMetadata, "playlist");
+  const effectiveTrackId = trackId || normalized.id;
 
   const playlists = useQuery(api.playlists.getUserPlaylists, user?._id ? { userId: user._id } : "skip");
   const createPlaylist = useMutation(api.playlists.createPlaylist);
@@ -87,9 +92,28 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
       setAddedPlaylists(new Set());
       setNewPlaylistName("");
     }
-  }, [isOpen, trackId]);
+  }, [isOpen, effectiveTrackId]);
 
   if (!isOpen) return null;
+
+  const handleAddToPlaylist = async (playlistId: string) => {
+    if (!effectiveTrackId) return;
+    try {
+      await addTrack({
+        playlistId: playlistId as any,
+        trackId: effectiveTrackId,
+        title: normalized.title,
+        artist: normalized.artist,
+        coverUrl: normalized.coverUrl,
+        duration: normalized.duration,
+        audioUrl: normalized.audioUrl,
+        source: normalized.source,
+      });
+      setAddedPlaylists((prev) => new Set(prev).add(playlistId));
+    } catch (error) {
+      console.error("Failed to add track to playlist", error);
+    }
+  };
 
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,25 +126,14 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
         userId: user._id,
       });
 
-      if (trackId) {
-        await addTrack({ playlistId, trackId: trackId as any });
-        setAddedPlaylists((prev) => new Set(prev).add(playlistId));
+      if (effectiveTrackId) {
+        await handleAddToPlaylist(playlistId);
       }
       setNewPlaylistName("");
     } catch (error) {
       console.error("Failed to create playlist", error);
     } finally {
       setIsCreating(false);
-    }
-  };
-
-  const handleAddToPlaylist = async (playlistId: string) => {
-    if (!trackId) return;
-    try {
-      await addTrack({ playlistId: playlistId as any, trackId: trackId as any });
-      setAddedPlaylists((prev) => new Set(prev).add(playlistId));
-    } catch (error) {
-      console.error("Failed to add track", error);
     }
   };
 
@@ -147,17 +160,17 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
               </button>
             </div>
 
-            {activeMetadata ? (
+            {normalized.id ? (
               <div className="flex items-center gap-3 bg-foreground/5 p-2 rounded-xl border border-foreground/5">
                 <img
-                  src={activeMetadata.coverUrl}
+                  src={normalized.coverUrl}
                   alt="Cover"
                   className="w-10 h-10 rounded-lg object-cover shadow-sm border border-foreground/5"
                   onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop"; }}
                 />
                 <div className="min-w-0 pr-2">
-                  <p className="text-sm font-semibold text-foreground truncate">{activeMetadata.title}</p>
-                  <p className="text-xs font-medium text-foreground/50 truncate">{activeMetadata.artist}</p>
+                  <p className="text-sm font-semibold text-foreground truncate">{normalized.title}</p>
+                  <p className="text-xs font-medium text-foreground/50 truncate">{normalized.artist}</p>
                 </div>
               </div>
             ) : (
@@ -181,7 +194,7 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
                   />
                 </LiquidContainer>
               </div>
-              
+
               <LiquidContainer radius="12px">
                 <button
                   type="submit"
@@ -207,10 +220,10 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId }: AddToPlaylistMo
                   </div>
                 ) : (
                   playlists.map((playlist) => (
-                    <ModalPlaylistItem 
+                    <ModalPlaylistItem
                       key={playlist._id}
                       playlist={playlist}
-                      trackId={trackId}
+                      trackId={effectiveTrackId}
                       isAdded={addedPlaylists.has(playlist._id)}
                       onAdd={handleAddToPlaylist}
                     />

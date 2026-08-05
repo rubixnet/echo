@@ -41,6 +41,7 @@ export const createProfile = mutation({
 
         return await ctx.db.insert("users", {
             workosId: args.workosId,
+            displayName: args.name || "",
             email: args.email,
             name: args.name || "", 
             onboarded: false, 
