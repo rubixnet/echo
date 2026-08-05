@@ -2,23 +2,11 @@
 import React, { createContext, useContext, useCallback, useRef, useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 import { useMutation } from "convex/react";
-import { useUser } from "@/hooks/useUser"
+import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
+import { normalizeTrack, TrackMetadata } from "@/lib/trackUtils";
 
 const Player = ReactPlayer as any;
-
-export interface TrackMetadata {
-    id?: string;
-    title: string;
-    artist: string;
-    coverUrl: string;
-    audioUrl?: string;
-    source? : {
-        type: 'playlist' | 'album' | 'artist';
-        name: string;
-        coverUrl? : string;
-    }
-}
 
 const AudioEngineContext = createContext<any>(null);
 
@@ -41,12 +29,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const [isOnLoop, setIsOnLoop] = useState(false);
 
     const isYouTube = currentTrackUrl ? (currentTrackUrl.includes("youtube.com") || currentTrackUrl.includes("youtu.be")) : false;
-    const [queue, setQueue] = useState<any[]>([])
-    const [queueIndex, setQueueIndex] = useState(-1)
-    const [isInRoom, setIsInRoom] = useState(false)
-    const isSavedToHistory = useRef(false)
-    const user = useUser()
-
+    const [queue, setQueue] = useState<any[]>([]);
+    const [queueIndex, setQueueIndex] = useState(-1);
+    const [isInRoom, setIsInRoom] = useState(false);
+    const isSavedToHistory = useRef(false);
+    const user = useUser();
 
     const formatTime = (time: number) => {
         if (!time || isNaN(time) || !isFinite(time)) return "0:00";
@@ -59,11 +46,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         if ("mediaSession" in navigator && activeMetadata) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: activeMetadata.title || "Unknown Track",
-                artist: activeMetadata.artist || "Unknown Artist",
-                album: "Broadcast Studio",
+                artist: activeMetadata.artist || activeMetadata.uploaderName || "Unknown Artist",
+                album: activeMetadata.source?.name || "Broadcast Studio",
                 artwork: [
                     {
-                        src: activeMetadata.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=512&auto=format&fit=crop",
+                        src: activeMetadata.coverUrl || activeMetadata.thumbnail || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=512&auto=format&fit=crop",
                         sizes: "512x512",
                         type: "image/jpeg"
                     }
@@ -98,33 +85,28 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             nativeAudioRef.current.pause();
         }
     }, [isPlaying, currentTrackUrl, volume, isYouTube]);
+    
+    const loadTrack = (url: string, metadata?: TrackMetadata | any) => {
+        const normalized = normalizeTrack({ ...metadata, audioUrl: url });
 
-    const loadTrack = (url: string, metadata?: TrackMetadata) => {
-        const nextMetadata: TrackMetadata = metadata
-            ? {
-                ...metadata,
-                audioUrl: metadata.audioUrl || url,
-                coverUrl: metadata.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
-            }
-            : {
-                title: "Unknown Track",
-                artist: "Unknown Artist",
-                coverUrl: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
-                audioUrl: url,
-            };
+        if (!normalized.id) {
+            console.error("[AudioEngine] Refusing playback: No valid YouTube ID found", metadata);
+            setIsLoading(false);
+            setIsPlaying(false);
+            return;
+        }
 
-        setActiveMetadata(nextMetadata);
+        setActiveMetadata(normalized);
 
-        if (currentTrackUrl === url) {
+        if (currentTrackUrl === normalized.audioUrl) {
             setIsPlaying(true);
             return;
         }
 
         isSavedToHistory.current = false;
-
         setIsLoading(true);
         setIsAudioReady(false);
-        setCurrentTrackUrl(url);
+        setCurrentTrackUrl(normalized.audioUrl);
         setIsPlaying(true);
     };
 
@@ -147,7 +129,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     const setOnTrackEnd = useCallback((callback: () => void) => {
         onTrackEndRef.current = callback;
-    }, [])
+    }, []);
 
     const seek = (e: React.MouseEvent<HTMLDivElement>) => {
         const bounds = e.currentTarget.getBoundingClientRect();
