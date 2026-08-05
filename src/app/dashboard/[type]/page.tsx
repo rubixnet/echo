@@ -19,20 +19,21 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
   const [tracks, setTracks] = useState<TrackLike[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!dbTracks) return;
 
+  useEffect(() => {
+    if (!dbTracks) return;  
 
     const mappedTracks: TrackLike[] = dbTracks.map((t, idx) => ({
       _id: t._id || t.youtubeId || `track-${idx}`,
+      id: t._id || t.youtubeId || `track-${idx}`,
       youtubeId: t.youtubeId,
       title: t.title || "Untitled Track",
       artist: t.artist || "Unknown Artist",
-      thumbnail: t.thumbnail,
+      thumbnail: t.thumbnail || t.coverUrl,
+      coverUrl: t.coverUrl || t.thumbnail, 
       duration: t.duration || "3:30",
       url: `https://www.youtube.com/watch?v=${t.youtubeId}`,
     }));
-
 
     setTracks(mappedTracks);
   }, [dbTracks, typeId]);
@@ -52,7 +53,7 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
 
   const handlePlayFirst = (sortedTracks: TrackLike[]) => {
     if (sortedTracks.length > 0) {
-      
+
     }
   };
 
@@ -62,9 +63,8 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
   return (
     <PlaylistLayout
       title={categoryName}
-      subtitle={`Official ${
-        categoryType === "chart" ? "YouTube Music Chart" : "Genre Feed"
-      } updated dynamically.`}
+      subtitle={`Official ${categoryType === "chart" ? "YouTube Music Chart" : "Genre Feed"
+        } updated dynamically.`}
       coverNode={
         <div className="w-full h-full flex items-center justify-center bg-foreground/5 text-foreground/40">
           {categoryType === "chart" ? <TrendingUp size={48} /> : <Music size={48} />}
