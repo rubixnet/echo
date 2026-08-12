@@ -1,23 +1,47 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useQuery } from "convex/react";
+import { useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
 
 export function useRoomState() {
-    const pathname = usePathname();
     const user = useUser();
-    
-    const roomMatch = pathname?.match(/\/dashboard\/room\/([^/]+)/);
-    const roomId = roomMatch ? roomMatch[1] : null;
-    
-    const room = useQuery(api.rooms.getRoom, roomId ? { roomId: roomId as any } : "skip");
-    
-    const isInRoom = !!roomId;
-    
-    const isHost = isInRoom && room !== undefined && room?.hostId === user?._id;
-    const isGuest = isInRoom && room !== undefined && room?.hostId !== user?._id;
+    const activeRoomId = user?.activeRoomId;
 
-    return { isInRoom, isHost, isGuest, room, roomId };
+    const room = useQuery(api.rooms.getRoom, activeRoomId ? { roomId: activeRoomId as any } : "skip");
+
+    const exitRoomMutation = useMutation(api.rooms.leaveRoom as any);
+
+    useEffect(() => {
+        if (activeRoomId && room === null && user?._id) {
+            console.log("Room was closed by host. Automatically leaving...");
+            exitRoomMutation({
+                userId: user._id as any,
+                roomId: activeRoomId as any
+            }).catch(console.error);
+        }
+    }, [activeRoomId, room, exitRoomMutation, user?._id]);
+
+    const isInRoom = !!activeRoomId && !!room;
+    const isHost = isInRoom && room.hostId === user?._id;
+    const isGuest = isInRoom && room.hostId !== user?._id;
+
+    const leaveRoom = async () => {
+        if (activeRoomId && user?._id) {
+            await exitRoomMutation({
+                userId: user._id as any,
+                roomId: activeRoomId as any
+            });
+        }
+    };
+
+    return {
+        isInRoom,
+        isHost,
+        isGuest,
+        room,
+        roomId: activeRoomId,
+        leaveRoom
+    };
 }
