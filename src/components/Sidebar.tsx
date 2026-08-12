@@ -118,11 +118,11 @@ export default function Sidebar() {
                             />
                         </div>
 
-                        <div className=" flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
+                        <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4 scrollbar-thin [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 hover:[&::-webkit-scrollbar-thumb]:bg-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                             {playlists?.map(p => (
                                 <SidebarPlaylistItem key={p._id} playlist={p} />
                             ))}
-                        </div>
+                        </div> 
                     </div>
 
                 </div>
