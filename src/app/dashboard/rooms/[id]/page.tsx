@@ -59,7 +59,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     }
 
   }, [room?.serverStartTime, room?.pausePosition, room?.isPlaying, room?.track?.audioUrl, currentTrackUrl, isAudioReady]);
-
+  
   if (!room) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full">
@@ -170,11 +170,11 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         </button>
 
         <div className="flex flex-col items-center text-center -mt-2 px-6">
-          <h4 className="font-extrabold text-neutral-900 text-xl md:text-2xl tracking-tight mb-1 flex items-center gap-2">
+          <h4 className="font-extrabold text-primary text-xl md:text-2xl tracking-tight mb-1 flex items-center gap-2">
             {hasTrack ? room.track.title : "Audio Engine Ready"}
             {room.isPlaying && <AudioLines size={20} className="text-emerald-500" />}
           </h4>
-          <p className="text-base text-neutral-500 font-medium">
+          <p className="text-base text-foreground/70 font-medium">
             {hasTrack ? room.track.artist : "Select or search a track to broadcast"}
           </p>
         </div>

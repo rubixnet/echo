@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import Link from "next/link";
+import { Id } from "../../../../convex/_generated/dataModel";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import {Users, Radio} from "lucide-react";
+import { Users } from "lucide-react";
 
 export default function LiveRoomsPage() {
     const router = useRouter();
@@ -16,18 +16,23 @@ export default function LiveRoomsPage() {
     
     const [roomNameInput, setRoomNameInput] = useState("");
     const [isCreating, setIsCreating] = useState(false);
+    const [joiningId, setJoiningId] = useState<string | null>(null);
 
     const liveRooms = useQuery(api.rooms?.getPublicRooms || api.rooms?.getRooms); 
     const createRoom = useMutation(api.rooms?.createRoom as any);
     const deleteRoom = useMutation(api.rooms?.deleteRoom as any);
+    const joinRoom = useMutation(api.rooms?.joinRoom as any);
 
     const handleCreateRoom = async (e?: React.FormEvent) => {
-
         e?.preventDefault();
         if (!roomNameInput.trim() || !user?._id) return;
         setIsCreating(true);
         try {
-            const newRoomId = await createRoom({ name: roomNameInput, isPublic: true, userId: user._id });
+            const newRoomId = await createRoom({ 
+                name: roomNameInput, 
+                isPublic: true, 
+                userId: user._id as Id<"users"> 
+            });
             setRoomNameInput("");
             router.push(`/dashboard/rooms/${newRoomId}`);
         } catch (error) {
@@ -35,12 +40,33 @@ export default function LiveRoomsPage() {
         }
     }; 
 
+    const handleJoinRoom = async (e: React.MouseEvent, roomId: string) => {
+        e.preventDefault();
+        if (!user?._id) return;
+        
+        setJoiningId(roomId);
+        try {
+            await joinRoom({ 
+                roomId: roomId as Id<"rooms">, 
+                userId: user._id as Id<"users"> 
+            });
+            router.push(`/dashboard/rooms/${roomId}`);
+        } catch (error) {
+            console.error("Failed to join room:", error);
+        } finally {
+            setJoiningId(null);
+        }
+    };
 
     const handleCloseRoom = async (e: React.MouseEvent, roomId: string) => {
         e.preventDefault(); 
+        e.stopPropagation();
         if (!user?._id) return;
         try { 
-            await deleteRoom({ roomId: roomId as any, userId: user._id }); 
+            await deleteRoom({ 
+                roomId: roomId as Id<"rooms">, 
+                userId: user._id as Id<"users"> 
+            }); 
         } catch (err) {
             console.error(err);
         }
@@ -93,43 +119,50 @@ export default function LiveRoomsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                     {liveRooms.map((room) => {
                         const isHost = user?._id === room.hostId;
+                        const isUserInThisRoom = user?.activeRoomId === room._id;
 
                         return (
-                            <Link href={`/dashboard/rooms/${room._id}`} key={room._id} className="block group outline-none">
-                                <div className="bg-foreground/[0.02] border border-foreground/10 hover:border-foreground/20 hover:bg-foreground/[0.04] rounded-2xl p-5 flex flex-col justify-between h-40 transition-all duration-300">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex flex-col min-w-0">
-                                            <h3 className="text-sm font-bold text-foreground truncate">{room.name}</h3>
-                                            <p className="text-[10px] text-foreground/50 truncate mt-0.5 font-medium uppercase tracking-wider">Host: {room.hostId.slice(-6)}</p>
-                                        </div>
-                                        <div className={cn(
-                                            "w-2 h-2 rounded-full shrink-0 mt-1.5 transition-colors duration-500", 
-                                            room.isPlaying ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" : "bg-foreground/20"
-                                        )} />
+                            <div 
+                                key={room._id} 
+                                onClick={(e) => handleJoinRoom(e, room._id)}
+                                className="bg-foreground/[0.02] border border-foreground/10 hover:border-foreground/20 hover:bg-foreground/[0.04] rounded-2xl p-5 flex flex-col justify-between h-40 transition-all duration-300 cursor-pointer group"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex flex-col min-w-0">
+                                        <h3 className="text-sm font-bold text-foreground truncate">{room.name}</h3>
+                                        <p className="text-[10px] text-foreground/50 truncate mt-0.5 font-medium uppercase tracking-wider">Host: {room.hostId.slice(-6)}</p>
                                     </div>
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full shrink-0 mt-1.5 transition-colors duration-500", 
+                                        room.isPlaying ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" : "bg-foreground/20"
+                                    )} />
+                                </div>
 
-                                    <div className="flex items-center justify-between gap-3 mt-auto pt-4 border-t border-foreground/5">
-                                        <span className="text-[11px] font-medium text-foreground/50 flex items-center gap-1.5">
-                                            <Users size={12} /> {room.listeners?.length || 1}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            {isHost && (
-                                                <button 
-                                                    onClick={(e) => handleCloseRoom(e, room._id)} 
-                                                    className="h-7 px-3 bg-destructive/5 cursor-pointer text-primary/80 border-destructive/80 border  hover:text-primary hover:bg-destructive rounded-lg text-[10px] font-bold transition-colors"
-                                                >
-                                                    Close
-                                                </button>
-                                            )}
-                                            <LiquidContainer radius="8px">
-                                                <div className="h-7 px-4 bg-foreground/5 rounded-[8px] text-foreground text-[11px] font-bold flex items-center justify-center transition-colors">
-                                                    Join
-                                                </div>
-                                            </LiquidContainer>
-                                        </div>
+                                <div className="flex items-center justify-between gap-3 mt-auto pt-4 border-t border-foreground/5">
+                                    <span className="text-[11px] font-medium text-foreground/50 flex items-center gap-1.5">
+                                        <Users size={12} /> {room.listeners?.length || 1}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        {isHost && (
+                                            <button 
+                                                onClick={(e) => handleCloseRoom(e, room._id)} 
+                                                className="h-7 px-3 bg-destructive/5 cursor-pointer text-primary/80 border-destructive/80 border hover:text-primary hover:bg-destructive rounded-lg text-[10px] font-bold transition-colors z-10"
+                                            >
+                                                Close
+                                            </button>
+                                        )}
+                                        <LiquidContainer radius="8px">
+                                            <button 
+                                                onClick={(e) => handleJoinRoom(e, room._id)}
+                                                disabled={joiningId === room._id}
+                                                className="h-7 px-4 bg-foreground/5 rounded-[8px] text-foreground text-[11px] font-bold flex items-center justify-center transition-colors"
+                                            >
+                                                {joiningId === room._id ? "Joining..." : isUserInThisRoom ? "Listening" : "Join"}
+                                            </button>
+                                        </LiquidContainer>
                                     </div>
                                 </div>
-                            </Link>
+                            </div>
                         );
                     })}
                 </div>
