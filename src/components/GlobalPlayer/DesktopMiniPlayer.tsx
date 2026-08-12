@@ -3,10 +3,14 @@
 import { useState } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Repeat, Loader2, Music, EllipsisVertical, ListMusic, Mic2, Shuffle, MonitorSpeaker } from "lucide-react";
+import { useRoomState } from "@/hooks/useRoomState";
 import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import { LikeButton, useDominantColor } from "./Shared";
+import { LikeButton, ProgressBar } from "./Shared";
+import {
+    Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Repeat, Loader2, Music,
+    EllipsisVertical, ListMusic, Mic2, Shuffle, MonitorSpeaker, Radio
+} from "lucide-react";
 
 interface DesktopMiniPlayerProps {
     isDrawerOpen: boolean;
@@ -17,25 +21,14 @@ interface DesktopMiniPlayerProps {
 export function DesktopMiniPlayer({ isDrawerOpen, setIsDrawerOpen, setIsPlaylistModalOpen }: DesktopMiniPlayerProps) {
     const {
         isPlaying, isLoading, togglePlay, activeMetadata,
-        currentTimeSec, durationSec, duration, currentTimeStr, seekToTime,
-        volume, setVolume, isOnLoop, setIsOnLoop, queue, queueIndex
+        currentTimeSec, volume, setVolume, isOnLoop, setIsOnLoop, queue, queueIndex
     } = useAudioEngine();
 
     const { playNext, playPrevious } = useGlobalPlayback();
-
-    const rgb = useDominantColor(activeMetadata?.coverUrl);
-    const dominantColor = rgb ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.6)` : 'transparent';
+    const { isGuest } = useRoomState();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isVolumeExpanded, setIsVolumeExpanded] = useState(false);
-
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragValue, setDragValue] = useState(0);
-
-    const progressPercent = durationSec ? ((isDragging ? dragValue : currentTimeSec) / durationSec) * 100 : 0;
-    const currentDragStr = isDragging
-        ? `${Math.floor(dragValue / 60)}:${Math.floor(dragValue % 60).toString().padStart(2, '0')}`
-        : currentTimeStr;
 
     return (
         <>
@@ -45,7 +38,7 @@ export function DesktopMiniPlayer({ isDrawerOpen, setIsDrawerOpen, setIsPlaylist
             </div>
 
             <div className={cn("fixed bottom-3 px-1 left-1/2 -translate-x-1/2 w-[98%] max-w-[1000px] z-[999] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]", isDrawerOpen ? "translate-y-[150%]" : "translate-y-0")}>
-                <LiquidContainer radius="16px" className="w-full h-[50px] shadow-xl">
+                <LiquidContainer radius="16px" className="w-full h-[50px]">
                     <div className="w-full h-full flex items-center px-4">
                         <div className="flex-[1.5] basis-0 flex items-center gap-3 min-w-0 pr-6">
                             {activeMetadata ? (
@@ -56,32 +49,13 @@ export function DesktopMiniPlayer({ isDrawerOpen, setIsDrawerOpen, setIsPlaylist
 
                                     <div className="flex flex-col flex-1 min-w-0 justify-center gap-[2px]">
                                         <div className="flex items-baseline truncate">
-                                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-foreground truncate cursor-pointer hover:underline" onClick={() => setIsDrawerOpen(true)}>
+                                            <h4 className="text-[11px] font-bold uppercase tracking-wide text-foreground truncate cursor-pointer hover:underline" onClick={() => setIsDrawerOpen(true)}>
                                                 {activeMetadata.title}
                                             </h4>
                                             <span className="text-[10px] font-medium text-foreground/50 ml-2 truncate shrink-0">• {activeMetadata.artist}</span>
                                         </div>
 
-                                        <div className="flex items-center gap-2 w-full group/timeline">
-                                            <span className="text-[9px] font-medium text-foreground/50 tabular-nums min-w-[28px]">{currentDragStr}</span>
-                                            <div className="relative flex-1 flex items-center h-1.5 cursor-pointer">
-                                                <input
-                                                    type="range" min={0} max={durationSec || 100}
-                                                    value={isDragging ? dragValue : currentTimeSec}
-                                                    onMouseDown={() => setIsDragging(true)}
-                                                    onChange={(e) => setDragValue(Number(e.target.value))}
-                                                    onMouseUp={(e) => {
-                                                        setIsDragging(false);
-                                                        seekToTime(Number(e.currentTarget.value));
-                                                    }}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0"
-                                                />
-                                                <div className="w-full h-1 bg-foreground/10 rounded-full overflow-hidden group-hover/timeline:h-1.5 transition-all">
-                                                    <div className="h-full bg-foreground rounded-full transition-all duration-75" style={{ width: `${progressPercent}%` }} />
-                                                </div>
-                                            </div>
-                                            <span className="text-[9px] font-medium text-foreground/50 tabular-nums min-w-[28px]">{duration}</span>
-                                        </div>
+                                        <ProgressBar heightClass="h-1" hoverHeightClass="group-hover/timeline:h-1.5" />
                                     </div>
                                 </>
                             ) : (
@@ -90,16 +64,30 @@ export function DesktopMiniPlayer({ isDrawerOpen, setIsDrawerOpen, setIsPlaylist
                                     <h4 className="text-xs font-medium">Ready to play</h4>
                                 </div>
                             )}
-                        </div>
+                        </div>                        
 
                         <div className="flex-[1] basis-0 flex items-center justify-center gap-4">
-                            <button disabled={!activeMetadata} className="text-foreground/40 hover:text-foreground transition-colors disabled:opacity-50"><Shuffle size={20} strokeWidth={2} /></button>
-                            <button onClick={playPrevious} disabled={!queue || queueIndex <= 0 && currentTimeSec <= 3} className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"><SkipBack size={24} strokeWidth={1} /></button>
-                            <button onClick={togglePlay} disabled={!activeMetadata} className="text-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
-                                {isLoading ? <Loader2 size={28} className="animate-spin" strokeWidth={2.5} /> : isPlaying ? <Pause size={28} fill="currentColor" strokeWidth={1} /> : <Play size={28} fill="currentColor" strokeWidth={1} />}
-                            </button>
-                            <button onClick={() => playNext(false)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"><SkipForward size={24} strokeWidth={1} /></button>
-                            <button onClick={() => setIsOnLoop(!isOnLoop)} disabled={!activeMetadata} className={cn("transition-colors shrink-0", isOnLoop ? "text-emerald-500" : "text-foreground/40 hover:text-foreground")}><Repeat size={20} strokeWidth={2} /></button>
+                            {isGuest ? (
+                                <button
+                                    onClick={() => window.dispatchEvent(new CustomEvent('openLockdownModal'))}
+                                    className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors rounded-full border border-emerald-500/20 shadow-sm cursor-pointer"
+                                >
+                                    <Radio size={14} className="animate-pulse" />
+                                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                                        Live • Leave Room
+                                    </span>
+                                </button>
+                            ) : (
+                                <>
+                                    <button disabled={!activeMetadata} className="text-foreground/40 hover:text-foreground transition-colors disabled:opacity-50"><Shuffle size={20} strokeWidth={2} /></button>
+                                    <button onClick={playPrevious} disabled={!queue || (queueIndex <= 0 && currentTimeSec <= 3)} className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"><SkipBack size={24} strokeWidth={1} /></button>
+                                    <button onClick={togglePlay} disabled={!activeMetadata} className="text-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
+                                        {isLoading ? <Loader2 size={28} className="animate-spin" strokeWidth={2.5} /> : isPlaying ? <Pause size={28} fill="currentColor" strokeWidth={1} /> : <Play size={28} fill="currentColor" strokeWidth={1} />}
+                                    </button>
+                                    <button onClick={() => playNext(false)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"><SkipForward size={24} strokeWidth={1} /></button>
+                                    <button onClick={() => setIsOnLoop(!isOnLoop)} disabled={!activeMetadata} className={cn("transition-colors shrink-0", isOnLoop ? "text-emerald-500" : "text-foreground/40 hover:text-foreground")}><Repeat size={20} strokeWidth={2} /></button>
+                                </>
+                            )}
                         </div>
 
                         <div className="flex-[1.5] basis-0 flex items-center justify-end gap-3 min-w-0 pl-8">

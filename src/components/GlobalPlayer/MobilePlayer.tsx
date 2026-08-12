@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
-import { Play, Pause, ChevronDown, Loader2, Music, ListMusic, EllipsisVertical, Mic2, ListPlus } from "lucide-react";
+import { useRoomState } from "@/hooks/useRoomState";
+import { Play, Pause, ChevronDown, Loader2, Music, ListMusic, EllipsisVertical, Mic2, ListPlus, Radio } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { Timeline, PlaybackControls, LikeButton, useNextInQueue, PlaybackStatus, useDominantColor, VibrantBackground } from "./Shared";
 import { SyncedLyrics } from "@/components/SyncedLyrics";
@@ -10,7 +11,19 @@ import { cn } from "@/lib/utils";
 import { Track } from "../TrackComponent";
 
 export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpen: (v: boolean) => void }) {
-    const { activeMetadata, isPlaying, isLoading, togglePlay, currentTimeSec, seekToTime, durationSec } = useAudioEngine();
+    const {
+        activeMetadata,
+        isPlaying,
+        isLoading,
+        togglePlay,
+        currentTimeSec,
+        seekToTime,
+        durationSec,
+        playNext,
+        playPrev
+    } = useAudioEngine() as any;
+
+    const { isGuest } = useRoomState();
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [mobileTab, setMobileTab] = useState<'cover' | 'lyrics' | 'queue'>('cover');
@@ -19,8 +32,70 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
     const [loadingId, setLoadingId] = useState<string | null>(null);
 
     const rgb = useDominantColor(activeMetadata?.coverUrl);
-    const dominantColor = rgb ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.6)` : 'transparent';
-    
+    const dominantColor = rgb ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.5)` : 'transparent';
+
+    const touchStart = useRef<{ x: number; y: number } | null>(null);
+    const touchEnd = useRef<{ x: number; y: number } | null>(null);
+
+    const MIN_SWIPE_DISTANCE = 50;
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchEnd.current = null;
+        touchStart.current = {
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY,
+        };
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        touchEnd.current = {
+            x: e.targetTouches[0].clientX,
+            y: e.targetTouches[0].clientY,
+        };
+    };
+
+    const handleTouchEndCollapsed = () => {
+        if (!touchStart.current || !touchEnd.current) return;
+
+        const distanceX = touchStart.current.x - touchEnd.current.x;
+        const distanceY = touchStart.current.y - touchEnd.current.y;
+
+        const isHorizontal = Math.abs(distanceX) > Math.abs(distanceY);
+
+        if (isHorizontal) {
+            if (distanceX > MIN_SWIPE_DISTANCE) {
+                playNext?.();
+            } else if (distanceX < -MIN_SWIPE_DISTANCE) {
+                playPrev?.();
+            }
+        } else {
+            if (distanceY > MIN_SWIPE_DISTANCE) {
+                if (activeMetadata) setIsExpanded(true);
+            }
+        }
+    };
+
+    const handleTouchEndExpanded = () => {
+        if (!touchStart.current || !touchEnd.current) return;
+
+        const distanceX = touchStart.current.x - touchEnd.current.x;
+        const distanceY = touchStart.current.y - touchEnd.current.y;
+
+        const isHorizontal = Math.abs(distanceX) > Math.abs(distanceY);
+
+        if (isHorizontal) {
+            if (distanceX > MIN_SWIPE_DISTANCE) {
+                playNext?.();
+            } else if (distanceX < -MIN_SWIPE_DISTANCE) {
+                playPrev?.();
+            }
+        } else {
+            if (distanceY < -MIN_SWIPE_DISTANCE) {
+                setIsExpanded(false);
+            }
+        }
+    };
+
     if (!isExpanded) {
         return (
             <>
@@ -30,11 +105,14 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                 </div>
 
                 <div
-                    className="fixed bottom-[80px] left-3 right-3 z-[999] cursor-pointer"
+                    className="fixed bottom-[80px] left-3 right-3 z-[999] cursor-pointer touch-pan-y"
                     onClick={() => activeMetadata && setIsExpanded(true)}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEndCollapsed}
                 >
                     <div
-                        className="absolute top-4 -bottom-15 -left-4 -right-4 -z-10 rounded-full blur-3xl pointer-events-none transition-colors duration-1000 ease-out"
+                        className="absolute top-0 -bottom-15 -left-4 -right-4 -z-10 blur-2xl rounded-full pointer-events-none transition-colors duration-1000 ease-out"
                         style={{ backgroundColor: dominantColor }}
                     />
 
@@ -57,12 +135,19 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                                         <h4 className="text-xs font-bold text-foreground truncate">{activeMetadata.title}</h4>
                                         <p className="text-[10px] font-medium text-foreground/50 truncate">{activeMetadata.artist}</p>
                                     </div>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
-                                        className="w-10 h-10 flex items-center justify-center text-foreground hover:bg-foreground/5 active:scale-90 rounded-full transition-all shrink-0"
-                                    >
-                                        {isLoading ? <Loader2 size={20} className="animate-spin" strokeWidth={2.5} /> : isPlaying ? <Pause size={20} fill="currentColor" strokeWidth={1} /> : <Play size={20} fill="currentColor" strokeWidth={1} />}
-                                    </button>
+
+                                    {isGuest ? (
+                                        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                                            <Radio size={18} className="text-emerald-500 animate-pulse" />
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+                                            className="w-10 h-10 flex items-center justify-center text-foreground hover:bg-foreground/5 active:scale-90 rounded-full transition-all shrink-0"
+                                        >
+                                            {isLoading ? <Loader2 size={20} className="animate-spin" strokeWidth={2.5} /> : isPlaying ? <Pause size={20} fill="currentColor" strokeWidth={1} /> : <Play size={20} fill="currentColor" strokeWidth={1} />}
+                                        </button>
+                                    )}
                                 </>
                             ) : (
                                 <div className="flex items-center gap-3 text-foreground/50 w-full">
@@ -80,8 +165,12 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
     }
 
     return (
-        <div className="fixed inset-0 z-[1000] bg-background flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]">
-
+        <div
+            className="fixed inset-0 z-[1000] bg-background flex flex-col overflow-hidden animate-in slide-in-from-bottom-full duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEndExpanded}
+        >
             <VibrantBackground imageUrl={activeMetadata?.coverUrl} />
 
             <div className="flex items-center justify-between p-6 relative z-10 shrink-0">
@@ -114,10 +203,10 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                     </div>
                 )}
                 {mobileTab === 'queue' && (
-                    <div className="flex-1 flex flex-col max-w-xl  w-full h-full overflow-hidden">
+                    <div className="flex-1 flex flex-col max-w-xl w-full h-full overflow-hidden">
                         <PlaybackStatus isFetching={isFetching} />
 
-                        <h3 className="text-[12px] font-medium text-foreground/50 tracking-wide mb-2 mt-5 shrink-0 px-1 ">Playing Next</h3>
+                        <h3 className="text-[12px] font-medium text-foreground/50 tracking-wide mb-2 mt-5 shrink-0 px-1">Playing Next</h3>
 
                         <div className="flex-1 liquid-scroll px-1 space-y-0.5">
                             {upNextTracks.map((track: any, idx: number) => (
@@ -148,7 +237,6 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                 )}
             </div>
 
-                
             <div className="px-6 pb-12 pt-6 relative z-10 shrink-0 flex flex-col">
 
                 <div className="flex flex-col items-center justify-center mb-6 w-full px-4 text-center">
@@ -157,7 +245,6 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                 </div>
 
                 <div className="flex items-center justify-between w-full mb-6 px-2">
-
                     <LiquidContainer radius="999px">
                         <button
                             onClick={() => setMobileTab(prev => prev === 'cover' ? 'lyrics' : 'cover')}
@@ -188,8 +275,10 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
                     </LiquidContainer>
 
                     <LiquidContainer radius="999px">
-                        <button className="w-10 h-10 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors"
-                            onClick={() => setMobileTab(prev => prev === 'cover' ? 'queue' : 'cover')}>
+                        <button
+                            className="w-10 h-10 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors"
+                            onClick={() => setMobileTab(prev => prev === 'cover' ? 'queue' : 'cover')}
+                        >
                             <ListMusic size={18} strokeWidth={2} />
                         </button>
                     </LiquidContainer>
@@ -197,7 +286,6 @@ export function MobilePlayer({ setIsPlaylistModalOpen }: { setIsPlaylistModalOpe
 
                 <Timeline className="mb-8" />
                 <PlaybackControls iconSize={36} className="justify-between px-2" />
-
             </div>
         </div>
     );

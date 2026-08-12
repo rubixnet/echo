@@ -3,19 +3,30 @@
 import { useState, useRef, useEffect } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
+import { useRoomState } from "@/hooks/useRoomState";
 import { DesktopDrawer } from "./DesktopDrawer";
 import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
-import { AddToPlaylistModal } from "../AddToPlaylistModal"; 
+import { AddToPlaylistModal } from "../AddToPlaylistModal";
+import { GuestModal } from "./GuestModal";
 
 export default function GlobalPlayer({ user }: { user?: any }) {
     const { togglePlay, activeMetadata, setOnTrackEnd, seekToTime } = useAudioEngine();
     const { playNext, playPrevious } = useGlobalPlayback();
+    const { isGuest, leaveRoom } = useRoomState();
     const playNextRef = useRef(playNext);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-    
+
+    const checkGuestLockdown = () => {
+        if (isGuest) {
+            window.dispatchEvent(new CustomEvent('openLockdownModal'));
+            return true;
+        }
+        return false;
+    };
+
     useEffect(() => {
         playNextRef.current = playNext;
     }, [playNext]);
@@ -26,18 +37,21 @@ export default function GlobalPlayer({ user }: { user?: any }) {
         }
     }, [setOnTrackEnd]);
 
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target as HTMLElement;
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
             if (e.code === 'Space') {
                 e.preventDefault();
-                togglePlay();
+                if (!checkGuestLockdown()) {
+                    togglePlay();
+                }
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [togglePlay]);
+    }, [togglePlay, isGuest]);
 
     useEffect(() => {
         if ('mediaSession' in navigator && activeMetadata) {
@@ -46,23 +60,25 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                 artist: activeMetadata.artist,
                 artwork: [{ src: activeMetadata.coverUrl, sizes: '512x512', type: 'image/jpeg' }]
             });
-            navigator.mediaSession.setActionHandler('play', () => togglePlay());
-            navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-            navigator.mediaSession.setActionHandler('previoustrack', () => playPrevious());
-            navigator.mediaSession.setActionHandler('nexttrack', () => playNext(false));
+            navigator.mediaSession.setActionHandler('play', () => { if (!checkGuestLockdown()) togglePlay() });
+            navigator.mediaSession.setActionHandler('pause', () => { if (!checkGuestLockdown()) togglePlay() });
+            navigator.mediaSession.setActionHandler('previoustrack', () => { if (!checkGuestLockdown()) playPrevious() });
+            navigator.mediaSession.setActionHandler('nexttrack', () => { if (!checkGuestLockdown()) playNext(false) });
             navigator.mediaSession.setActionHandler('seekto', (details) => {
-                if (details.seekTime !== undefined) seekToTime(details.seekTime);
+                if (!checkGuestLockdown() && details.seekTime !== undefined) seekToTime(details.seekTime);
             });
         }
-    }, [activeMetadata, togglePlay, playNext, playPrevious, seekToTime]);
+    }, [activeMetadata, togglePlay, playNext, playPrevious, seekToTime, isGuest]); // <-- Added isGuest dependency
+
     return (
         <>
+            <GuestModal />
             <div className="hidden md:block">
                 <DesktopDrawer isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} />
-                <DesktopMiniPlayer 
-                    isDrawerOpen={isDrawerOpen} 
-                    setIsDrawerOpen={setIsDrawerOpen} 
-                    setIsPlaylistModalOpen={setIsPlaylistModalOpen} 
+                <DesktopMiniPlayer
+                    isDrawerOpen={isDrawerOpen}
+                    setIsDrawerOpen={setIsDrawerOpen}
+                    setIsPlaylistModalOpen={setIsPlaylistModalOpen}
                 />
             </div>
 
@@ -70,10 +86,10 @@ export default function GlobalPlayer({ user }: { user?: any }) {
                 <MobilePlayer setIsPlaylistModalOpen={setIsPlaylistModalOpen} />
             </div>
 
-            <AddToPlaylistModal 
-                isOpen={isPlaylistModalOpen} 
-                onClose={() => setIsPlaylistModalOpen(false)} 
-                trackId={activeMetadata?.id || null} 
+            <AddToPlaylistModal
+                isOpen={isPlaylistModalOpen}
+                onClose={() => setIsPlaylistModalOpen(false)}
+                trackId={activeMetadata?.id || null}
             />
         </>
     );
