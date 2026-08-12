@@ -6,19 +6,19 @@ import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
 import { PlaylistContextMenu } from "@/components/PlaylistActions";
 import { Track } from "@/components/TrackComponent";
+import Link from "next/link";
 
 export default function LibraryHubPage() {
   const user = useUser();
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const { playlists, likedSongs, historySongs, libraryTracks, isLoading } = useLibraryData(user?._id);
+  const { playlists, likedSongs, historySongs, libraryTracks, libraryArtists, isLoading } = useLibraryData(user?._id);
   const pinnedPlaylist = playlists.filter((p) => p.isPinned);
 
   if (isLoading) {
     return <LibrarySkeleton />;
   }
-
 
   return (
     <div className="px-6 lg:px-12 py-8 pb-12 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
@@ -99,6 +99,41 @@ export default function LibraryHubPage() {
                 loadingId={loadingId}
                 setLoadingId={setLoadingId}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {libraryArtists.length > 0 && (
+        <section className="space-y-4" >
+          <div>
+            <h2 className="text-xl font-bold tracking-tight">Artists</h2>
+          </div>
+
+          <div className='flex gap-6'>
+            {libraryArtists.map((artist, idx) => (
+              <Link
+                key={idx}
+                href={`/dashboard/artist/${encodeURIComponent(artist.title)}`}
+                className="group flex flex-col text-center gap-4 p-2 rounded-2xl cursor-pointer transition-all"
+              >
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:h-30 md:w-30 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
+                  {artist.coverUrl ? (
+                    <img
+                      src={artist.coverUrl}
+                      alt={artist.title}
+                      className="w-full h-full object-cover transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex justify-center bg-emerald-500/10 text-emerald-500 font-bold text-xl">
+                      {artist.title[0]}
+                    </div>
+                  )}
+                </div>
+                <span className="font-semibold text-xs text-foreground/80 group-hover:text-foreground truncate w-full transition-colors">
+                  {artist.title}
+                </span>
+              </Link>
             ))}
           </div>
         </section>

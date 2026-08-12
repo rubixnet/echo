@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
-// import { PlaylistContextMenu } from "@/components/PlaylistActions";
 import { cn } from "@/lib/utils";
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
@@ -25,7 +24,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="flex bg-background text-foreground">
-      <aside className="hidden lg:block w-72 md:w-80 shrink-0 relative">
+      <aside className="hidden lg:block w-72 md:w-80 shrink-0 relative z-20">
         <div className="absolute right-0 top-0 bottom-0 w-px bg-foreground/10 pointer-events-none" />
         <div className="sticky top-[40px] h-[calc(100vh-40px)] overflow-y-auto liquid-scroll">
           {isLoading ? (
@@ -122,7 +121,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
           )}
         </div>
       </aside>
-      <main className="flex-1 min-w-0 pt-0">
+
+      <main className="flex-1 min-w-0 pt-0 relative z-10">
         {children}
       </main>
     </div>
@@ -189,19 +189,6 @@ function SidebarPlaylistItem({
             </span>
           </div>
         </Link>
-
-        {/* <PlaylistContextMenu playlist={playlist}>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="absolute right-2 p-1.5 text-foreground/40 hover:text-foreground rounded-md opacity-0 group-hover:opacity-100 hover:bg-foreground/5 transition-all shrink-0"
-            aria-label="Options"
-          >
-            <MoreVertical size={16} />
-          </button>
-        </PlaylistContextMenu> */}
       </div>
 
       {!isLast && <div className="h-px bg-foreground/5 ml-[68px] my-1" />}
