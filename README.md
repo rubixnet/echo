@@ -1,23 +1,35 @@
 design, 
+
 - logo, room page, seperate cover for each playlist! 
 
-- - disabling controls for the person who joined the room!! only lyrics, volume and options. 
-- live rooms will be removed if host closes the room, leaves the site, if offline, and if host starts another room, don't let host create another rom if the user is already in a room.
+- firing stuff / api's again and again so that images are loaded properly! and making the background image like that as well, 
+when the image loads, 
 
-- - only showing them when the user leaves the room! 
+- og images for all this pages! 
+- update the modals and update global player to have other options as well!
 
+- fixing adding to queue, play next logic! 
+
+- disliking songs or option to suggest less, which then the song will be added in showLess db table for that user and we will not show that song again.
+
+- slowly animating or opacity for the bentos! 
+
+- Encountered two children with the same key, `EARCQwChOA0`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Call
+
+- bad looking focus ring color for global player. 
+
+- fix for light mode
 - use users avatar
-- use liquid glass official component for room page! 
+- remove scale from buttons and animations
 
-- later update library component so that all sorts of stuff can be put into it, will identify it as
-artist | album | track | playlist | genre etc and then show have a main item with them id of artist / album / track / playylist id / genre id. 
+- pre created playlist not get played
 
-- cmk for power user, 
-- artist page.
+- making sidebar take space on larager screens!
+- fix user leaving room! 
 
-- making model aware on mobile so that it does not go our of screens on moible! 
+- adding handle shuffle function in playlists as well! 
+
 - updating recommendations so that the current song doesn't show up in related data, nor the past songs! 
-
 
 - - option to loop song, one at a time, shuffle, repeat, random play order. 
 
@@ -25,7 +37,6 @@ artist | album | track | playlist | genre etc and then show have a main item wit
 - option to connect and check what song are my friends listening to. 
 
 - create og image for that particular song with particular link for that use. 
-
 - controls bento grid for the user, showing navbar options, track component grid 
 - and audio player! maybe!
 - background is mix of colors for second onboarding step, new color get added to it each time user selects a genre! 
@@ -47,4 +58,3 @@ artist | album | track | playlist | genre etc and then show have a main item wit
 - make shuffle work! 
 
 - playing when apps closed, off screen controls. 
-- creating and editing playlist info on playlist layout. 
