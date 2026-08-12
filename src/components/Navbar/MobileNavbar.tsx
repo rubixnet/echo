@@ -10,26 +10,26 @@ export default function MobileNavbar() {
     const pathname = usePathname();
 
     const NavItem = ({ href, icon: Icon, active }: { href: string; icon: any; active?: boolean }) => (
-        <Link 
-            href={href} 
+        <Link
+            href={href}
             className={cn(
                 "relative flex items-center justify-center h-full flex-1 transition-colors duration-300",
-                active ? "text-primary" : "text-foreground/50 hover:text-foreground"
+                active ? "text-primary font-bold" : "text-foreground/80 hover:text-foreground"
             )}
         >
             <div className={cn(
                 "absolute m-auto h-11 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] rounded-full z-0",
-                active ? "bg-foreground/5 w-[calc(100%+4px)] opacity-100 scale-100" : "w-10 opacity-0 scale-50" 
+                active ? "bg-foreground/5 w-[calc(100%+4px)] opacity-100 scale-100" : "w-10 opacity-0 scale-50"
             )} />
-            
-            <Icon 
-                size={active ? 22 : 20} 
-                strokeWidth={active ? 2.5 : 2} 
-                className="relative z-10 transition-all duration-300" 
+
+            <Icon
+                size={active ? 22 : 20}
+                strokeWidth={active ? 3 : 2}
+                className="relative z-10 transition-all duration-300"
             />
         </Link>
     );
-    
+
     return (
         <div className="fixed bottom-0 left-0 w-full flex justify-center pb-4 px-3 z-50 pointer-events-none">
             <div className="max-w-md w-full pointer-events-auto">
@@ -41,7 +41,7 @@ export default function MobileNavbar() {
                         <NavItem href="/dashboard/rooms" icon={Radio} active={pathname.includes("/profile")} />
                         <NavItem href="/dashboard/settings" icon={Settings} active={pathname.includes("/settings")} />
                     </div>
-                </LiquidContainer>  
+                </LiquidContainer>
             </div>
         </div>
     );

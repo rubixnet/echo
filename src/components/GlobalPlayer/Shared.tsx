@@ -6,52 +6,93 @@ import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Play, Pause, SkipForward, SkipBack, Radio, ListMusic, Shuffle, Repeat, Star, Loader2 } from "lucide-react";
+import { useRoomState } from "@/hooks/useRoomState";
 import { cn } from "@/lib/utils";
+import {
+    Play, Pause, SkipForward, SkipBack, Radio, ListMusic, Shuffle, Repeat, Star, Loader2
+} from "lucide-react";
 
-export function Timeline({ className }: { className?: string }) {
+export function ProgressBar({
+    heightClass = "h-1.5",
+    hoverHeightClass = "group-hover/timeline:h-2"
+}: {
+    heightClass?: string;
+    hoverHeightClass?: string;
+}) {
     const { currentTimeSec, durationSec, duration, currentTimeStr, seekToTime } = useAudioEngine();
+    const { isGuest } = useRoomState();
     const [isDragging, setIsDragging] = useState(false);
     const [dragValue, setDragValue] = useState(0);
 
     const progressPercent = durationSec ? ((isDragging ? dragValue : currentTimeSec) / durationSec) * 100 : 0;
-
     const currentDragStr = isDragging
         ? `${Math.floor(dragValue / 60)}:${Math.floor(dragValue % 60).toString().padStart(2, '0')}`
         : currentTimeStr;
 
     return (
-        <div className={cn("flex items-center gap-3 w-full group/timeline", className)}>
-            <span className="text-xs font-bold text-foreground/50 tabular-nums min-w-[36px]">{currentDragStr}</span>
-            <div className="relative flex-1 flex items-center h-2 cursor-pointer">
-                <input
-                    type="range" min={0} max={durationSec || 100}
-                    value={isDragging ? dragValue : currentTimeSec}
-                    onMouseDown={() => setIsDragging(true)}
-                    onChange={(e) => setDragValue(Number(e.target.value))}
-                    onMouseUp={(e) => {
-                        setIsDragging(false);
-                        seekToTime(Number(e.currentTarget.value));
-                    }}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0"
-                />
-                <div className="w-full h-1.5 bg-foreground/10 rounded-full overflow-hidden group-hover/timeline:h-2 transition-all">
-                    <div className="h-full bg-foreground rounded-full transition-all duration-75 relative" style={{ width: `${progressPercent}%` }} />
+        <div className="flex items-center gap-2 w-full group/timeline">
+            <span className="text-[9px] font-medium text-foreground/50 tabular-nums min-w-[28px]">{currentDragStr}</span>
+
+            <div className={cn("relative flex-1 flex items-center h-2", !isGuest && "cursor-pointer")}>
+                {!isGuest && (
+                    <input
+                        type="range"
+                        min={0}
+                        max={durationSec || 100}
+                        value={isDragging ? dragValue : currentTimeSec}
+                        onMouseDown={() => setIsDragging(true)}
+                        onChange={(e) => setDragValue(Number(e.target.value))}
+                        onMouseUp={(e) => {
+                            setIsDragging(false);
+                            seekToTime(Number(e.currentTarget.value));
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0"
+                    />
+                )}
+
+                <div className={cn("w-full bg-foreground/10 rounded-full overflow-hidden transition-all", heightClass, !isGuest && hoverHeightClass)}>
+                    <div className="h-full bg-foreground rounded-full transition-all duration-75" style={{ width: `${progressPercent}%` }} />
                 </div>
             </div>
-            <span className="text-xs font-bold text-foreground/50 tabular-nums min-w-[36px] text-right">{duration}</span>
+
+            <span className="text-[9px] font-medium text-foreground/50 tabular-nums min-w-[28px]">
+                {duration}
+            </span>
         </div>
     );
 }
 
-export function PlaybackControls({ className, iconSize = 28 }: { className?: string, iconSize?: number }) {
+export function Timeline({ className }: { className?: string }) {
+    return (
+        <div className={cn("flex items-center gap-3 w-full", className)}>
+            <ProgressBar heightClass="h-1.5" hoverHeightClass="group-hover/timeline:h-2" />
+        </div>
+    );
+}
+
+export function PlaybackControls({ className, iconSize = 28 }: { className?: string; iconSize?: number }) {
     const { isPlaying, isLoading, togglePlay, activeMetadata, isOnLoop, setIsOnLoop, currentTimeSec, queue, queueIndex } = useAudioEngine();
     const { playNext, playPrevious } = useGlobalPlayback();
+    const { isGuest } = useRoomState();
+
+    if (isGuest) {
+        return (
+            <div className={cn("flex items-center justify-center py-2", className)}>
+                <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('openLockdownModal'))}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors rounded-full border border-emerald-500/20 active:scale-95 cursor-pointer"
+                >
+                    <Radio size={16} className="animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-widest">Live • Leave Room</span>
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className={cn("flex items-center justify-center gap-6", className)}>
             <button className="text-foreground/40 hover:text-foreground transition-colors max-md:hidden"><Shuffle size={iconSize * 0.7} strokeWidth={2} /></button>
-            <button onClick={playPrevious} disabled={!queue || queueIndex <= 0 && currentTimeSec <= 3} className="text-foreground/80 hover:text-foreground active:scale-95 transition-transform disabled:opacity-30">
+            <button onClick={playPrevious} disabled={!queue || (queueIndex <= 0 && currentTimeSec <= 3)} className="text-foreground/80 hover:text-foreground active:scale-95 transition-transform disabled:opacity-30">
                 <SkipBack size={iconSize} fill="currentColor" strokeWidth={1} />
             </button>
             <button
@@ -135,31 +176,38 @@ export function useNextInQueue(limit: number = 4) {
     const upcomingTracks = queue ? queue.slice(queueIndex + 1, queueIndex + 1 + limit) : [];
 
     useEffect(() => {
-        const currentId = activeMetadata?.youtubeId || activeMetadata?.audioUrl?.split("id=")[1];
+        const currentId =
+            activeMetadata?.youtubeId ||
+            activeMetadata?.id ||
+            activeMetadata?.audioUrl?.split("id=")[1];
 
         if (upcomingTracks.length === 0 && currentId && currentId !== fetchedForId && !isFetching) {
-
             const preFetchRelated = async () => {
                 setIsFetching(true);
+                setFetchedForId(currentId);
+
                 try {
                     const res = await fetch(`/api/youtube/related?id=${currentId}`);
-                    const data = await res.json();
+                    if (!res.ok) {
+                        console.warn(`[useNextInQueue] API returned HTTP ${res.status}`);
+                        return;
+                    }
 
-                    if (data.items && data.items.length > 0) {
-                        const validSongs = data.items.filter((item: any) =>
-                            item.id !== currentId && item.youtubeId !== currentId
-                        );
+                    const data = await res.json();
+                    if (data.items && Array.isArray(data.items) && data.items.length > 0) {
+                        const existingIds = new Set((queue || []).map((t: any) => t.youtubeId || t.id));
+                        const validSongs = data.items.filter((item: any) => {
+                            const itemId = item.youtubeId || item.id;
+                            return itemId && itemId !== currentId && !existingIds.has(itemId);
+                        });
 
                         const songsToAdd = validSongs.slice(0, 5);
-
                         if (songsToAdd.length > 0) {
                             setQueue((prevQueue: any[]) => [...(prevQueue || []), ...songsToAdd]);
                         }
-
-                        setFetchedForId(currentId);
                     }
                 } catch (error) {
-                    console.error("Failed to pre-fetch related tracks", error);
+                    console.error("Failed to pre-fetch related tracks:", error);
                 } finally {
                     setIsFetching(false);
                 }
@@ -167,12 +215,9 @@ export function useNextInQueue(limit: number = 4) {
 
             preFetchRelated();
         }
-    }, [activeMetadata, upcomingTracks.length, isFetching, fetchedForId, setQueue]);
+    }, [activeMetadata, upcomingTracks.length, isFetching, fetchedForId, queue, setQueue]);
 
-    return {
-        upNextTracks: upcomingTracks,
-        isFetching
-    };
+    return { upNextTracks: upcomingTracks, isFetching };
 }
 
 export function PlaybackStatus({ isFetching }: { isFetching?: boolean }) {
@@ -200,9 +245,8 @@ export function PlaybackStatus({ isFetching }: { isFetching?: boolean }) {
             </div>
         );
     }
-
     return (
-        <div className="shrink-0 flex items-center gap-4 ">
+        <div className="shrink-0 flex items-center gap-4">
             <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-inner">
                 {isFetching ? <Radio size={24} /> : <ListMusic size={24} />}
             </div>
@@ -232,10 +276,10 @@ export function useDominantColor(imageUrl?: string) {
         img.src = imageUrl;
 
         img.onload = () => {
-            const canvas = document.createElement('canvas');
+            const canvas = document.createElement("canvas");
             canvas.width = 1;
             canvas.height = 1;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
             if (ctx) {
                 ctx.drawImage(img, 0, 0, 1, 1);
@@ -248,29 +292,24 @@ export function useDominantColor(imageUrl?: string) {
     return rgb;
 }
 
-export function VibrantBackground({ imageUrl }: { imageUrl?: string }) {
+export function VibrantBackground({ imageUrl, opacity = 0.85 }: { imageUrl?: string; opacity?: number }) {
     const rgb = useDominantColor(imageUrl);
-
-    const dominantColor = rgb
-        ? `rgb(${rgb[0]} ${rgb[1]} ${rgb[2]})`
-        : "var(--background)";
+    const dominantColor = rgb ? `rgb(${rgb[0]} ${rgb[1]} ${rgb[2]})` : "var(--background)";
 
     return (
         <div
             className="absolute inset-0 z-0 pointer-events-none transition-all duration-1000 ease-out"
-            style={
-                {
-                    "--dominant-color": dominantColor,
-                    backgroundImage: `
-            linear-gradient(
-              to bottom in oklch,
-              oklch(from var(--dominant-color) l c h / 0.85) 0%,
-              var(--background) 92%
-            )
-          `,
-                    opacity: 0.85,
-                } as React.CSSProperties
-            }
+            style={{
+                "--dominant-color": dominantColor,
+                backgroundImage: `
+                    linear-gradient(
+                      to bottom in oklch,
+                      oklch(from var(--dominant-color) l c h / 0.85) 0%,
+                      var(--background) 92%
+                    )
+                `,
+                opacity,
+            } as React.CSSProperties}
         />
     );
 }

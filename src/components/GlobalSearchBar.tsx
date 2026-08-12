@@ -106,11 +106,11 @@ export function GlobalSearchBar() {
   return (
     <div ref={searchContainerRef} className="relative w-full z-50 animate-in fade-in zoom-in-95 duration-300">
       <form onSubmit={handleSearchSubmit} className="w-full group">
-        <LiquidContainer radius="50px" className="w-full h-11 transition-shadow shadow-lg">
+        <LiquidContainer radius="50px" className="w-full h-11 ">
           <input
             ref={searchInputRef}
             type="text"
-            placeholder="Search tracks, artists, global vault..."
+            placeholder="Search tracks, and artists.."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -131,7 +131,7 @@ export function GlobalSearchBar() {
 
       {showHistoryPopover && combinedList.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-3 slide-in-from-top-2 duration-200 z-50">
-          <LiquidPanel radius="24px" className="w-full shadow-2xl shadow-black/40">
+          <LiquidPanel radius="24px" className="w-full">
             <div className="p-2">
               <div className="space-y-0.5 overflow-y-auto liquid-scroll pr-1 mr-1">
                 {combinedList.map((item, index) => (
