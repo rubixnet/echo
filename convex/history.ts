@@ -14,39 +14,46 @@ export const getUserHistory = query({
 });
 
 export const addToHistory = mutation({
-    args: { userId: v.id('users'), trackId: v.id('tracks') },
+    args: { userId: v.id('users'), trackId: v.string() },
     handler: async (ctx, args) => {
         const existing = await ctx.db
             .query('history')
             .withIndex("by_user_and_track", (q) => q.eq('userId', args.userId).eq('trackId', args.trackId))
-            .first()
+            .first();
 
         if (existing) {
-            await ctx.db.patch(existing._id, { playedAt: Date.now() })
-        } else {
-            const track = await ctx.db.get(args.trackId)
-            if (!track) throw new Error('Track not found')
-
-            await ctx.db.insert('history', {
-                userId: args.userId,
-                trackId: args.trackId,
-                title: track.title,
-                artist: track.artist,
-                coverUrl: track.coverUrl,
-                duration: track.duration,
-                audioUrl: track.audioUrl,
-                playedAt: Date.now(),
-            })
+            await ctx.db.patch(existing._id, { playedAt: Date.now() });
+            return;
         }
 
-        const searchHisotry = await ctx.db
-            .query('history')
-            .withIndex('by_user', (q) => q.eq('userId', args.userId))
-            .collect()
+        let track = null;
 
-        searchHisotry.sort((a, b) => b.playedAt - a.playedAt)
+        const validConvexId = ctx.db.normalizeId("tracks", args.trackId);
+
+        if (validConvexId) {
+            track = await ctx.db.get(validConvexId);
+        } else {
+            track = await ctx.db
+                .query("tracks")
+                .withIndex("by_youtubeId", (q) => q.eq("youtubeId", args.trackId))
+                .first();
+        }
+
+        if (!track) throw new Error('Track not found');
+
+        await ctx.db.insert('history', {
+            userId: args.userId,
+            trackId: args.trackId,
+            title: track.title,
+            artist: track.artist,
+            coverUrl: track.coverUrl,
+            duration: track.duration,
+            audioUrl: track.audioUrl,
+            playedAt: Date.now(),
+        });
+
     }
-})
+});
 
 export const removeHistoryItem = mutation({
     args: { historyId: v.id('history') },

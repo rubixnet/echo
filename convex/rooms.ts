@@ -33,13 +33,28 @@ export const getRoom = query({
 
 export const deleteRoom = mutation({
     args: { roomId: v.id("rooms"), userId: v.id("users") },
-    handler: async (ctx, args) => { 
+    handler: async (ctx, args) => {
         const room = await ctx.db.get(args.roomId);
-        if (room && room.hostId === args.userId) {
-            await ctx.db.delete(args.roomId);
+        if (!room) return;
+
+        if (room.hostId !== args.userId) {
+            throw new Error("Only the host can close this room");
         }
-    }
+
+        const usersInRoom = await ctx.db
+            .query("users")
+            .filter((q) => q.eq(q.field("activeRoomId"), args.roomId))
+            .collect();
+
+        for (const user of usersInRoom) {
+            await ctx.db.patch(user._id, { activeRoomId: undefined });
+        }
+
+        await ctx.db.delete(args.roomId);
+    },
 });
+
+
 
 export const getMyHosterRooms = query({
     args: { userId: v.optional(v.id("users")) },
@@ -69,18 +84,24 @@ export const createRoom = mutation({
         userId: v.id("users")
     },
     handler: async (ctx, args) => {
-        const user = await ctx.db.get(args.userId);
+        const userId = args.userId as Id<"users">;
+        const name = args.name as string;
+        const isPublic = args.isPublic as boolean;
+
+        const user = await ctx.db.get(userId);
         if (!user) throw new Error("User not found");
 
         const roomId = await ctx.db.insert("rooms", {
-            name: args.name,
+            name: name,
             hostId: user._id,
             isPlaying: false,
             pausePosition: 0,
             listeners: [user._id],
-            isPublic: args.isPublic,
+            isPublic: isPublic,
             lastActiveAt: Date.now(),
         });
+
+        await ctx.db.patch(user._id, { activeRoomId: roomId });
 
         return roomId;
     },
@@ -103,6 +124,8 @@ export const joinRoom = mutation({
                 listeners: [...room.listeners, user._id],
             });
         }
+
+        await ctx.db.patch(args.userId, { activeRoomId: args.roomId });
     },
 });
 
@@ -111,7 +134,7 @@ export const syncPlayback = mutation({
         roomId: v.id("rooms"),
         isPlaying: v.boolean(),
         clientCurrentTime: v.number(),
-        trackId: v.optional(v.string()), 
+        trackId: v.optional(v.string()),
         userId: v.id("users")
     },
     handler: async (ctx, args) => {
@@ -168,8 +191,23 @@ export const clearExpiredRooms = internalMutation({
     }
 });
 
+export const leaveRoom = mutation({
+    args: { roomId: v.id("rooms"), userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const room = await ctx.db.get(args.roomId);
+        if (!room) return;
+
+        const updatedListeners = room.listeners.filter(
+            (id) => id !== args.userId
+        );
+        await ctx.db.patch(room._id, { listeners: updatedListeners });
+
+        await ctx.db.patch(args.userId, { activeRoomId: undefined });
+    },
+});
+
 export const updateRoomTrack = mutation({
-    args: { roomId: v.id("rooms"), trackId: v.optional(v.string()) }, 
+    args: { roomId: v.id("rooms"), trackId: v.optional(v.string()) },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.roomId, {
             currentTrackId: args.trackId,
