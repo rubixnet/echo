@@ -141,7 +141,7 @@ export function AddToPlaylistModal({ isOpen, onClose, trackId, track }: AddToPla
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative shadow-[0_8px_40px_rgb(0,0,0,0.12)] w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
+      <div className="relative w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-300">
         <LiquidPanel radius="24px">
 
           <div className="px-6 pt-6 pb-4">
