@@ -1,62 +1,127 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
+import YTMusic from "ytmusic-api";
 
-const execAsync = promisify(exec);
+const ytmusic = new YTMusic();
+let isInitialized = false;
+
+const relatedCache = new Map<string, { items: any[]; expires: number }>();
+const CACHE_TTL = 10 * 60 * 1000;
 
 export async function GET(request: Request) {
+  try {
     const { searchParams } = new URL(request.url);
     const videoId = searchParams.get("id");
+    const excludeParam = searchParams.get("exclude") || "";
 
     if (!videoId) {
-        return NextResponse.json({ error: "Missing video ID" }, { status: 400 });
+      return NextResponse.json({ items: [] }, { status: 400 });
     }
+
+    const excludeSet = new Set<string>([
+      videoId,
+      ...excludeParam.split(",").map((id) => id.trim()).filter(Boolean),
+    ]);
+
+    const now = Date.now();
+
+    if (relatedCache.has(videoId) && relatedCache.get(videoId)!.expires > now) {
+      const cachedItems = relatedCache.get(videoId)!.items;
+      const filtered = cachedItems.filter(
+        (item: any) => !excludeSet.has(item.id || item.youtubeId)
+      );
+      return NextResponse.json({ items: filtered });
+    }
+
+    if (!isInitialized) {
+      await ytmusic.initialize().catch(() => {});
+      isInitialized = true;
+    }
+
+    let rawSongs: any[] = [];
+    let resolvedArtistName = "";
 
     try {
-        const mixUrl = `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`;
-
-        let stdoutString = "";
-
-        try {
-            const { stdout } = await execAsync(
-                `yt-dlp --no-warnings --ignore-errors -j --flat-playlist --playlist-end 10 "${mixUrl}"`
-            );
-            stdoutString = stdout;
-        } catch (err: any) {
-            if (err.stdout) {
-                stdoutString = err.stdout;
-            } else {
-                throw err;
-            }
-        }
-
-        const results = stdoutString.trim().split('\n').map((line) => {
-            try {
-                if (!line) return null;
-                const data = JSON.parse(line);
-
-                if (data.id === videoId) return null;
-
-                const title = (data.title || "").toLowerCase();
-                const duration = data.duration || 0;
-                if (duration > 600 || title.includes("podcast") || title.includes("episode")) return null;
-
-                return {
-                    youtubeId: data.id,
-                    title: data.title,
-                    artist: data.uploader || data.channel || "Unknown Artist",
-                    coverUrl: data.thumbnails?.[0]?.url || `https://i.ytimg.com/vi/${data.id}/hqdefault.jpg`,
-                    duration: duration,
-                };
-            } catch (e) {
-                return null;
-            }
-        }).filter(Boolean);
-
-        return NextResponse.json({ items: results.slice(0, 5) });
-
-    } catch (error) {
-        console.error("Failed to fetch YouTube Mix:", error);
-        return NextResponse.json({ items: [] }, { status: 500 });
+      const songInfo: any = await ytmusic.getSong(videoId);
+      if (songInfo) {
+        resolvedArtistName = songInfo.artist?.name || "";
+      }
+    } catch (err) {
+      console.warn("[Related API] getSong lookup failed:", err);
     }
+
+    if (resolvedArtistName) {
+      try {
+        rawSongs = await ytmusic.searchSongs(`${resolvedArtistName} top songs`);
+      } catch (err) {
+        console.warn("[Related API] Artist top songs search failed:", err);
+      }
+    }
+
+    if (!rawSongs || rawSongs.length === 0) {
+      try {
+        rawSongs = await ytmusic.searchSongs("top trending music songs");
+      } catch (err) {
+        console.warn("[Related API] General fallback search failed:", err);
+      }
+    }
+
+    if (!rawSongs || rawSongs.length === 0) {
+      return NextResponse.json({ items: [] });
+    }
+
+    const seenIds = new Set<string>();
+    const results: any[] = [];
+
+    for (const song of rawSongs) {
+      const vId = song.videoId || song.id;
+      if (!vId || seenIds.has(vId) || excludeSet.has(vId)) continue;
+
+      const duration = typeof song.duration === "number" ? song.duration : 0;
+      const title = song.name || song.title || "Untitled Track";
+      const lowerTitle = title.toLowerCase();
+
+      if (duration > 600) continue;
+      if (
+        lowerTitle.includes("podcast") ||
+        lowerTitle.includes("episode") ||
+        lowerTitle.includes("full album") ||
+        lowerTitle.includes("live stream")
+      ) {
+        continue;
+      }
+      
+      const artist =
+        song.artist?.name ||
+        (Array.isArray(song.artists) && song.artists[0]?.name) ||
+        resolvedArtistName ||
+        "Unknown Artist";
+
+      const thumbnail =
+        song.thumbnails?.[song.thumbnails.length - 1]?.url ||
+        `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
+
+      const mappedTrack = {
+        id: vId,
+        youtubeId: vId,
+        title: title,
+        artist: artist,
+        artistId: song.artist?.artistId || null,
+        coverUrl: thumbnail,
+        duration: duration,
+        audioUrl: `/api/youtube/stream?id=${vId}`,
+      };
+
+      seenIds.add(vId);
+      results.push(mappedTrack);
+    }
+
+    if (results.length > 0) {
+      relatedCache.set(videoId, { items: results, expires: now + CACHE_TTL });
+    }
+
+    return NextResponse.json({ items: results.slice(0, 8) });
+  } catch (error) {
+    console.error("Related API Error:", error);
+    return NextResponse.json({ items: [] }, { status: 500 });
+  }
 }

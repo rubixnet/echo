@@ -87,7 +87,6 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
           showDuration={true}
           key={track._id}
           track={track}
-          index={index + 1}
           variant="row"
           loadingId={loadingId}
           setLoadingId={setLoadingId}
