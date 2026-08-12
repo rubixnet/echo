@@ -12,18 +12,63 @@ function ContextMenu({
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />
 }
 
-function ContextMenuTrigger({
-  className,
-  ...props
-}: React.ComponentProps<typeof ContextMenuPrimitive.Trigger>) {
+const ContextMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof ContextMenuPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Trigger>
+>(({ className, onTouchStart, onTouchEnd, onTouchMove, onTouchCancel, style, ...props }, ref) => {
+  const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLSpanElement>) => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+
+    const target = e.currentTarget;
+    const touch = e.touches[0];
+
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null;
+      const event = new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+      target.dispatchEvent(event);
+    }, 800);
+
+    onTouchStart?.(e);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   return (
     <ContextMenuPrimitive.Trigger
+      ref={ref}
       data-slot="context-menu-trigger"
       className={cn("select-none", className)}
+      style={{ WebkitTouchCallout: "none", ...style }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={(e) => {
+        cancelLongPress();
+        onTouchEnd?.(e);
+      }}
+      onTouchMove={(e) => {
+        cancelLongPress();
+        onTouchMove?.(e);
+      }}
+      onTouchCancel={(e) => {
+        cancelLongPress();
+        onTouchCancel?.(e);
+      }}
       {...props}
     />
-  )
-}
+  );
+});
+ContextMenuTrigger.displayName = ContextMenuPrimitive.Trigger.displayName;
 
 function ContextMenuGroup({
   ...props
@@ -202,6 +247,7 @@ function ContextMenuRadioItem({
       )}
       {...props}
     >
+
       <span className="pointer-events-none absolute right-2">
         <ContextMenuPrimitive.ItemIndicator>
           <CheckIcon
