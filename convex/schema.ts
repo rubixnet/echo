@@ -7,7 +7,9 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     email: v.string(),
     workosId: v.string(),
+    activeRoomId: v.optional(v.id("rooms")),
     onboarded: v.optional(v.boolean()),
+    avatarUrl: v.optional(v.string()),
     favoriteGenres: v.optional(v.array(v.string())),
   }).index("workosId", ["workosId"]),
 
@@ -38,6 +40,22 @@ export default defineSchema({
     ),
     playedAt: v.number(),
   }).index("by_user", ["userId"])
+    .index("by_user_and_track", ["userId", "trackId"]),
+
+  suggestLess: defineTable({
+    userId: v.id("users"),
+    trackId: v.string(),
+    dislikedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_track", ["userId", "trackId"]),
+
+  hatedSongs: defineTable({
+    userId: v.id("users"),
+    trackId: v.string(),
+    hatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
   likedSongs: defineTable({
@@ -102,6 +120,7 @@ export default defineSchema({
     isPinned: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
+
   libraryTracks: defineTable({
     userId: v.id("users"),
     trackId: v.string(),
@@ -120,6 +139,31 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
+
+  libraryItems: defineTable({
+    userId: v.id("users"),
+    itemType: v.string(),
+    itemId: v.string(),
+    title: v.string(),
+    subtitle: v.optional(v.string()),
+    coverUrl: v.optional(v.string()),
+    metadata: v.optional(
+      v.object({
+        duration: v.optional(v.string()),
+        audioUrl: v.optional(v.string()),
+        source: v.optional(
+          v.object({
+            type: v.string(),
+            name: v.optional(v.string()),
+          })
+        ),
+      })
+    ),
+    savedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_type", ["userId", "itemType"])
+    .index("by_user_and_item", ["userId", "itemType", "itemId"]),
 
   playlistTracks: defineTable({
     playlistId: v.id('playlists'),
