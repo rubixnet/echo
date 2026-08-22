@@ -7,7 +7,11 @@ let initialized = false;
 function getBestCoverUrl(thumbnails: any[], videoId?: string): string {
   if (Array.isArray(thumbnails) && thumbnails.length > 0) {
     const validThumb = thumbnails[thumbnails.length - 1]?.url;
-    if (validThumb && typeof validThumb === "string" && validThumb.startsWith("http")) {
+    if (
+      validThumb &&
+      typeof validThumb === "string" &&
+      validThumb.startsWith("http")
+    ) {
       return validThumb;
     }
   }
@@ -22,7 +26,10 @@ export async function GET(request: Request) {
   const nameOrId = searchParams.get("name") || searchParams.get("id");
 
   if (!nameOrId) {
-    return NextResponse.json({ error: "Artist name or ID is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Artist name or ID is required" },
+      { status: 400 },
+    );
   }
 
   try {
@@ -45,7 +52,7 @@ export async function GET(request: Request) {
         } else {
           const generalResults = await ytmusic.search(nameOrId);
           const artistMatch = generalResults.find(
-            (item: any) => item.type === "ARTIST" || item.artistId
+            (item: any) => item.type === "ARTIST" || item.artistId,
           );
           if (artistMatch) {
             artistId = (artistMatch as any).artistId;
@@ -68,7 +75,10 @@ export async function GET(request: Request) {
     ]);
 
     if (!artistProfile) {
-      return NextResponse.json({ error: "Failed to load artist details" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Failed to load artist details" },
+        { status: 404 },
+      );
     }
 
     const profile = artistProfile as any;
@@ -113,6 +123,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error("Artist Fetch Error:", error);
-    return NextResponse.json({ error: "Failed to fetch artist" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch artist" },
+      { status: 500 },
+    );
   }
 }
