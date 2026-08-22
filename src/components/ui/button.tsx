@@ -1,15 +1,15 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot, Slottable } from "@radix-ui/react-slot"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot, Slottable } from "@radix-ui/react-slot";
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full text-sm font-bold whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 relative isolate overflow-hidden",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full text-sm font-bold cursor-pointer whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 relative isolate overflow-hidden",
   {
     variants: {
       variant: {
         default:
-          "text-primary shadow-xl border-none hover:opacity-90",
+          "text-foreground hover:bg-foreground/5 hover:text-foreground border-none",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         outline:
@@ -18,8 +18,7 @@ const buttonVariants = cva(
           "text-foreground/70 hover:bg-foreground/10 hover:text-foreground",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20",
-        link:
-          "text-primary underline-offset-4 hover:underline",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-11 px-5 gap-2",
@@ -32,8 +31,8 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
-)
+  },
+);
 
 function Button({
   className,
@@ -44,9 +43,9 @@ function Button({
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button"
+  const Comp = asChild ? Slot : "button";
   const isLiquid = variant === "default" || !variant;
 
   return (
@@ -60,13 +59,15 @@ function Button({
           <div
             className="hidden dark:block absolute inset-0 -z-10 rounded-[inherit] pointer-events-none"
             style={{
-              boxShadow: "inset 0 -1px 4px 0 rgba(255, 255, 255, 0.2), 0 3px 5px 0 rgba(0, 0, 0, 0.2)",
+              boxShadow:
+                "inset 0 -1px 4px 0 rgba(255, 255, 255, 0.2), 0 3px 5px 0 rgba(0, 0, 0, 0.2)",
             }}
           >
             <div
               className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
               style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(48,48,48,0.35) 60%, rgba(51,51,51,0.2) 100%)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(48,48,48,0.35) 60%, rgba(51,51,51,0.2) 100%)",
               }}
             />
             <div
@@ -74,7 +75,8 @@ function Button({
               style={{
                 WebkitBackdropFilter: "blur(18px) saturate(120%)",
                 backdropFilter: "blur(18px) saturate(120%)",
-                background: "linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 8%)",
+                background:
+                  "linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 8%)",
                 boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
               }}
             >
@@ -82,8 +84,10 @@ function Button({
                 className="absolute inset-0 rounded-[inherit]"
                 style={{
                   padding: "1px",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.1) 100%)",
-                  WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.1) 100%)",
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                   WebkitMaskComposite: "xor",
                   maskComposite: "exclude",
                 }}
@@ -94,30 +98,36 @@ function Button({
           <div
             className="block dark:hidden absolute inset-0 -z-10 rounded-[inherit] pointer-events-none"
             style={{
-              boxShadow: "inset 0 -1px 4px 0 rgba(0, 0, 0, 0.05), 0 3px 5px 0 rgba(0, 0, 0, 0.1)",
+              boxShadow:
+                "0 0 15px 1px rgba(255, 255, 255, 0.7), 0 8px 24px -4px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.4)",
             }}
           >
             <div
               className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
               style={{
-                background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.1) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0.15) 100%)",
               }}
             />
             <div
               className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none"
               style={{
-                WebkitBackdropFilter: "blur(18px) saturate(120%)",
-                backdropFilter: "blur(18px) saturate(120%)",
-                background: "linear-gradient(0deg, rgba(255,255,255,0.4) 0%, transparent 7%)",
-                boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)",
+                WebkitBackdropFilter: "blur(20px) saturate(140%)",
+                backdropFilter: "blur(20px) saturate(140%)",
+                background:
+                  "linear-gradient(120deg, rgba(255, 255, 255, 0.45) 0%, transparent 40%, rgba(255, 255, 255, 0.2) 100%)",
+                boxShadow:
+                  "inset 1px 1px 2px 0 rgba(255, 255, 255, 0.9), inset -1px -1px 2px 0 rgba(255, 255, 255, 0.4)",
               }}
             >
               <div
                 className="absolute inset-0 rounded-[inherit]"
                 style={{
-                  padding: "1px",
-                  background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.02) 70%, rgba(0,0,0,0.1) 100%)",
-                  WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                  padding: "1.5px",
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.85) 100%)",
+                  WebkitMask:
+                    "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
                   WebkitMaskComposite: "xor",
                   maskComposite: "exclude",
                 }}
@@ -129,7 +139,7 @@ function Button({
 
       <Slottable>{children}</Slottable>
     </Comp>
-  )
+  );
 }
 
 const buttonGroupVariants = cva(
@@ -145,30 +155,102 @@ const buttonGroupVariants = cva(
     defaultVariants: {
       size: "default",
     },
-  }
-)
+  },
+);
 
 const ButtonGroup = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof buttonGroupVariants> & { separator?: boolean }
+  React.HTMLAttributes<HTMLDivElement> &
+    VariantProps<typeof buttonGroupVariants> & { separator?: boolean }
 >(({ className, size, separator = false, children, ...props }, ref) => {
   const childArray = React.Children.toArray(children);
+
   return (
-    <div ref={ref} className={cn(buttonGroupVariants({ size, className }))} {...props}>
-      <div className="hidden dark:block absolute inset-0 -z-10 rounded-[inherit] pointer-events-none" style={{ boxShadow: "inset 0 -1px 4px 0 rgba(255, 255, 255, 0.2), 0 3px 5px 0 rgba(0, 0, 0, 0.2)", }} >
-        <div className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(48,48,48,0.35) 60%, rgba(51,51,51,0.2) 100%)" }} />
-        <div className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none" style={{ WebkitBackdropFilter: "blur(18px) saturate(120%)", backdropFilter: "blur(18px) saturate(120%)", background: "linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 8%)", boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)", }} >
-          <div className="absolute inset-0 rounded-[inherit]" style={{ padding: "1px", background: "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.1) 100%)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude", }} />
-        </div>
-      </div>
-      <div className="block dark:hidden absolute inset-0 -z-10 rounded-[inherit] pointer-events-none" style={{ boxShadow: "inset 0 -1px 4px 0 rgba(0, 0, 0, 0.05), 0 3px 5px 0 rgba(0, 0, 0, 0.1)", }} >
-        <div className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.3) 60%, rgba(255,255,255,0.1) 100%)" }} />
-        <div className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none" style={{ WebkitBackdropFilter: "blur(18px) saturate(120%)", backdropFilter: "blur(18px) saturate(120%)", background: "linear-gradient(0deg, rgba(255,255,255,0.4) 0%, transparent 7%)", boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)", }} >
-          <div className="absolute inset-0 rounded-[inherit]" style={{ padding: "1px", background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.02) 70%, rgba(0,0,0,0.1) 100%)", WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)", WebkitMaskComposite: "xor", maskComposite: "exclude", }} />
+    <div
+      ref={ref}
+      className={cn(buttonGroupVariants({ size, className }))}
+      {...props}
+    >
+      <div
+        className="hidden dark:block absolute inset-0 -z-10 rounded-[inherit] pointer-events-none"
+        style={{
+          boxShadow:
+            "inset 0 -1px 4px 0 rgba(255, 255, 255, 0.2), 0 3px 5px 0 rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        <div
+          className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(48,48,48,0.35) 60%, rgba(51,51,51,0.2) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none"
+          style={{
+            WebkitBackdropFilter: "blur(18px) saturate(120%)",
+            backdropFilter: "blur(18px) saturate(120%)",
+            background:
+              "linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 8%)",
+            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
+          }}
+        >
+          <div
+            className="absolute inset-0 rounded-[inherit]"
+            style={{
+              padding: "1px",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0.01) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.1) 100%)",
+              WebkitMask:
+                "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
+          />
         </div>
       </div>
 
-      <div className="relative z-10 flex items-center p-0.5 h-full">
+      <div
+        className="block dark:hidden absolute inset-0 -z-10 rounded-[inherit] pointer-events-none"
+        style={{
+          boxShadow:
+            "0 0 15px 1px rgba(255, 255, 255, 0.7), 0 8px 24px -4px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.4)",
+        }}
+      >
+        <div
+          className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0.15) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none"
+          style={{
+            WebkitBackdropFilter: "blur(20px) saturate(140%)",
+            backdropFilter: "blur(20px) saturate(140%)",
+            background:
+              "linear-gradient(120deg, rgba(255, 255, 255, 0.45) 0%, transparent 40%, rgba(255, 255, 255, 0.2) 100%)",
+            boxShadow:
+              "inset 1px 1px 2px 0 rgba(255, 255, 255, 0.9), inset -1px -1px 2px 0 rgba(255, 255, 255, 0.4)",
+          }}
+        >
+          <div
+            className="absolute inset-0 rounded-[inherit]"
+            style={{
+              padding: "1.5px",
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.1) 60%, rgba(255,255,255,0.85) 100%)",
+              WebkitMask:
+                "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex items-center p-1 h-full">
         {childArray.map((child, index) => (
           <React.Fragment key={index}>
             {child}
@@ -181,5 +263,6 @@ const ButtonGroup = React.forwardRef<
     </div>
   );
 });
+ButtonGroup.displayName = "ButtonGroup";
 
-export { Button, buttonVariants, ButtonGroup }
+export { Button, buttonVariants, ButtonGroup };
