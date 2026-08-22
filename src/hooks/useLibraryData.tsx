@@ -9,7 +9,7 @@ export function useLibraryData(userId: string | undefined) {
   const historySongs = useQuery(api.history.getUserHistory, skip);
   const libraryItems = useQuery(api.library.getLibraryItems, skip);
 
-  const items = libraryItems || []
+  const items = libraryItems || [];
 
   const savedTracks = items
     .filter((i) => i.itemType === "track")
@@ -21,11 +21,12 @@ export function useLibraryData(userId: string | undefined) {
       artist: item.subtitle || "Unknown Artist",
       coverUrl: item.coverUrl || "",
       duration: item.metadata?.duration || "0:00",
-      audioUrl: item.metadata?.audioUrl || `/api/youtube/stream?id=${item.itemId}`,
+      audioUrl:
+        item.metadata?.audioUrl || `/api/youtube/stream?id=${item.itemId}`,
       source: item.metadata?.source,
     }));
 
-  const savedArtists = items.filter((i) => i.itemType === "artist")
+  const savedArtists = items.filter((i) => i.itemType === "artist");
 
   const isLoading =
     playlists === undefined ||
