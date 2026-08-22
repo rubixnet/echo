@@ -1,1 +1,1 @@
-declare module 'react-player/youtube';
+declare module "react-player/youtube";

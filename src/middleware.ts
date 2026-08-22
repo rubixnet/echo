@@ -1,30 +1,34 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyAuth } from "@/lib/auth"
+import { verifyAuth } from "@/lib/auth";
 
 export async function middleware(request: NextRequest) {
-    const token = request.cookies.get('session')?.value;
-    const { pathname } = request.nextUrl;
+  const token = request.cookies.get("session")?.value;
+  const { pathname } = request.nextUrl;
 
-    const isAuthRecovery = 
-        pathname === "/login" && 
-        (request.nextUrl.searchParams.has('error') || request.nextUrl.searchParams.has('logout'));
+  const isAuthRecovery =
+    pathname === "/login" &&
+    (request.nextUrl.searchParams.has("error") ||
+      request.nextUrl.searchParams.has("logout"));
 
-    const isPublicAuthPage = pathname === '/' || pathname === '/login';
-    
-    const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/tour') || pathname.startsWith('/home');
+  const isPublicAuthPage = pathname === "/" || pathname === "/login";
 
-    const verifiedToken = token ? await verifyAuth(token) : null;
+  const isProtectedRoute =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/tour") ||
+    pathname.startsWith("/home");
 
-    if (!verifiedToken && isProtectedRoute) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
+  const verifiedToken = token ? await verifyAuth(token) : null;
 
-    if (verifiedToken && isPublicAuthPage && !isAuthRecovery) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  if (!verifiedToken && isProtectedRoute) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
-    return NextResponse.next();
+  if (verifiedToken && isPublicAuthPage && !isAuthRecovery) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
