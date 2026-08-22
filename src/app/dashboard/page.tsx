@@ -9,7 +9,8 @@ export interface Category {
   _id: string;
   categoryId: string;
   name: string;
-  playlistId: string;type: "chart" | "genre" | string;
+  playlistId: string;
+  type: "chart" | "genre" | string;
   coverUrl?: string;
 }
 

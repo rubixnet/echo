@@ -12,7 +12,11 @@ import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 import { usePlaylistActions } from "@/components/PlaylistActions";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 
-export default function PlaylistPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PlaylistPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const resolvedParams = use(params);
   const router = useRouter();
   const user = useUser();
@@ -22,16 +26,19 @@ export default function PlaylistPage({ params }: { params: Promise<{ id: string 
 
   const { playTrack } = useGlobalPlayback();
 
-  const playlists = useQuery(api.playlists.getUserPlaylists, user?._id ? { userId: user._id } : "skip");
+  const playlists = useQuery(
+    api.playlists.getUserPlaylists,
+    user?._id ? { userId: user._id } : "skip",
+  );
   const tracks = useQuery(api.playlists.getPlaylistTracks, { playlistId });
   const playlist = playlists?.find((p) => p._id === playlistId);
 
   const isLoading = playlists === undefined || tracks === undefined;
 
-  const { handleTogglePin, openEdit, openDelete, modals, isPinned } = usePlaylistActions(
-    playlist,
-    { onDeleteSuccess: () => router.push("/dashboard/library") }
-  );
+  const { handleTogglePin, openEdit, openDelete, modals, isPinned } =
+    usePlaylistActions(playlist, {
+      onDeleteSuccess: () => router.push("/dashboard/library"),
+    });
 
   const totalDurationStr = useMemo(() => {
     if (!tracks) return "0 min";
@@ -46,7 +53,11 @@ export default function PlaylistPage({ params }: { params: Promise<{ id: string 
   }, [tracks]);
 
   if (!playlist && !isLoading) {
-    return <div className="p-10 text-center text-foreground/50 bg-background">Playlist not found</div>;
+    return (
+      <div className="p-10 text-center text-foreground/50 bg-background">
+        Playlist not found
+      </div>
+    );
   }
 
   const handlePlayFirst = (sorted: TrackLike[]) => {
@@ -59,7 +70,7 @@ export default function PlaylistPage({ params }: { params: Promise<{ id: string 
       },
       setLoadingId,
       sorted as any,
-      0
+      0,
     );
   };
 
@@ -74,11 +85,20 @@ export default function PlaylistPage({ params }: { params: Promise<{ id: string 
   ) : showGrid ? (
     <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
       {tracks!.slice(0, 4).map((t, i) => (
-        <img key={i} src={t?.coverUrl} className="w-full h-full object-cover" alt="" />
+        <img
+          key={i}
+          src={t?.coverUrl}
+          className="w-full h-full object-cover"
+          alt=""
+        />
       ))}
     </div>
   ) : (
-    <img src={tracks![0]?.coverUrl} className="w-full h-full object-cover" alt="" />
+    <img
+      src={tracks![0]?.coverUrl}
+      className="w-full h-full object-cover"
+      alt=""
+    />
   );
 
   return (

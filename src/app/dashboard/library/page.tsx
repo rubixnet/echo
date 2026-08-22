@@ -1,150 +1,317 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { History, Star, ListMusic, Pin, MoreVertical } from "lucide-react";
+import {
+  History,
+  Star,
+  ListMusic,
+  Pin,
+  MoreVertical,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
+import { useSearchFilter } from "@/hooks/useSearchFilter";
+import { LibrarySearchBar } from "@/components/LibrarySearchBar";
 import { PlaylistContextMenu } from "@/components/PlaylistActions";
 import { Track } from "@/components/TrackComponent";
 import Link from "next/link";
 
+const SECTION_LIMITS = {
+  pins: 5,
+  playlists: 8,
+  tracks: 6,
+  artists: 6,
+};
+
 export default function LibraryHubPage() {
   const user = useUser();
   const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const { playlists, likedSongs, historySongs, libraryTracks, libraryArtists, isLoading } = useLibraryData(user?._id);
-  const pinnedPlaylist = playlists.filter((p) => p.isPinned);
+  const [expandedSections, setExpandedSections] = useState<{
+    pins: boolean;
+    playlists: boolean;
+    tracks: boolean;
+    artists: boolean;
+  }>({
+    pins: false,
+    playlists: false,
+    tracks: false,
+    artists: false,
+  });
+
+  const toggleSection = (key: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const {
+    playlists,
+    likedSongs,
+    historySongs,
+    libraryTracks,
+    libraryArtists,
+    isLoading,
+  } = useLibraryData(user?._id);
+
+  const filteredPlaylists = useSearchFilter(playlists, searchTerm, ["name"]);
+  const filteredTracks = useSearchFilter(libraryTracks, searchTerm, [
+    "title",
+    "artist",
+  ]);
+  const filteredArtists = useSearchFilter(libraryArtists, searchTerm, [
+    "title",
+  ]);
+
+  const pinnedPlaylists = filteredPlaylists.filter((p) => p.isPinned);
 
   if (isLoading) {
     return <LibrarySkeleton />;
   }
 
+  const isSearching = Boolean(searchTerm.trim());
+
+  const displayedPins = expandedSections.pins
+    ? pinnedPlaylists
+    : pinnedPlaylists.slice(0, SECTION_LIMITS.pins);
+
+  const showCustomCards = !isSearching;
+  const customCardsCount = showCustomCards
+    ? (historySongs.length > 0 ? 1 : 0) + (likedSongs.length > 0 ? 1 : 0)
+    : 0;
+
+  const availablePlaylistSlots = Math.max(
+    0,
+    SECTION_LIMITS.playlists - customCardsCount,
+  );
+  const displayedPlaylists = expandedSections.playlists
+    ? filteredPlaylists
+    : filteredPlaylists.slice(0, availablePlaylistSlots);
+
+  const totalLibraryItems = customCardsCount + filteredPlaylists.length;
+
+  const displayedTracks = expandedSections.tracks
+    ? filteredTracks
+    : filteredTracks.slice(0, SECTION_LIMITS.tracks);
+
+  const displayedArtists = expandedSections.artists
+    ? filteredArtists
+    : filteredArtists.slice(0, SECTION_LIMITS.artists);
+
+  const hasAnyResults =
+    pinnedPlaylists.length > 0 ||
+    filteredPlaylists.length > 0 ||
+    filteredTracks.length > 0 ||
+    filteredArtists.length > 0 ||
+    (!isSearching && (historySongs.length > 0 || likedSongs.length > 0));
+
   return (
     <div className="px-6 lg:px-12 py-8 pb-12 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
-      {pinnedPlaylist.length > 0 &&
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight">Pins</h2>
-          </div>
+      <LibrarySearchBar value={searchTerm} onChange={setSearchTerm} />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {pinnedPlaylist.map((p) => (
-              <LibraryPlaylistItem key={p._id} playlist={p} />
-            ))}
-          </div>
-        </section>
-      }
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold tracking-tight">Your Library</h2>
+      {!hasAnyResults && isSearching ? (
+        <div className="py-24 text-center">
+          <p className="text-base font-semibold text-foreground/80">
+            No library results found for &ldquo;{searchTerm}&rdquo;
+          </p>
+          <p className="text-xs text-foreground/50 mt-1">
+            Check your spelling or try searching for another title, artist, or
+            playlist.
+          </p>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {historySongs.length > 0 && (
-            <div
-              onClick={() => router.push(`/dashboard/library/history`)}
-              className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-            >
-              <div className="aspect-square w-full rounded-md overflow-hidden bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm mb-3">
-                <History size={56} className="fill-transparent text-white drop-shadow-md" />
+      ) : (
+        <>
+          {pinnedPlaylists.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">Pins</h2>
+                {pinnedPlaylists.length > SECTION_LIMITS.pins && (
+                  <AccordionToggle
+                    isExpanded={expandedSections.pins}
+                    onToggle={() => toggleSection("pins")}
+                    count={pinnedPlaylists.length}
+                  />
+                )}
               </div>
-              <h3 className="font-bold text-sm text-foreground truncate">Recently Played</h3>
-              <p className="text-xs font-medium text-foreground/50 mt-0.5">
-                {historySongs.length === 1 ? "1 song" : `${historySongs.length} songs`}
-              </p>
-            </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                {displayedPins.map((p) => (
+                  <LibraryPlaylistItem key={p._id} playlist={p} />
+                ))}
+              </div>
+            </section>
           )}
 
-          {likedSongs.length > 0 && (
-            <div
-              onClick={() => router.push(`/dashboard/library/liked`)}
-              className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-            >
-              <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
-                <Star size={56} className="fill-white text-white drop-shadow-md" />
-              </div>
-              <h3 className="font-bold text-sm text-foreground truncate">Favorite Songs</h3>
-              <p className="text-xs font-medium text-foreground/50 mt-0.5">
-                {likedSongs.length === 1 ? "1 song" : `${likedSongs.length} songs`}
-              </p>
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold tracking-tight">Your Library</h2>
+              {totalLibraryItems > SECTION_LIMITS.playlists && (
+                <AccordionToggle
+                  isExpanded={expandedSections.playlists}
+                  onToggle={() => toggleSection("playlists")}
+                  count={totalLibraryItems}
+                />
+              )}
             </div>
-          )}
 
-          {playlists.map((p) => (
-            <LibraryPlaylistItem key={p._id} playlist={p} />
-          ))}
-        </div>
-
-        {playlists.length === 0 && historySongs.length === 0 && likedSongs.length === 0 && (
-          <div className="py-8 text-sm font-medium text-foreground/50">
-            Your library is empty.
-          </div>
-        )}
-      </section>
-
-      {libraryTracks.length > 0 && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold tracking-tight">Recently Saved Songs</h2>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
-            {libraryTracks.map((track, index) => (
-              <Track
-                key={track._id}
-                track={track}
-                index={index + 1}
-                variant="row"
-                loadingId={loadingId}
-                setLoadingId={setLoadingId}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {libraryArtists.length > 0 && (
-        <section className="space-y-4" >
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">Artists</h2>
-          </div>
-
-          <div className='flex gap-6'>
-            {libraryArtists.map((artist, idx) => (
-              <Link
-                key={idx}
-                href={`/dashboard/artist/${encodeURIComponent(artist.title)}`}
-                className="group flex flex-col text-center gap-4 p-2 rounded-2xl cursor-pointer transition-all"
-              >
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:h-30 md:w-30 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
-                  {artist.coverUrl ? (
-                    <img
-                      src={artist.coverUrl}
-                      alt={artist.title}
-                      className="w-full h-full object-cover transition-transform duration-300"
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+              {showCustomCards && historySongs.length > 0 && (
+                <div
+                  onClick={() => router.push(`/dashboard/library/history`)}
+                  className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
+                >
+                  <div className="aspect-square w-full rounded-md overflow-hidden bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm mb-3">
+                    <History
+                      size={56}
+                      className="fill-transparent text-white drop-shadow-md"
                     />
-                  ) : (
-                    <div className="w-full h-full flex justify-center bg-emerald-500/10 text-emerald-500 font-bold text-xl">
-                      {artist.title[0]}
-                    </div>
-                  )}
+                  </div>
+                  <h3 className="font-bold text-sm text-foreground truncate">
+                    Recently Played
+                  </h3>
+                  <p className="text-xs font-medium text-foreground/50 mt-0.5">
+                    {historySongs.length === 1
+                      ? "1 song"
+                      : `${historySongs.length} songs`}
+                  </p>
                 </div>
-                <span className="font-semibold text-xs text-foreground/80 group-hover:text-foreground truncate w-full transition-colors">
-                  {artist.title}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+              )}
+
+              {showCustomCards && likedSongs.length > 0 && (
+                <div
+                  onClick={() => router.push(`/dashboard/library/liked`)}
+                  className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
+                >
+                  <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
+                    <Star
+                      size={56}
+                      className="fill-white text-white drop-shadow-md"
+                    />
+                  </div>
+                  <h3 className="font-bold text-sm text-foreground truncate">
+                    Favorite Songs
+                  </h3>
+                  <p className="text-xs font-medium text-foreground/50 mt-0.5">
+                    {likedSongs.length === 1
+                      ? "1 song"
+                      : `${likedSongs.length} songs`}
+                  </p>
+                </div>
+              )}
+
+              {displayedPlaylists.map((p) => (
+                <LibraryPlaylistItem key={p._id} playlist={p} />
+              ))}
+            </div>
+
+            {filteredPlaylists.length === 0 && !showCustomCards && (
+              <div className="py-8 text-sm font-medium text-foreground/50">
+                No matching playlists.
+              </div>
+            )}
+          </section>
+
+          {filteredTracks.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">
+                  {isSearching ? "Matching Songs" : "Recently Saved Songs"}
+                </h2>
+                {filteredTracks.length > SECTION_LIMITS.tracks && (
+                  <AccordionToggle
+                    isExpanded={expandedSections.tracks}
+                    onToggle={() => toggleSection("tracks")}
+                    count={filteredTracks.length}
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
+                {displayedTracks.map((track, index) => (
+                  <Track
+                    key={track._id}
+                    track={track}
+                    index={index + 1}
+                    variant="row"
+                    loadingId={loadingId}
+                    setLoadingId={setLoadingId}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {filteredArtists.length > 0 && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">Artists</h2>
+                {filteredArtists.length > SECTION_LIMITS.artists && (
+                  <AccordionToggle
+                    isExpanded={expandedSections.artists}
+                    onToggle={() => toggleSection("artists")}
+                    count={filteredArtists.length}
+                  />
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-6">
+                {displayedArtists.map((artist, idx) => (
+                  <Link
+                    key={idx}
+                    href={`/dashboard/artist/${encodeURIComponent(artist.title)}`}
+                    className="group flex flex-col text-center gap-4 p-2 rounded-2xl cursor-pointer transition-all"
+                  >
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 md:h-30 md:w-30 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
+                      {artist.coverUrl ? (
+                        <img
+                          src={artist.coverUrl}
+                          alt={artist.title}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 font-bold text-xl">
+                          {artist.title[0]}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-semibold text-xs text-foreground/80 group-hover:text-foreground truncate w-full transition-colors">
+                      {artist.title}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
 }
 
+function AccordionToggle({
+  isExpanded,
+  onToggle,
+  count,
+}: {
+  isExpanded: boolean;
+  onToggle: () => void;
+  count: number;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex items-center gap-1 text-xs font-semibold text-foreground/60 hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-foreground/5"
+    >
+      <span>{isExpanded ? "Show Less" : `Show All (${count})`}</span>
+      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+    </button>
+  );
+}
+
 function LibraryPlaylistItem({ playlist }: { playlist: any }) {
   const router = useRouter();
-
   const trackCount = playlist.trackCount || 0;
   const coverUrl = playlist.coverUrl;
 
@@ -173,7 +340,9 @@ function LibraryPlaylistItem({ playlist }: { playlist: any }) {
 
       <div className="flex items-start justify-between gap-1">
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-sm text-foreground capitalize truncate">{playlist.name}</h3>
+          <h3 className="font-bold text-sm text-foreground capitalize truncate">
+            {playlist.name}
+          </h3>
           <p className="text-xs font-medium text-foreground/50 mt-0.5">
             {trackCount === 1 ? "1 song" : `${trackCount} songs`}
           </p>
