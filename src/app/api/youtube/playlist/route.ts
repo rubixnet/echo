@@ -45,8 +45,7 @@ export async function GET(request: Request) {
       const videoId = entry.id;
 
       let thumbnail =
-        entry.thumbnails?.[entry.thumbnails.length - 1]?.url ||
-        entry.thumbnail;
+        entry.thumbnails?.[entry.thumbnails.length - 1]?.url || entry.thumbnail;
 
       if (!thumbnail || !thumbnail.startsWith("http")) {
         thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
@@ -86,7 +85,7 @@ export async function GET(request: Request) {
     console.error("yt-dlp extraction error:", error?.message || error);
     return NextResponse.json(
       { error: "Failed to parse playlist" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

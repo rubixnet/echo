@@ -19,7 +19,10 @@ export async function GET(request: Request) {
 
     const excludeSet = new Set<string>([
       videoId,
-      ...excludeParam.split(",").map((id) => id.trim()).filter(Boolean),
+      ...excludeParam
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean),
     ]);
 
     const now = Date.now();
@@ -27,7 +30,7 @@ export async function GET(request: Request) {
     if (relatedCache.has(videoId) && relatedCache.get(videoId)!.expires > now) {
       const cachedItems = relatedCache.get(videoId)!.items;
       const filtered = cachedItems.filter(
-        (item: any) => !excludeSet.has(item.id || item.youtubeId)
+        (item: any) => !excludeSet.has(item.id || item.youtubeId),
       );
       return NextResponse.json({ items: filtered });
     }
@@ -89,7 +92,7 @@ export async function GET(request: Request) {
       ) {
         continue;
       }
-      
+
       const artist =
         song.artist?.name ||
         (Array.isArray(song.artists) && song.artists[0]?.name) ||

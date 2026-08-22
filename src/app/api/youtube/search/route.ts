@@ -8,7 +8,7 @@ const ytmusic = new YTMusic();
 let isInitialized = false;
 
 const searchCache = new Map<string, { items: any[]; expires: number }>();
-const CACHE_TTL = 30 * 60 * 1000; 
+const CACHE_TTL = 30 * 60 * 1000;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,7 +20,10 @@ export async function GET(request: Request) {
   const now = Date.now();
 
   if (searchCache.has(cacheKey) && searchCache.get(cacheKey)!.expires > now) {
-    return NextResponse.json({ items: searchCache.get(cacheKey)!.items, cached: true });
+    return NextResponse.json({
+      items: searchCache.get(cacheKey)!.items,
+      cached: true,
+    });
   }
 
   try {
@@ -64,7 +67,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ items });
     }
   } catch (err) {
-    console.warn("[Search API] Fast path failed, falling back to yt-dlp...", err);
+    console.warn(
+      "[Search API] Fast path failed, falling back to yt-dlp...",
+      err,
+    );
   }
 
   try {
@@ -75,7 +81,7 @@ export async function GET(request: Request) {
     try {
       const { stdout } = await execAsync(
         `yt-dlp --no-warnings --ignore-errors -j "ytsearch${FALLBACK_LIMIT}:${safeQuery}"`,
-        { maxBuffer: 10 * 1024 * 1024 }
+        { maxBuffer: 10 * 1024 * 1024 },
       );
       stdoutString = stdout;
     } catch (err: any) {
@@ -103,7 +109,8 @@ export async function GET(request: Request) {
             uploaderName: data.uploader,
             artist: data.uploader,
             artistId: null,
-            url: data.webpage_url || `https://www.youtube.com/watch?v=${data.id}`,
+            url:
+              data.webpage_url || `https://www.youtube.com/watch?v=${data.id}`,
             thumbnail: data.thumbnail,
             coverUrl: data.thumbnail,
             duration: data.duration,
@@ -123,6 +130,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ items });
   } catch (e: any) {
     console.error("Search Fallback Error:", e.message);
-    return NextResponse.json({ error: "Search failed", items: [] }, { status: 500 });
+    return NextResponse.json(
+      { error: "Search failed", items: [] },
+      { status: 500 },
+    );
   }
 }
