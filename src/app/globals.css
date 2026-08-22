@@ -3,7 +3,12 @@
 @import "shadcn/tailwind.css";
 
 body {
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
 }
 
 html,
@@ -85,7 +90,7 @@ body {
 }
 
 :root {
-  --background: oklch(98.51% 0 89.88);
+  --background: oklch(96% 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -131,11 +136,11 @@ body {
 }
 
 .item:focus-within svg {
-  color: black
+  color: black;
 }
 
 .dark {
-  --background: oklch(0.13 0.00 0.00);
+  --background: oklch(0.13 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
@@ -176,7 +181,7 @@ body {
 
   body {
     @apply bg-background text-foreground;
-    @apply selection:bg-emerald-200 selection:text-emerald-900 dark:selection:bg-emerald-900 dark:selection:text-emerald-200
+    @apply selection:bg-emerald-200 selection:text-emerald-900 dark:selection:bg-emerald-900 dark:selection:text-emerald-200;
   }
 
   html {
