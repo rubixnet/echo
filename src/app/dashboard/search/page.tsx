@@ -11,7 +11,9 @@ export default function SearchPage() {
   const query = searchParams.get("q") || "";
 
   const [ytResults, setYtResults] = useState<any[]>([]);
-  const [artists, setArtists] = useState<{ name: string; avatarUrl: string }[]>([]);
+  const [artists, setArtists] = useState<{ name: string; avatarUrl: string }[]>(
+    [],
+  );
   const [isSearchingYt, setIsSearchingYt] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -33,7 +35,7 @@ export default function SearchPage() {
 
     try {
       const res = await fetch(
-        `/api/youtube/search?q=${encodeURIComponent(queryToSearch)}`
+        `/api/youtube/search?q=${encodeURIComponent(queryToSearch)}`,
       );
       const data = await res.json().catch(() => ({ items: [], artists: [] }));
 
@@ -50,7 +52,10 @@ export default function SearchPage() {
 
         setYtResults(top6Songs);
 
-        const artistMap = new Map<string, { name: string; avatarUrl: string }>();
+        const artistMap = new Map<
+          string,
+          { name: string; avatarUrl: string }
+        >();
 
         if (data.artists && Array.isArray(data.artists)) {
           data.artists.forEach((a: any) => {
@@ -103,7 +108,6 @@ export default function SearchPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-6">
-
                 {ytResults.map((track) => {
                   const videoId =
                     track.url?.split("?v=")[1] || track.youtubeId || track.id;
@@ -118,7 +122,7 @@ export default function SearchPage() {
                     />
                   );
                 })}
-                
+
                 {isSearchingYt &&
                   Array.from({ length: 6 - ytResults.length }).map((_, i) => (
                     <div
@@ -138,9 +142,7 @@ export default function SearchPage() {
 
           {artists.length > 0 && !isSearchingYt && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
-              <h3 className="font-black uppercase text-primary">
-                Artists
-              </h3>
+              <h3 className="font-black uppercase text-primary">Artists</h3>
 
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                 {artists.map((artist, idx) => (
@@ -149,7 +151,6 @@ export default function SearchPage() {
                     href={`/dashboard/artist/${encodeURIComponent(artist.name)}`}
                     className="group flex flex-col items-center gap-2 p-2 rounded-2xl cursor-pointer transition-all text-center"
                   >
-
                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
                       {artist.avatarUrl ? (
                         <img
