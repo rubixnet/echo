@@ -12,7 +12,7 @@ export const getLibraryItems = query({
       return await ctx.db
         .query("libraryItems")
         .withIndex("by_user_and_type", (q) =>
-          q.eq("userId", args.userId).eq("itemType", targetType)
+          q.eq("userId", args.userId).eq("itemType", targetType),
         )
         .order("desc")
         .collect();
@@ -32,7 +32,7 @@ export const getUserLibrary = query({
     const items = await ctx.db
       .query("libraryItems")
       .withIndex("by_user_and_type", (q) =>
-        q.eq("userId", args.userId).eq("itemType", "track")
+        q.eq("userId", args.userId).eq("itemType", "track"),
       )
       .order("desc")
       .collect();
@@ -64,7 +64,10 @@ export const checkSaved = query({
     const existing = await ctx.db
       .query("libraryItems")
       .withIndex("by_user_and_item", (q) =>
-        q.eq("userId", args.userId).eq("itemType", args.itemType).eq("itemId", args.itemId)
+        q
+          .eq("userId", args.userId)
+          .eq("itemType", args.itemType)
+          .eq("itemId", args.itemId),
       )
       .first();
 
@@ -86,7 +89,10 @@ export const toggleSaveItem = mutation({
     const existing = await ctx.db
       .query("libraryItems")
       .withIndex("by_user_and_item", (q) =>
-        q.eq("userId", args.userId).eq("itemType", args.itemType).eq("itemId", args.itemId)
+        q
+          .eq("userId", args.userId)
+          .eq("itemType", args.itemType)
+          .eq("itemId", args.itemId),
       )
       .first();
 
