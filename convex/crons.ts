@@ -13,14 +13,14 @@ crons.interval(
   "sync-daily-charts",
   { hours: 24 },
   internal.syncPlaylists.syncPlaylistsByFrequency,
-  { frequency: "daily" }
+  { frequency: "daily" },
 );
 
 crons.interval(
   "sync-weekly-genres",
   { hours: 168 },
   internal.syncPlaylists.syncPlaylistsByFrequency,
-  { frequency: "weekly" }
+  { frequency: "weekly" },
 );
 
 export default crons;
