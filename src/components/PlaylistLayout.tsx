@@ -12,7 +12,7 @@ import {
   Check,
   PenLine,
   Pin,
-  Trash
+  Trash,
 } from "lucide-react";
 import { Button, ButtonGroup } from "@/components/ui/button";
 import {
@@ -24,6 +24,7 @@ import {
 import { Track } from "@/components/TrackComponent";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { useDominantColor } from "@/components/GlobalPlayer/Shared";
+import { useSearchFilter } from "@/hooks/useSearchFilter";
 import { cn } from "@/lib/utils";
 
 type SortColumn = "date" | "title" | "artist" | "duration";
@@ -49,10 +50,7 @@ type PlaylistLayoutProps = {
   tracks: TrackLike[] | null | undefined;
   isLoading?: boolean;
   onPlayFirst?: (sortedTracks: TrackLike[]) => void;
-  renderTrack?: (
-    track: TrackLike,
-    allTracks: TrackLike[]
-  ) => ReactNode;
+  renderTrack?: (track: TrackLike, allTracks: TrackLike[]) => ReactNode;
   emptyIcon?: ReactNode;
   emptyText?: string;
   className?: string;
@@ -92,7 +90,8 @@ export function PlaylistLayout({
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const toggleSort = () => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  const toggleSort = () =>
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
 
   let imageUrl = coverUrl;
   if (!imageUrl && React.isValidElement(coverNode)) {
@@ -104,40 +103,31 @@ export function PlaylistLayout({
     const shuffled = [...tracks].sort(() => Math.random() - 0.5);
     onPlayFirst?.(shuffled);
     setLoadingId(shuffled[0]._id);
-  }
+  };
 
   const rgb = useDominantColor(imageUrl);
 
+  const filtered = useSearchFilter(tracks, searchTerm, ["title", "artist"]);
+
   const sortedTracks = useMemo(() => {
-    if (!tracks) return [];
+    if (sortColumn === "date") return filtered;
 
-    const filtered = tracks.filter((t) => {
-      if (!searchTerm.trim()) return true;
-      const query = searchTerm.toLowerCase();
-      const matchTitle = (t.title || "").toLowerCase().includes(query);
-      const matchArtist = (t.artist || "").toLowerCase().includes(query);
-      return matchTitle || matchArtist;
-    });
-
-    const withIndex = filtered.map((t, i) => ({ ...t, originalIndex: i }));
-    return withIndex.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       let cmp = 0;
-      if (sortColumn === "title") {
+      if (sortColumn === "title")
         cmp = (a.title || "").localeCompare(b.title || "");
-      } else if (sortColumn === "artist") {
+      if (sortColumn === "artist")
         cmp = (a.artist || "").localeCompare(b.artist || "");
-      } else if (sortColumn === "duration") {
+      if (sortColumn === "duration") {
         const getSecs = (d: string) => {
           const [m, s] = (d || "0:00").split(":").map(Number);
           return (m || 0) * 60 + (s || 0);
         };
         cmp = getSecs(a.duration || "0:00") - getSecs(b.duration || "0:00");
-      } else {
-        cmp = a.originalIndex - b.originalIndex;
       }
       return sortOrder === "asc" ? cmp : -cmp;
     });
-  }, [tracks, sortColumn, sortOrder, searchTerm]);
+  }, [filtered, sortColumn, sortOrder]);
 
   if (isLoading || tracks === undefined) {
     return <PlaylistLayoutSkeleton className={className} />;
@@ -149,42 +139,50 @@ export function PlaylistLayout({
 
   const isValidRgb = Array.isArray(rgb) && rgb.length >= 3 && !isNaN(rgb[0]);
 
-  const brightness = isValidRgb ? (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000 : 255;
+  const brightness = isValidRgb
+    ? (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000
+    : 255;
   const r = isValidRgb ? rgb[0] : 150;
   const g = isValidRgb ? rgb[1] : 150;
   const b = isValidRgb ? rgb[2] : 150;
 
   const maxVal = Math.max(r, g, b, 10);
-  const scale = maxVal < 100 ? 2.5 : (maxVal < 150 ? 1.5 : 1);
+  const scale = maxVal < 100 ? 2.5 : maxVal < 150 ? 1.5 : 1;
   const lr = Math.min(255, Math.round(r * scale));
   const lg = Math.min(255, Math.round(g * scale));
   const lb = Math.min(255, Math.round(b * scale));
 
   return (
-    <div className={cn("relative w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background", className)}>
+    <div
+      className={cn(
+        "relative w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background",
+        className,
+      )}
+    >
       <div
         className={cn(
-          "absolute -top-24 -left-10 md:-left-8 right-0 pointer-events-none transition-colors duration-700 ease-in-out z-0 h-[500px] md:h-[600px] lg:h-[400px]",
-
-          "[--bg-r:var(--lr)] [--bg-g:var(--lg)] [--bg-b:var(--lb)] [--bg-op1:1] [--bg-op2:0.5]",
-
-          "dark:[--bg-r:var(--dr)] dark:[--bg-g:var(--dg)] dark:[--bg-b:var(--db)] dark:[--bg-op1:0.7] dark:[--bg-op2:0.3]"
+          "absolute -top-24 -left-10 md:-left-8 right-0 pointer-events-none transition-colors duration-700 ease-in-out z-0 h-[500px] md:h-[600px] lg:h-[400px] blur-3xl",
+          "[--bg-r:var(--lr)] [--bg-g:var(--lg)] [--bg-b:var(--lb)] [--bg-op1:0.8] [--bg-op2:0.4]",
+          "dark:[--bg-r:var(--dr)] dark:[--bg-g:var(--dg)] dark:[--bg-b:var(--db)] dark:[--bg-op1:0.6] dark:[--bg-op2:0.2]",
         )}
-        style={{
-          '--lr': lr, '--lg': lg, '--lb': lb,
-          '--dr': r, '--dg': g, '--db': b,
+        style={
+          {
+            "--lr": lr,
+            "--lg": lg,
+            "--lb": lb,
+            "--dr": r,
+            "--dg": g,
+            "--db": b,
 
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 80px)',
-          maskImage: 'linear-gradient(to right, transparent 0%, black 80px)',
-
-          background: isValidRgb
-            ? `radial-gradient(100% 100% at top left, 
-                rgba(var(--bg-r), var(--bg-g), var(--bg-b), var(--bg-op1)) 0%, 
-                rgba(var(--bg-r), var(--bg-g), var(--bg-b), var(--bg-op2)) 50%, 
-                rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0) 85%
-              )`
-            : 'transparent'
-        } as React.CSSProperties}
+            background: isValidRgb
+              ? `radial-gradient(220% 100% at 0% 0%, 
+            rgba(var(--bg-r), var(--bg-g), var(--bg-b), var(--bg-op1)) 0%, 
+            rgba(var(--bg-r), var(--bg-g), var(--bg-b), var(--bg-op2)) 55%, 
+            rgba(var(--bg-r), var(--bg-g), var(--bg-b), 0) 100%
+          )`
+              : "transparent",
+          } as React.CSSProperties
+        }
       />
       <div className="relative z-10 w-full">
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8">
@@ -195,20 +193,39 @@ export function PlaylistLayout({
             <div className="fixed inset-x-0 top-4 z-50 px-6 md:hidden">
               <div className="flex justify-end">
                 <ButtonGroup separator={false}>
-                  <Button variant="ghost" size="sm" className="w-10 px-0 text-foreground/70" onClick={() => setShowMobileSearch(!showMobileSearch)}>
-                    <SearchIcon size={16} className={showMobileSearch ? "text-primary" : ""} />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-10 px-0 text-foreground/70"
+                    onClick={() => setShowMobileSearch(!showMobileSearch)}
+                  >
+                    <SearchIcon
+                      size={16}
+                      className={showMobileSearch ? "text-primary" : ""}
+                    />
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="w-10 px-0 text-foreground/70">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-10 px-0 text-foreground/70"
+                      >
                         <ListFilter size={14} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-40 shadow-none"
+                    >
                       {filters.map((filter) => {
                         const isSelected = sortColumn === filter;
                         return (
-                          <DropdownMenuItem key={filter} onClick={() => setSortColumn(filter)} className="cursor-pointer">
+                          <DropdownMenuItem
+                            key={filter}
+                            onClick={() => setSortColumn(filter)}
+                            className="cursor-pointer"
+                          >
                             <div className="flex items-center gap-2">
                               <span className="flex w-4 items-center justify-center">
                                 {isSelected && <Check className="h-4 w-4" />}
@@ -220,8 +237,17 @@ export function PlaylistLayout({
                       })}
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Button variant="ghost" size="sm" className="w-10 px-0 text-foreground/70" onClick={toggleSort}>
-                    {sortOrder === "desc" ? <ArrowDownUp size={16} /> : <ArrowUpDown size={16} />}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-10 px-0 text-foreground/70"
+                    onClick={toggleSort}
+                  >
+                    {sortOrder === "desc" ? (
+                      <ArrowDownUp size={16} />
+                    ) : (
+                      <ArrowUpDown size={16} />
+                    )}
                   </Button>
                 </ButtonGroup>
               </div>
@@ -249,32 +275,60 @@ export function PlaylistLayout({
         </div>
 
         <div className="flex md:hidden items-center justify-between -mx-6 px-6 py-3 mb-6 ">
-          <Button size="default" className="w-11 px-0 text-foreground/70" onClick={handleShuffle}>
+          <Button
+            size="default"
+            className="w-11 px-0 text-foreground/70"
+            onClick={handleShuffle}
+          >
             <Shuffle size={16} />
           </Button>
 
           {showActions && (
-            < ButtonGroup size="default" separator={false}>
-              <Button variant="ghost" className="h-full w-10 px-0 text-foreground/70" onClick={onEdit}>
+            <ButtonGroup size="default" separator={false}>
+              <Button
+                variant="ghost"
+                className="h-full w-10 px-0 text-foreground/70"
+                onClick={onEdit}
+              >
                 <PenLine size={16} />
               </Button>
-              <Button variant="ghost" className={cn("h-full w-10 px-0 text-foreground/70", isPinned && "text-foreground")} onClick={onTogglePin}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "h-full w-10 px-0 text-foreground/70",
+                  isPinned && "text-foreground",
+                )}
+                onClick={onTogglePin}
+              >
                 <Pin size={16} className={isPinned ? "fill-current" : ""} />
               </Button>
-              <Button variant="ghost" className="h-full w-10 px-0 text-foreground/70" onClick={onDelete}>
+              <Button
+                variant="ghost"
+                className="h-full w-10 px-0 text-foreground/70"
+                onClick={onDelete}
+              >
                 <Trash size={16} />
               </Button>
             </ButtonGroup>
           )}
 
-
-          <Button size="default" className="w-11 px-0 text-foreground/70" disabled={!hasTracks || !onPlayFirst} onClick={() => onPlayFirst?.(sortedTracks)}>
+          <Button
+            size="default"
+            className="w-11 px-0 text-foreground/70"
+            disabled={!hasTracks || !onPlayFirst}
+            onClick={() => onPlayFirst?.(sortedTracks)}
+          >
             <Play size={16} fill="currentColor" />
           </Button>
         </div>
 
-        <div className={cn("md:hidden overflow-hidden transition-all duration-300", showMobileSearch ? "h-12 opacity-100 mb-4" : "h-0 opacity-0 mb-0")}>
-          <LiquidContainer radius="50px" className="h-10 w-full">
+        <div
+          className={cn(
+            "md:hidden overflow-hidden transition-all duration-300",
+            showMobileSearch ? "h-12 opacity-100 mb-4" : "h-0 opacity-0 mb-0",
+          )}
+        >
+          <LiquidContainer radius="50px" className="h-10 w-full shadow-none">
             <input
               type="text"
               placeholder="Search Playlist"
@@ -325,7 +379,7 @@ export function PlaylistLayout({
                   size="sm"
                   className={cn(
                     "w-10 px-0 text-foreground/70 hover:text-foreground hover:bg-foreground/10",
-                    isPinned && "text-foreground"
+                    isPinned && "text-foreground",
                   )}
                   onClick={onTogglePin}
                   title={isPinned ? "Unpin playlist" : "Pin playlist"}
@@ -397,10 +451,13 @@ export function PlaylistLayout({
                 placeholder="Search Playlist"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="relative z-10 pr-12 w-full h-full bg-transparent pl-4 text-foreground placeholder:text-foreground/60 focus:outline-none"
+                className="relative z-10 pr-12 shadow-none w-full h-full bg-transparent pl-4 text-foreground placeholder:text-foreground/60 focus:outline-none"
               />
               <div className="absolute inset-y-0 -right-1 flex items-center pr-4 z-20">
-                <button type="button" className="p-1.5 text-foreground/60 hover:text-foreground transition-colors cursor-default pointer-events-none">
+                <button
+                  type="button"
+                  className="p-1.5 text-foreground/60 hover:text-foreground transition-colors cursor-default pointer-events-none"
+                >
                   <SearchIcon size={20} />
                 </button>
               </div>
@@ -421,7 +478,7 @@ export function PlaylistLayout({
               {sortedTracks.map((track) => {
                 if (!track) return null;
 
-                const trackKey = track._id
+                const trackKey = track._id;
 
                 if (renderTrack) {
                   return (
@@ -445,13 +502,18 @@ export function PlaylistLayout({
           </div>
         )}
       </div>
-    </div >
+    </div>
   );
 }
 
 export function PlaylistLayoutSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background", className)}>
+    <div
+      className={cn(
+        "w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background",
+        className,
+      )}
+    >
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8">
         <div>
           <div className="flex justify-between">
@@ -505,26 +567,3 @@ function TrackRowSkeleton() {
     </div>
   );
 }
-
-// return (
-//   <div className={cn("relative w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background", className)}>
-//     <div
-//       className={cn(
-//         "absolute -top-24 -left-10 md:-left-8 right-0 pointer-events-none transition-colors duration-700 ease-in-out z-0 h-[500px] md:h-[600px] lg:h-[400px]",
-//         isDarkColor
-//           ? "[--op1:1] [--op2:0.8] dark:[--op1:1] dark:[--op2:1]"
-//           : "[--op1:0.85] [--op2:0.4] dark:[--op1:0.5] dark:[--op2:0.15]"
-//       )}
-//       style={{
-//         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%)',
-//         maskImage: 'linear-gradient(to right, transparent 0%, black 15%)',
-
-//         background: isValidRgb
-//           ? `radial-gradient(150% 120% at top left,
-//               rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, var(--op1)) 0%,
-//               rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, var(--op2)) 45%,
-//               rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0) 80%
-//             )`
-//           : 'transparent'
-//       }}
-//     />
