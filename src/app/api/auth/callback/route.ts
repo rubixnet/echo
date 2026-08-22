@@ -29,12 +29,15 @@ export async function GET(req: Request) {
       lastName?: string | null;
     };
     const fallbackName = workosUser.email.split("@")[0];
-    const displayName = [workosUserWithName.firstName, workosUserWithName.lastName]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || fallbackName;
+    const displayName =
+      [workosUserWithName.firstName, workosUserWithName.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || fallbackName;
 
-    let profile = await fetchQuery(api.users.getProfile, { workosID: workosUser.id });
+    let profile = await fetchQuery(api.users.getProfile, {
+      workosID: workosUser.id,
+    });
     let isNewUser = false;
 
     if (!profile) {
@@ -68,7 +71,6 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.redirect(new URL("/dashboard", req.url));
-
   } catch (error) {
     console.error("Auth Callback Error:", error);
     return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
