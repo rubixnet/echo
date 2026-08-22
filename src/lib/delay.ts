@@ -6,20 +6,20 @@
  * @returns The offset in milliseconds. Add this to client Date.now() to get Server time.
  */
 export function calculateServerOffset(
-    clientSendTime: number,
-    serverTime: number,
-    clientReceiveTime: number
+  clientSendTime: number,
+  serverTime: number,
+  clientReceiveTime: number,
 ): number {
-    // Round Trip Time (RTT) is the total time the request took to go there and back
-    const rtt = clientReceiveTime - clientSendTime;
+  // Round Trip Time (RTT) is the total time the request took to go there and back
+  const rtt = clientReceiveTime - clientSendTime;
 
-    // Assume the network delay is symmetrical (it took half the RTT to get to the server)
-    const networkLatency = rtt / 2;
+  // Assume the network delay is symmetrical (it took half the RTT to get to the server)
+  const networkLatency = rtt / 2;
 
-    // The time the server *actually* processed it, minus what our clock thought it should be
-    const offset = serverTime - (clientSendTime + networkLatency);
+  // The time the server *actually* processed it, minus what our clock thought it should be
+  const offset = serverTime - (clientSendTime + networkLatency);
 
-    return offset;
+  return offset;
 }
 
 /**
@@ -32,21 +32,21 @@ export function calculateServerOffset(
  */
 
 export function getPerfectSyncTime(
-    serverStartTime: number | undefined,
-    pausePosition: number,
-    isPlaying: boolean,
-    serverOffset: number = 0 // Default to 0 if we haven't calculated it yet
+  serverStartTime: number | undefined,
+  pausePosition: number,
+  isPlaying: boolean,
+  serverOffset: number = 0, // Default to 0 if we haven't calculated it yet
 ): number {
-    if (!isPlaying || !serverStartTime) {
-        return pausePosition;
-    }
+  if (!isPlaying || !serverStartTime) {
+    return pausePosition;
+  }
 
-    // What time is it right now on the Server?
-    const currentServerTime = Date.now() + serverOffset;
+  // What time is it right now on the Server?
+  const currentServerTime = Date.now() + serverOffset;
 
-    // How long has the song been playing since the host hit play?
-    const elapsedMilliseconds = currentServerTime - serverStartTime;
+  // How long has the song been playing since the host hit play?
+  const elapsedMilliseconds = currentServerTime - serverStartTime;
 
-    // Convert to seconds for HTML5 Audio
-    return elapsedMilliseconds / 1000;
+  // Convert to seconds for HTML5 Audio
+  return elapsedMilliseconds / 1000;
 }
