@@ -9,14 +9,21 @@ export interface TrackMetadata {
   uploaderName?: string;
   thumbnail?: string;
   source?: {
-    type: "search" | "category" | "playlist" | "history" | "liked" | "player" | string;
+    type:
+      | "search"
+      | "category"
+      | "playlist"
+      | "history"
+      | "liked"
+      | "player"
+      | string;
     name?: string;
     coverUrl?: string;
   };
 }
 
 export interface CanonicalTrack {
-  id: string; 
+  id: string;
   youtubeId: string;
   title: string;
   artist: string;
@@ -24,12 +31,17 @@ export interface CanonicalTrack {
   audioUrl: string;
   duration: string;
   source: {
-    type: "search" | "category" | "playlist" | "history" | "liked" | "player" | string;
+    type:
+      | "search"
+      | "category"
+      | "playlist"
+      | "history"
+      | "liked"
+      | "player"
+      | string;
     name?: string;
   };
 }
-
-
 
 export function extractYouTubeId(raw: any): string {
   if (!raw || typeof raw !== "string") return "";
@@ -50,7 +62,7 @@ export function extractYouTubeId(raw: any): string {
 
 export function normalizeTrack(
   track: any,
-  defaultSourceType: CanonicalTrack["source"]["type"] = "search"
+  defaultSourceType: CanonicalTrack["source"]["type"] = "search",
 ): CanonicalTrack {
   const ytId =
     extractYouTubeId(track?.youtubeId) ||
