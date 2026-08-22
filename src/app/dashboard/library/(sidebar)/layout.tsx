@@ -8,11 +8,17 @@ import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
 import { cn } from "@/lib/utils";
 
-export default function SidebarLayout({ children }: { children: React.ReactNode }) {
+export default function SidebarLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const user = useUser();
   const pathname = usePathname();
 
-  const { playlists, likedSongs, historySongs, isLoading } = useLibraryData(user?._id);
+  const { playlists, likedSongs, historySongs, isLoading } = useLibraryData(
+    user?._id,
+  );
 
   const sortedPlaylists = [...playlists].sort((a, b) => {
     const aPinned = a.isPinned ?? false;
@@ -39,11 +45,14 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       "flex items-center gap-3 p-2 rounded-lg transition-colors group",
                       pathname === "/dashboard/library/history"
                         ? "bg-foreground/[0.08]"
-                        : "hover:bg-foreground/[0.04]"
+                        : "hover:bg-foreground/[0.04]",
                     )}
                   >
                     <div className="w-12 h-12 shrink-0 rounded-md bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm">
-                      <History size={20} className="fill-transparent text-white" />
+                      <History
+                        size={20}
+                        className="fill-transparent text-white"
+                      />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span
@@ -51,7 +60,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                           "text-sm font-bold truncate transition-colors",
                           pathname === "/dashboard/library/history"
                             ? "text-foreground"
-                            : "text-foreground/80 group-hover:text-foreground"
+                            : "text-foreground/80 group-hover:text-foreground",
                         )}
                       >
                         Recently Played
@@ -78,7 +87,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       "flex items-center gap-3 p-2 rounded-lg transition-colors group",
                       pathname === "/dashboard/library/liked"
                         ? "bg-foreground/[0.08]"
-                        : "hover:bg-foreground/[0.04]"
+                        : "hover:bg-foreground/[0.04]",
                     )}
                   >
                     <div className="w-12 h-12 shrink-0 rounded-md bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
@@ -90,7 +99,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                           "text-sm font-bold truncate transition-colors",
                           pathname === "/dashboard/library/liked"
                             ? "text-foreground"
-                            : "text-foreground/80 group-hover:text-foreground"
+                            : "text-foreground/80 group-hover:text-foreground",
                         )}
                       >
                         Favorite Songs
@@ -122,9 +131,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 pt-0 relative z-10">
-        {children}
-      </main>
+      <main className="flex-1 min-w-0 pt-0 relative z-10">{children}</main>
     </div>
   );
 }
@@ -146,9 +153,7 @@ function SidebarPlaylistItem({
       <div
         className={cn(
           "relative flex items-center p-2 rounded-lg transition-colors group",
-          isActive
-            ? "bg-foreground/[0.08]"
-            : "hover:bg-foreground/[0.04]"
+          isActive ? "bg-foreground/[0.08]" : "hover:bg-foreground/[0.04]",
         )}
       >
         <Link
@@ -179,7 +184,7 @@ function SidebarPlaylistItem({
                 "text-sm font-bold truncate capitalize transition-colors",
                 isActive
                   ? "text-foreground"
-                  : "text-foreground/80 group-hover:text-foreground"
+                  : "text-foreground/80 group-hover:text-foreground",
               )}
             >
               {playlist.name}

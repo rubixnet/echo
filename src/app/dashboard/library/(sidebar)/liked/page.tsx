@@ -6,7 +6,7 @@ import { api } from "../../../../../../convex/_generated/api";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
 import { Track } from "@/components/TrackComponent";
-import {Star} from "lucide-react";
+import { Star } from "lucide-react";
 
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 
@@ -17,11 +17,11 @@ export default function LikedSongsPage() {
 
   const playlists = useQuery(
     api.playlists.getUserPlaylists,
-    user?._id ? { userId: user._id } : "skip"
+    user?._id ? { userId: user._id } : "skip",
   );
   const likedSongs = useQuery(
     api.likes.getMyLikes,
-    user?._id ? { userId: user._id } : "skip"
+    user?._id ? { userId: user._id } : "skip",
   );
 
   const isLoading = playlists === undefined || likedSongs === undefined;
@@ -48,7 +48,7 @@ export default function LikedSongsPage() {
       },
       setLoadingId,
       sorted as any,
-      0
+      0,
     );
   };
 
