@@ -6,22 +6,30 @@ import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 import { Track } from "@/components/TrackComponent";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 
-export default function TypePage({ params }: { params: Promise<{ type: string }> }) {
+export default function TypePage({
+  params,
+}: {
+  params: Promise<{ type: string }>;
+}) {
   const resolvedParams = use(params);
   const typeId = resolvedParams.type;
 
   const categories = useQuery(api.syncPlaylists.getCategories);
-  const dbTracks = useQuery(api.syncPlaylists.getCategoryTracks, { categoryId: typeId });
+  const dbTracks = useQuery(api.syncPlaylists.getCategoryTracks, {
+    categoryId: typeId,
+  });
 
   const category = categories?.find((c) => c.categoryId === typeId);
 
   const [tracks, setTracks] = useState<TrackLike[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  const { playTrack } = useGlobalPlayback();
 
   useEffect(() => {
-    if (!dbTracks) return;  
+    if (!dbTracks) return;
 
     const mappedTracks: TrackLike[] = dbTracks.map((t, idx) => ({
       _id: t._id || t.youtubeId || `track-${idx}`,
@@ -30,7 +38,7 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
       title: t.title || "Untitled Track",
       artist: t.artist || "Unknown Artist",
       thumbnail: t.thumbnail || t.coverUrl,
-      coverUrl: t.coverUrl || t.thumbnail, 
+      coverUrl: t.coverUrl || t.thumbnail,
       duration: t.duration || "3:30",
       url: `https://www.youtube.com/watch?v=${t.youtubeId}`,
     }));
@@ -52,9 +60,10 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
   }
 
   const handlePlayFirst = (sortedTracks: TrackLike[]) => {
-    if (sortedTracks.length > 0) {
+    const first = sortedTracks[0];
+    if (!first) return;
 
-    }
+    playTrack(first, setLoadingId, sortedTracks as any, 0);
   };
 
   const categoryName = category?.name || typeId.toUpperCase();
@@ -63,16 +72,23 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
   return (
     <PlaylistLayout
       title={categoryName}
-      subtitle={`Official ${categoryType === "chart" ? "YouTube Music Chart" : "Genre Feed"
-        } updated dynamically.`}
+      subtitle={`Official ${
+        categoryType === "chart" ? "YouTube Music Chart" : "Genre Feed"
+      } updated dynamically.`}
       coverNode={
         <div className="w-full h-full flex items-center justify-center bg-foreground/5 text-foreground/40">
-          {categoryType === "chart" ? <TrendingUp size={48} /> : <Music size={48} />}
+          {categoryType === "chart" ? (
+            <TrendingUp size={48} />
+          ) : (
+            <Music size={48} />
+          )}
         </div>
       }
       metaLine={
         <>
-          <span className="capitalize font-bold text-foreground">{categoryType}</span>
+          <span className="capitalize font-bold text-foreground">
+            {categoryType}
+          </span>
           <span className="text-foreground/40">•</span>
           <span>{tracks.length} tracks</span>
         </>
@@ -80,7 +96,9 @@ export default function TypePage({ params }: { params: Promise<{ type: string }>
       tracks={tracks}
       isLoading={isLoading}
       onPlayFirst={handlePlayFirst}
-      emptyIcon={<Music className="mx-auto mb-4 text-foreground/30" size={48} />}
+      emptyIcon={
+        <Music className="mx-auto mb-4 text-foreground/30" size={48} />
+      }
       emptyText="No songs found in this category."
       renderTrack={(track, index) => (
         <Track

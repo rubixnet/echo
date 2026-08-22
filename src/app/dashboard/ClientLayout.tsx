@@ -5,11 +5,16 @@ import Sidebar from "@/components/Sidebar";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import Navbar from "@/components/Navbar/Navbar";
 
-export default function ClientLayout({ children, user }: { children: React.ReactNode; user: any; }) {
+export default function ClientLayout({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: any;
+}) {
   return (
     <UserProvider user={user}>
       <ConvexClientProvider>
-
         <AudioProvider>
           <DashboardShell user={user}>{children}</DashboardShell>
         </AudioProvider>
@@ -18,7 +23,13 @@ export default function ClientLayout({ children, user }: { children: React.React
   );
 }
 
-function DashboardShell({ children, user }: { children: React.ReactNode; user: any; }) {
+function DashboardShell({
+  children,
+  user,
+}: {
+  children: React.ReactNode;
+  user: any;
+}) {
   return (
     <div className="flex flex-col h-screen w-full bg-background font-sans overflow-hidden text-neutral-900">
       <div className="flex flex-1 overflow-hidden relative">

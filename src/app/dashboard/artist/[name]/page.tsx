@@ -1,14 +1,16 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useMemo } from "react";
 import { Track } from "@/components/TrackComponent";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { Play, Shuffle, Music2, Plus, Bookmark } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Play, Shuffle, SearchIcon, Music2, Bookmark } from "lucide-react";
+import { Button, ButtonGroup } from "@/components/ui/button";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { useSearchFilter } from "@/hooks/useSearchFilter";
 
 interface ArtistData {
   name: string;
@@ -19,18 +21,22 @@ interface ArtistData {
   songs: any[];
 }
 
-export default function ArtistPage({ params }: { params: Promise<{ name: string }> }) {
+export default function ArtistPage({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}) {
   const resolvedParams = use(params);
   const rawName = resolvedParams.name;
   const artistName = decodeURIComponent(rawName || "");
-  const user = useUser()
+  const user = useUser();
 
+  const [searchTerm, setSearchTerm] = useState("");
   const [artistData, setArtistData] = useState<ArtistData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const toggleSaveLibraryItem = useMutation(api.library.toggleSaveItem);
-
   const { playTrack } = useGlobalPlayback();
 
   useEffect(() => {
@@ -39,7 +45,9 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
       setIsLoading(true);
 
       try {
-        const res = await fetch(`/api/youtube/artist?name=${encodeURIComponent(artistName)}`);
+        const res = await fetch(
+          `/api/youtube/artist?name=${encodeURIComponent(artistName)}`,
+        );
         if (res.ok) {
           const data = await res.json();
           setArtistData(data);
@@ -53,6 +61,15 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
     fetchArtist();
   }, [artistName]);
 
+  const filteredTopSongs = useSearchFilter(artistData?.topSongs, searchTerm, [
+    "title",
+    "artist",
+  ]);
+  const filteredSongs = useSearchFilter(artistData?.songs, searchTerm, [
+    "title",
+    "artist",
+  ]);
+
   const handleToggleLibrary = async () => {
     if (!user?._id || !artistData) return;
     await toggleSaveLibraryItem({
@@ -65,32 +82,31 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
   };
 
   const handlePlayAll = () => {
-
-    if (artistData?.topSongs && artistData.topSongs.length > 0) {
-      playTrack(artistData.topSongs[0], setLoadingId, artistData.topSongs, 0);
+    const listToPlay =
+      filteredTopSongs.length > 0 ? filteredTopSongs : artistData?.topSongs;
+    if (listToPlay && listToPlay.length > 0) {
+      playTrack(listToPlay[0], setLoadingId, listToPlay, 0);
     }
   };
 
   const handleShuffle = () => {
-    if (artistData?.topSongs && artistData.topSongs.length > 0) {
-      const shuffled = [...artistData.topSongs].sort(() => Math.random() - 0.5);
+    const listToPlay =
+      filteredTopSongs.length > 0 ? filteredTopSongs : artistData?.topSongs;
+    if (listToPlay && listToPlay.length > 0) {
+      const shuffled = [...listToPlay].sort(() => Math.random() - 0.5);
       playTrack(shuffled[0], setLoadingId, shuffled, 0);
     }
   };
 
   const isBookmarked = useQuery(
     api.library.checkSaved,
-    user?._id ? { userId: user._id as any, itemType: "artist", itemId: artistName } : "skip"
-  )
-
-  const addToLibrary = async () => {
-
-  }
+    user?._id
+      ? { userId: user._id as any, itemType: "artist", itemId: artistName }
+      : "skip",
+  );
 
   if (isLoading) {
-    return (
-      <ArtistPageSkeleton />
-    );
+    return <ArtistPageSkeleton />;
   }
 
   if (!artistData) {
@@ -103,60 +119,93 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
 
   return (
     <div className="w-full min-h-screen bg-background text-foreground pb-32">
-      <div className="relative w-full h-[35vh] md:h-[45vh] -mt-20 flex items-end px-6 md:px-12 pb-10 overflow-hidden ">
+      <div className="relative w-full h-[35vh] md:h-[45vh] -mt-20 flex items-end px-6 md:px-12 pb-10 overflow-hidden">
         {artistData.coverUrl && (
           <div
-            className="absolute inset-0 bg-cover bg-center dark:opacity-25 blur-lg scale-110"
-            style={{ backgroundImage: `urlme}(${artistData.coverUrl})` }}
+            className="absolute inset-0 bg-cover bg-center dark:opacity-25 blur-md scale-110"
+            style={{ backgroundImage: `url(${artistData.coverUrl})` }}
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
 
-        <div className="relative z-20 flex items-end gap-6 max-w-5xl">
+        <div className="relative z-20 flex items-end justify-between w-full">
+          <div className="flex items-end gap-6">
+            {artistData.coverUrl && (
+              <img
+                src={artistData.coverUrl}
+                alt={artistData.name}
+                className="w-28 h-28 select-none md:w-40 md:h-40 rounded-full object-cover border-2 border-foreground/10 shrink-0"
+              />
+            )}
 
+            <div className="flex flex-col gap-2">
+              <h1 className="text-4xl md:text-6xl text-balance font-black tracking-tighter leading-none text-foreground">
+                {artistData.name}
+              </h1>
 
-          {artistData.coverUrl && (
-            <img
-              src={artistData.coverUrl}
-              alt={artistData.name}
-              className="w-28 h-28 select-none md:w-40 md:h-40 rounded-full object-cover border-2 border-foreground/10 shrink-0"
-            />
-          )}
+              <div className="flex items-center gap-3 mt-4">
+                <ButtonGroup separator={true}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-foreground/90 hover:text-foreground hover:bg-foreground/10"
+                    onClick={handlePlayAll}
+                    disabled={filteredTopSongs.length === 0}
+                  >
+                    <Play size={20} className="fill-current" />
+                    <span className="hidden sm:block">Play</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-10 px-0 text-foreground/70 hover:text-foreground hover:bg-foreground/10"
+                    disabled={filteredTopSongs.length === 0}
+                    onClick={handleShuffle}
+                  >
+                    <Shuffle size={18} />
+                  </Button>
+                </ButtonGroup>
 
-          <div className="flex flex-col gap-2">
-            <h1 className="text-4xl md:text-6xl text-balance font-black tracking-tighter leading-none text-foreground">
-              {artistData.name}
-            </h1>
-
-            <div className="flex items-center gap-3 mt-4">
-              <Button
-                onClick={handlePlayAll}
-                className="w-11 px-0 shadow-none sm:w-auto sm:px-5"
-                disabled={artistData.topSongs.length === 0}
-              >
-                <Play size={20} className="fill-current " />
-                <span className="hidden sm:block">
-                  Play
-                </span>
-              </Button>
-              <Button
-                onClick={handleShuffle}
-                disabled={artistData.topSongs.length === 0}
-                className="w-11 shadow-none px-0"
-              >
-                <Shuffle size={18} />
-              </Button>
-              <Button
-                onClick={(e: any) => {
-                  e.stopPropagation();
-                  handleToggleLibrary();
-                }}
-                disabled={artistData.topSongs.length === 0}
-                className="w-11 shadow-none px-0"
-              >
-                <Bookmark size={18} className={cn("transition-colors", isBookmarked ? "fill-primary text-primary" : "text-primary/80")} />
-              </Button>
+                <Button
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    handleToggleLibrary();
+                  }}
+                  disabled={artistData.topSongs.length === 0}
+                  className="w-11 shadow-none px-0"
+                >
+                  <Bookmark
+                    size={18}
+                    className={cn(
+                      "transition-colors",
+                      isBookmarked
+                        ? "fill-primary text-primary"
+                        : "text-primary/80",
+                    )}
+                  />
+                </Button>
+              </div>
             </div>
+          </div>
+
+          <div className="hidden md:block overflow-hidden transition-all duration-300">
+            <LiquidContainer radius="50px" className="h-11">
+              <input
+                type="text"
+                placeholder="Search tracks..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="relative z-10 pr-12 shadow-none w-full h-full bg-transparent pl-4 text-foreground placeholder:text-foreground/60 focus:outline-none"
+              />
+              <div className="absolute inset-y-0 -right-1 flex items-center pr-4 z-20">
+                <button
+                  type="button"
+                  className="p-1.5 text-foreground/60 hover:text-foreground transition-colors cursor-default pointer-events-none"
+                >
+                  <SearchIcon size={20} />
+                </button>
+              </div>
+            </LiquidContainer>
           </div>
         </div>
       </div>
@@ -167,36 +216,54 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
             <Music2 size={18} className="text-emerald-500" /> Top Songs
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-6">
-            {artistData.topSongs.map((track, index) => (
-              <Track
-                key={track.id || index}
-                track={track}
-                showDuration={false}
-                variant="row"
-                loadingId={loadingId}
-                setLoadingId={setLoadingId}
-              />
-            ))}
-          </div>
-        </section>
-
-        {artistData.songs.length > 0 && (
-          <section>
-            <h2 className="text-xl font-bold tracking-tight mb-4">Singles & Popular Releases</h2>
-
+          {filteredTopSongs.length === 0 ? (
+            <p className="text-sm text-foreground/50 py-4">
+              {searchTerm
+                ? `No top songs matching "${searchTerm}"`
+                : "No top songs found."}
+            </p>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-6">
-              {artistData.songs.map((track, index) => (
+              {filteredTopSongs.map((track, index) => (
                 <Track
                   key={track.id || index}
                   track={track}
-                  variant="row"
                   showDuration={false}
+                  variant="row"
                   loadingId={loadingId}
                   setLoadingId={setLoadingId}
                 />
               ))}
             </div>
+          )}
+        </section>
+
+        {artistData.songs.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold tracking-tight mb-4">
+              Singles & Popular Releases
+            </h2>
+
+            {filteredSongs.length === 0 ? (
+              <p className="text-sm text-foreground/50 py-4">
+                {searchTerm
+                  ? `No releases matching "${searchTerm}"`
+                  : "No releases found."}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-6">
+                {filteredSongs.map((track, index) => (
+                  <Track
+                    key={track.id || index}
+                    track={track}
+                    variant="row"
+                    showDuration={false}
+                    loadingId={loadingId}
+                    setLoadingId={setLoadingId}
+                  />
+                ))}
+              </div>
+            )}
           </section>
         )}
       </div>
@@ -206,16 +273,16 @@ export default function ArtistPage({ params }: { params: Promise<{ name: string 
 
 function ArtistPageSkeleton() {
   return (
-    <div className="w-full min-h-full p-6 md:p-10 pb-32 text-foreground bg-background">
+    <div className="w-full min-h-full mt-10 md:mt-20 p-6 md:p-10 pb-32 text-foreground bg-background">
       <div className="flex flex-col md:flex-row gap-4 md:gap-5 mb-8">
         <div className="mx-2">
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-6 md:gap-0">
             <div className="w-28 h-28 md:w-40 md:h-40 shrink-0 bg-foreground/10 rounded-full animate-pulse" />
 
             <div className="flex flex-col gap-3 flex-1 min-w-0 justify-end">
-              <div className="h-11 mt-2 md:hidden w-3/4  bg-foreground/10 rounded-md animate-pulse" />
+              <div className="h-11 mt-2 md:hidden w-3/4 bg-foreground/10 rounded-md animate-pulse" />
 
-              <div className='gap-3 flex md:hidden mt-2 mx-1'>
+              <div className="gap-3 flex md:hidden mt-2 mx-1">
                 <div className="h-11 w-11 bg-foreground/10 rounded-full animate-pulse" />
                 <div className="h-11 w-11 bg-foreground/10 rounded-full animate-pulse" />
                 <div className="h-11 w-11 bg-foreground/10 rounded-full animate-pulse" />
@@ -226,7 +293,7 @@ function ArtistPageSkeleton() {
 
         <div className="flex flex-col gap-3 pb-2 flex-1 min-w-0 justify-end">
           <div className="h-14 hidden md:block w-2/3 bg-foreground/10 rounded-md animate-pulse" />
-          <div className=' gap-3 md:flex hidden'>
+          <div className="gap-3 md:flex hidden">
             <div className="h-11 w-24 bg-foreground/10 rounded-full animate-pulse" />
             <div className="h-11 w-11 bg-foreground/10 rounded-full animate-pulse" />
             <div className="h-11 w-11 bg-foreground/10 rounded-full animate-pulse" />
@@ -250,7 +317,7 @@ function ArtistPageSkeleton() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function TrackRowSkeleton() {
