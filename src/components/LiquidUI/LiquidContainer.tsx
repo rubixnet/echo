@@ -7,7 +7,6 @@ interface LiquidContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   radius?: string;
 }
 
-
 export function LiquidContainer({
   children,
   className,
@@ -58,7 +57,6 @@ export function LiquidContainer({
           />
         </div>
       </div>
-
 
       <div
         className="block dark:hidden absolute inset-0 rounded-(--liquid-radius) pointer-events-none"
