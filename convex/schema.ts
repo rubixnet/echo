@@ -21,7 +21,8 @@ export default defineSchema({
     youtubeId: v.optional(v.string()),
     audioUrl: v.string(),
     coverUrl: v.string(),
-  }).index("by_youtubeId", ["youtubeId"])
+  })
+    .index("by_youtubeId", ["youtubeId"])
     .searchIndex("search_title", { searchField: "title" }),
 
   history: defineTable({
@@ -36,10 +37,11 @@ export default defineSchema({
       v.object({
         type: v.string(),
         name: v.optional(v.string()),
-      })
+      }),
     ),
     playedAt: v.number(),
-  }).index("by_user", ["userId"])
+  })
+    .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
   suggestLess: defineTable({
@@ -50,7 +52,7 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
-  hatedSongs: defineTable({
+  neverShowAgain: defineTable({
     userId: v.id("users"),
     trackId: v.string(),
     hatedAt: v.number(),
@@ -71,9 +73,10 @@ export default defineSchema({
       v.object({
         type: v.string(),
         name: v.optional(v.string()),
-      })
+      }),
     ),
-  }).index("by_user", ["userId"])
+  })
+    .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
   categories: defineTable({
@@ -98,7 +101,8 @@ export default defineSchema({
     userId: v.id("users"),
     searchQuery: v.string(),
     searchedAt: v.number(),
-  }).index("by_user", ["userId"])
+  })
+    .index("by_user", ["userId"])
     .index("by_user_and_query", ["userId", "searchQuery"]),
 
   rooms: defineTable({
@@ -115,11 +119,10 @@ export default defineSchema({
 
   playlists: defineTable({
     name: v.string(),
-    userId: v.id('users'),
+    userId: v.id("users"),
     createdAt: v.number(),
     isPinned: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
-
 
   libraryTracks: defineTable({
     userId: v.id("users"),
@@ -133,7 +136,7 @@ export default defineSchema({
       v.object({
         type: v.string(),
         name: v.optional(v.string()),
-      })
+      }),
     ),
     savedAt: v.number(),
   })
@@ -155,9 +158,9 @@ export default defineSchema({
           v.object({
             type: v.string(),
             name: v.optional(v.string()),
-          })
+          }),
         ),
-      })
+      }),
     ),
     savedAt: v.number(),
   })
@@ -166,7 +169,7 @@ export default defineSchema({
     .index("by_user_and_item", ["userId", "itemType", "itemId"]),
 
   playlistTracks: defineTable({
-    playlistId: v.id('playlists'),
+    playlistId: v.id("playlists"),
     trackId: v.string(),
     title: v.optional(v.string()),
     artist: v.optional(v.string()),
@@ -177,10 +180,10 @@ export default defineSchema({
       v.object({
         type: v.string(),
         name: v.optional(v.string()),
-      })
+      }),
     ),
     addedAt: v.number(),
   })
     .index("by_playlist", ["playlistId"])
-    .index("by_playlist_and_track", ["playlistId", "trackId"])
+    .index("by_playlist_and_track", ["playlistId", "trackId"]),
 });
