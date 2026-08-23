@@ -1,5 +1,7 @@
 import { AudioProvider } from "@/components/AudioProvider";
+import type { AppUser } from "@/hooks/useUser";
 import { UserProvider } from "@/hooks/useUser";
+import { RoomProvider } from "@/hooks/useRoomContext";
 import GlobalPlayer from "@/components/GlobalPlayer/GlobalPlayer";
 import Sidebar from "@/components/Sidebar";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
@@ -10,26 +12,23 @@ export default function ClientLayout({
   user,
 }: {
   children: React.ReactNode;
-  user: any;
+  user: AppUser;
 }) {
   return (
     <UserProvider user={user}>
       <ConvexClientProvider>
         <AudioProvider>
-          <DashboardShell user={user}>{children}</DashboardShell>
+          {/* Room core: live membership + playback sync for EVERY page. */}
+          <RoomProvider>
+            <DashboardShell>{children}</DashboardShell>
+          </RoomProvider>
         </AudioProvider>
       </ConvexClientProvider>
     </UserProvider>
   );
 }
 
-function DashboardShell({
-  children,
-  user,
-}: {
-  children: React.ReactNode;
-  user: any;
-}) {
+function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen w-full bg-background font-sans overflow-hidden text-neutral-900">
       <div className="flex flex-1 overflow-hidden relative">
@@ -40,7 +39,7 @@ function DashboardShell({
           {children}
         </main>
 
-        <GlobalPlayer user={user} />
+        <GlobalPlayer />
       </div>
     </div>
   );

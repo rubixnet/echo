@@ -11,14 +11,84 @@ import ReactPlayer from "react-player";
 import { useMutation } from "convex/react";
 import { useUser } from "@/hooks/useUser";
 import { api } from "../../convex/_generated/api";
-import { normalizeTrack, TrackMetadata } from "@/lib/trackUtils";
+import {
+  normalizeTrack,
+  TrackMetadata,
+  NormalizableTrack,
+  QueueItem,
+} from "@/lib/trackUtils";
 
-const Player = ReactPlayer as any;
+type YTPlayerLike = {
+  seekTo: (time: number, type: "seconds" | "fraction") => void;
+  getCurrentTime: () => number;
+  getDuration?: () => number;
+};
 
-const AudioEngineContext = createContext<any>(null);
+interface ReactPlayerProps {
+  ref?: React.Ref<YTPlayerLike>;
+  url?: string;
+  playing?: boolean;
+  volume?: number;
+  width?: string;
+  height?: string;
+  config?: Record<string, unknown>;
+  onProgress?: (state: { played: number; playedSeconds: number }) => void;
+  onReady?: () => void;
+  onError?: (err: unknown) => void;
+  onEnded?: () => void;
+}
+
+const Player = ReactPlayer as unknown as React.ComponentType<ReactPlayerProps>;
+
+export interface AudioEngine {
+  progressRef: React.RefObject<HTMLDivElement | null>;
+  isPlaying: boolean;
+  isLoading: boolean;
+  isAudioReady: boolean;
+  currentTimeStr: string;
+  duration: string;
+  currentTimeSec: number;
+  durationSec: number;
+  currentTrackUrl: string | null;
+  activeMetadata: TrackMetadata | null;
+  volume: number;
+  setActiveMetadata: React.Dispatch<React.SetStateAction<TrackMetadata | null>>;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  setVolume: (v: number) => void;
+  loadTrack: (
+    url: string,
+    metadata?: NormalizableTrack,
+    options?: { autoPlay?: boolean },
+  ) => void;
+  togglePlay: () => void;
+  play: () => void;
+  pause: () => void;
+  seek: (e: React.MouseEvent<HTMLDivElement>) => void;
+  seekToTime: (seconds: number) => void;
+  getCurrentTime: () => number;
+  forceSync: (
+    serverStartTime?: number,
+    pausePosition?: number,
+    forcePlay?: boolean,
+  ) => void;
+  queue: QueueItem[];
+  setQueue: React.Dispatch<React.SetStateAction<QueueItem[]>>;
+  queueIndex: number;
+  setQueueIndex: React.Dispatch<React.SetStateAction<number>>;
+  onTrackEndRef: React.RefObject<() => void>;
+  setOnTrackEnd: (callback: () => void) => void;
+  onTrackErrorRef: React.RefObject<(error?: unknown) => void>;
+  setOnTrackError: (callback: (error?: unknown) => void) => void;
+  isOnLoop: boolean;
+  setIsOnLoop: React.Dispatch<React.SetStateAction<boolean>>;
+  isInRoom: boolean;
+  setIsInRoom: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const AudioEngineContext = createContext<AudioEngine | null>(null);
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const ytPlayerRef = useRef<any>(null);
+  const ytPlayerRef = useRef<YTPlayerLike | null>(null);
   const nativeAudioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,24 +109,27 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const isYouTube = currentTrackUrl
     ? currentTrackUrl.includes("youtube.com") ||
-      currentTrackUrl.includes("youtu.be")
+    currentTrackUrl.includes("youtu.be")
     : false;
-  const [queue, setQueue] = useState<any[]>([]);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
   const [queueIndex, setQueueIndex] = useState(-1);
   const [isInRoom, setIsInRoom] = useState(false);
   const isSavedToHistory = useRef(false);
   const user = useUser();
 
-  const onTrackEndRef = useRef<() => void>(() => {});
-  const onTrackErrorRef = useRef<(error?: any) => void>(() => {});
+  const onTrackEndRef = useRef<() => void>(() => { });
+  const onTrackErrorRef = useRef<(error?: unknown) => void>(() => { });
 
   const setOnTrackEnd = useCallback((callback: () => void) => {
     onTrackEndRef.current = callback;
   }, []);
 
-  const setOnTrackError = useCallback((callback: (error?: any) => void) => {
-    onTrackErrorRef.current = callback;
-  }, []);
+  const setOnTrackError = useCallback(
+    (callback: (error?: unknown) => void) => {
+      onTrackErrorRef.current = callback;
+    },
+    [],
+  );
 
   const formatTime = (time: number) => {
     if (!time || isNaN(time) || !isFinite(time)) return "0:00";
@@ -86,10 +159,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         ],
       });
 
-      navigator.mediaSession.setActionHandler("play", () => setIsPlaying(true));
-      navigator.mediaSession.setActionHandler("pause", () =>
-        setIsPlaying(false),
-      );
+      // Transport action handlers (play/pause/next/prev) are owned by
+      // GlobalPlayer so they respect room state (host broadcast / guest lock).
     }
   }, [activeMetadata]);
 
@@ -123,7 +194,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isPlaying, currentTrackUrl, volume, isYouTube]);
 
-  const loadTrack = (url: string, metadata?: TrackMetadata | any) => {
+  const loadTrack = (
+    url: string,
+    metadata?: NormalizableTrack,
+    options?: { autoPlay?: boolean },
+  ) => {
     const normalized = normalizeTrack({ ...metadata, audioUrl: url });
 
     if (!normalized.id) {
@@ -139,7 +214,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setActiveMetadata(normalized);
 
     if (currentTrackUrl === normalized.audioUrl) {
-      setIsPlaying(true);
+      if (options?.autoPlay !== false) setIsPlaying(true);
       return;
     }
 
@@ -147,13 +222,24 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setIsAudioReady(false);
     setCurrentTrackUrl(normalized.audioUrl);
-    setIsPlaying(true);
+    // Room followers loading a paused broadcast stay silent until the
+    // host presses play.
+    setIsPlaying(options?.autoPlay !== false);
   };
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!currentTrackUrl) return;
-    setIsPlaying(!isPlaying);
-  };
+    setIsPlaying((prev) => !prev);
+  }, [currentTrackUrl]);
+
+  const play = useCallback(() => {
+    if (!currentTrackUrl) return;
+    setIsPlaying(true);
+  }, [currentTrackUrl]);
+
+  const pause = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
 
   const seekToTime = (seconds: number) => {
     if (isYouTube && ytPlayerRef.current) {
@@ -221,6 +307,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         setVolume: setVolumeState,
         loadTrack,
         togglePlay,
+        play,
+        pause,
         seek,
         seekToTime,
         getCurrentTime,
@@ -253,7 +341,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             if (user?._id && activeMetadata?.id) {
               addToHistory({
                 userId: user._id,
-                trackId: activeMetadata.id as any,
+                trackId: activeMetadata.id,
               }).catch(console.error);
 
               isSavedToHistory.current = true;
@@ -283,7 +371,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setIsAudioReady(true);
             if (isPlaying) {
               const playing = e.currentTarget.play();
-              if (playing !== undefined) playing.catch(() => {});
+              if (playing !== undefined) playing.catch(() => { });
             }
           }
         }}
@@ -315,7 +403,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           width="10px"
           height="10px"
           config={{ youtube: { playerVars: { playsinline: 1, autoplay: 1 } } }}
-          onProgress={(state: any) => {
+          onProgress={(state) => {
             if (!isYouTube) return;
             setCurrentTimeSec(state.playedSeconds);
             setCurrentTimeStr(formatTime(state.playedSeconds));
@@ -333,7 +421,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
               setIsAudioReady(true);
             }
           }}
-          onError={(err: any) => {
+          onError={(err) => {
             if (!isYouTube) return;
             console.error("[AudioEngine] YouTube player failed to load:", err);
             setIsLoading(false);
