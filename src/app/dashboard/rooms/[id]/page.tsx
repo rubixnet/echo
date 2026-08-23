@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, use } from "react";
+import Image from "next/image";
+import { useCallback, useEffect, use, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
+import type { Id } from "../../../../../convex/_generated/dataModel";
+import { useRouter } from "next/navigation";
 import { useAudioEngine } from "@/components/AudioProvider";
 import {
   Play,
@@ -13,10 +16,13 @@ import {
   Loader2,
   AudioLines,
   Music,
+  LogOut,
+  XCircle,
 } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { useRoomState } from "@/hooks/useRoomContext";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getPerfectSyncTime } from "@/lib/delay";
 
 export default function RoomPage({
   params,
@@ -24,107 +30,114 @@ export default function RoomPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
-  const roomId = resolvedParams.id as any;
+  const router = useRouter();
+  const roomId = resolvedParams.id as Id<"rooms">;
   const user = useUser();
+  const userId = user?._id;
 
-  const room = useQuery(api.rooms.getRoom, roomId ? { roomId } : "skip");
-  const syncPlayback = useMutation(api.rooms.syncPlayback);
+  // Existence check for THIS room - never throws, null means gone.
+  const directRoom = useQuery(api.rooms.getRoom, roomId ? { roomId } : "skip");
 
+  // Live membership comes from the global RoomProvider.
   const {
-    loadTrack,
-    currentTimeSec,
-    durationSec,
-    isPlaying: localIsPlaying,
-    togglePlay,
-    seekToTime,
-    currentTrackUrl,
-    isAudioReady,
-  } = useAudioEngine();
+    isInRoom,
+    isHost,
+    isGuest,
+    room,
+    roomLoading,
+    controlTogglePlay,
+    leaveRoom,
+    closeRoom,
+  } = useRoomState();
 
-  const isHost = user?._id === room?.hostId;
+  const joinRoomMutation = useMutation(api.rooms.joinRoom);
 
+  const joinThisRoom = useCallback(async () => {
+    if (!userId) return;
+    try {
+      await joinRoomMutation({ roomId, userId });
+    } catch {
+      /* reactive state reflects reality; errors stay internal */
+    }
+  }, [joinRoomMutation, roomId, userId]);
+
+  const { currentTimeSec, durationSec } = useAudioEngine();
+  const [joiningNow, setJoiningNow] = useState(false);
+
+  /* Direct-link visits auto-join a live session so playback sync kicks
+     in immediately - no need to go through the rooms listing first. */
+  const joinAttemptedRef = useRef(false);
   useEffect(() => {
-    if (!room || !room.track?.audioUrl) return;
-
-    const trackUrlToPlay = room.track.audioUrl;
-
-    if (currentTrackUrl !== trackUrlToPlay) {
-      loadTrack(trackUrlToPlay, {
-        title: room.track.title,
-        artist: room.track.artist,
-        coverUrl: room.track.coverUrl,
-      });
-      return;
+    if (directRoom && userId && !isInRoom && !joinAttemptedRef.current) {
+      joinAttemptedRef.current = true;
+      setJoiningNow(true);
+      joinThisRoom().finally(() => setJoiningNow(false));
     }
+  }, [directRoom, userId, isInRoom, joinThisRoom]);
 
-    if (!isAudioReady) return;
-
-    const perfectTime = getPerfectSyncTime(
-      room.serverStartTime,
-      room.pausePosition,
-      room.isPlaying,
-      0,
-    );
-
-    if (Math.abs(currentTimeSec - perfectTime) > 0.5) {
-      seekToTime(perfectTime);
-    }
-
-    if (room.isPlaying && !localIsPlaying) {
-      togglePlay();
-    } else if (!room.isPlaying && localIsPlaying) {
-      togglePlay();
-    }
-  }, [
-    room?.serverStartTime,
-    room?.pausePosition,
-    room?.isPlaying,
-    room?.track?.audioUrl,
-    currentTrackUrl,
-    isAudioReady,
-  ]);
-
-  if (!room) {
+  if (directRoom === undefined || roomLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full">
         <Loader2 className="animate-spin text-emerald-500 mb-4" size={32} />
-        <p className="text-neutral-400 font-bold tracking-tight">
+        <p className="text-sm font-bold text-foreground/60 tracking-tight">
           Tuning into frequency...
         </p>
       </div>
     );
   }
 
-  const handleHostToggle = async () => {
-    if (!isHost || !user?._id || !room.track) return;
+  /* Graceful end-state: the host closed the room or it expired.
+     No raw Convex errors ever surface here. */
+  if (directRoom === null) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full gap-3 text-center px-6">
+        <XCircle size={36} className="text-foreground/20 mb-1" />
+        <h2 className="text-lg font-bold text-foreground tracking-tight">
+          This session has ended
+        </h2>
+        <p className="text-sm text-foreground/50 font-medium max-w-xs leading-relaxed">
+          The broadcast you were looking for is no longer live.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => router.push("/dashboard/rooms")}
+        >
+          Back to Live Rooms
+        </Button>
+      </div>
+    );
+  }
 
-    const willPlay = !room.isPlaying;
-    await syncPlayback({
-      roomId: room._id,
-      isPlaying: willPlay,
-      clientCurrentTime: currentTimeSec,
-      userId: user._id,
-    });
-  };
+  if (!isInRoom) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full w-full gap-4">
+        <Loader2 className="animate-spin text-emerald-500" size={28} />
+        <p className="text-sm font-medium text-foreground/50 tracking-tight">
+          {joiningNow ? "Joining the session..." : "Connecting..."}
+        </p>
+      </div>
+    );
+  }
 
-  const progressPercent = durationSec
-    ? (currentTimeSec / durationSec) * 100
-    : 0;
-  const hasTrack = !!room.track;
+  const progressPercent =
+    durationSec && room ? (currentTimeSec / durationSec) * 100 : 0;
+  const hasTrack = !!room?.track;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full bg-background text-neutral-900 pt-8 pb-32">
+    <div className="flex flex-col items-center justify-center h-full w-full bg-background pt-8 pb-32">
       <div className="flex items-center gap-3 mb-12">
         <div className="px-4 py-1.5 bg-border border-neutral rounded-full flex items-center gap-2 shadow-sm">
           <Radio
             size={14}
             className={cn(
               "text-emerald-500",
-              room.isPlaying && "animate-pulse",
+              room?.isPlaying && "animate-pulse",
             )}
           />
           <span className="text-xs font-black tracking-widest uppercase text-neutral-500">
-            {isHost ? "You are  Broadcasting" : "Live Session"}
+            {isHost ? "Broadcasting" : "Live Session"}
           </span>
         </div>
 
@@ -132,7 +145,7 @@ export default function RoomPage({
           <div className="px-4 py-1.5 bg-border border-neutral rounded-full flex items-center gap-2 shadow-sm">
             <Crown size={14} className="text-amber-500" />
             <span className="text-xs font-bold text-neutral-500 truncate max-w-[120px]">
-              {room.name}
+              {room?.name}
             </span>
           </div>
         )}
@@ -140,7 +153,7 @@ export default function RoomPage({
 
       <div className="flex flex-col items-center justify-center gap-8 relative">
         <button
-          onClick={handleHostToggle}
+          onClick={controlTogglePlay}
           disabled={!isHost || !hasTrack}
           className={cn(
             "group relative flex items-center justify-center w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full focus:outline-none transition-transform active:scale-[0.98]",
@@ -175,15 +188,15 @@ export default function RoomPage({
 
           <div className="w-[260px] h-[260px] md:w-[320px] md:h-[320px] rounded-full shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] overflow-hidden relative bg-neutral-100 border border-neutral-200/50">
             {hasTrack ? (
-              <img
-                src={room.track.coverUrl}
+              <Image width={500} height={500} unoptimized
+                src={room!.track!.coverUrl}
                 alt="Currently Playing"
                 className={cn(
                   "w-full h-full object-cover scale-110 pointer-events-none transition-all duration-[3000ms]",
-                  room.isPlaying ? "animate-[spin_6s_linear_infinite]" : "",
+                  room?.isPlaying ? "animate-[spin_6s_linear_infinite]" : "",
                 )}
                 style={{
-                  animationPlayState: room.isPlaying ? "running" : "paused",
+                  animationPlayState: room?.isPlaying ? "running" : "paused",
                 }}
               />
             ) : (
@@ -201,7 +214,7 @@ export default function RoomPage({
 
             {isHost && hasTrack && (
               <div className="absolute inset-0 bg-neutral-900 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                {room.isPlaying ? (
+                {room?.isPlaying ? (
                   <Pause size={18} fill="currentColor" className="text-white" />
                 ) : (
                   <Play
@@ -217,22 +230,48 @@ export default function RoomPage({
 
         <div className="flex flex-col items-center text-center -mt-2 px-6">
           <h4 className="font-extrabold text-primary text-xl md:text-2xl tracking-tight mb-1 flex items-center gap-2">
-            {hasTrack ? room.track.title : "Audio Engine Ready"}
-            {room.isPlaying && (
+            {hasTrack ? room!.track!.title : "Audio Engine Ready"}
+            {room?.isPlaying && (
               <AudioLines size={20} className="text-emerald-500" />
             )}
           </h4>
-          <p className="text-base text-foreground/70 font-medium">
+          <p className="text-base text-foreground/70 font-medium tracking-tight">
             {hasTrack
-              ? room.track.artist
-              : "Select or search a track to broadcast"}
+              ? room!.track!.artist
+              : isGuest
+                ? "Waiting for the host to play something"
+                : "Select or search a track to broadcast"}
           </p>
         </div>
       </div>
 
-      <div className="mt-12 flex items-center gap-2 text-neutral-400 font-medium">
-        <Users size={16} />
-        <span>{room.listeners?.length || 1} tuned into this frequency</span>
+      <div className="mt-12 flex items-center gap-3 text-foreground/50 font-medium tracking-tight">
+        <span className="flex items-center gap-2 text-sm">
+          <Users size={16} />
+          {room?.listeners?.length || 1} tuned in
+        </span>
+
+        {isHost ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() =>
+              closeRoom().then(() => router.push("/dashboard/rooms"))
+            }
+          >
+            <XCircle size={14} /> Close Room
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              leaveRoom().then(() => router.push("/dashboard/rooms"))
+            }
+          >
+            <LogOut size={14} /> Leave
+          </Button>
+        )}
       </div>
     </div>
   );

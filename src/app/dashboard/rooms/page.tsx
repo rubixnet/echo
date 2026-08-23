@@ -17,42 +17,66 @@ export default function LiveRoomsPage() {
   const [roomNameInput, setRoomNameInput] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const liveRooms = useQuery(api.rooms?.getPublicRooms || api.rooms?.getRooms);
-  const createRoom = useMutation(api.rooms?.createRoom as any);
-  const deleteRoom = useMutation(api.rooms?.deleteRoom as any);
-  const joinRoom = useMutation(api.rooms?.joinRoom as any);
+  const liveRooms = useQuery(api.rooms.getPublicRooms);
+  const createRoom = useMutation(api.rooms.createRoom);
+  const joinRoomMutation = useMutation(api.rooms.joinRoom);
+  const closeRoomMutation = useMutation(api.rooms.closeRoom);
 
   const handleCreateRoom = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!roomNameInput.trim() || !user?._id) return;
     setIsCreating(true);
+    setNotice(null);
     try {
-      const newRoomId = await createRoom({
+      const result = await createRoom({
         name: roomNameInput,
         isPublic: true,
         userId: user._id as Id<"users">,
       });
       setRoomNameInput("");
-      router.push(`/dashboard/rooms/${newRoomId}`);
-    } catch (error) {
+      if (result.ok && result.roomId) {
+        router.push(`/dashboard/rooms/${result.roomId}`);
+        return;
+      }
+      setNotice("Could not create the room. Please try again.");
+    } catch {
+      setNotice("Could not create the room. Please try again.");
+    } finally {
       setIsCreating(false);
     }
   };
 
-  const handleJoinRoom = async (e: React.MouseEvent, roomId: string) => {
-    e.preventDefault();
-    if (!user?._id) return;
+  const handleJoinRoom = async (e?: React.MouseEvent, roomId?: string) => {
+    e?.preventDefault();
+    if (!roomId || !user?._id) return;
+
+    // Already listening in this room - just open it.
+    if (user.activeRoomId === roomId) {
+      router.push(`/dashboard/rooms/${roomId}`);
+      return;
+    }
 
     setJoiningId(roomId);
+    setNotice(null);
     try {
-      await joinRoom({
+      // Non-throwing: closed rooms return a status instead of an error.
+      const result = await joinRoomMutation({
         roomId: roomId as Id<"rooms">,
         userId: user._id as Id<"users">,
       });
-      router.push(`/dashboard/rooms/${roomId}`);
-    } catch (error) {
-      console.error("Failed to join room:", error);
+      if (result.ok) {
+        router.push(`/dashboard/rooms/${roomId}`);
+        return;
+      }
+      setNotice(
+        result.reason === "ROOM_NOT_FOUND"
+          ? "That session just ended."
+          : "Could not join this session right now.",
+      );
+    } catch {
+      setNotice("Could not join this session right now.");
     } finally {
       setJoiningId(null);
     }
@@ -63,12 +87,12 @@ export default function LiveRoomsPage() {
     e.stopPropagation();
     if (!user?._id) return;
     try {
-      await deleteRoom({
+      await closeRoomMutation({
         roomId: roomId as Id<"rooms">,
         userId: user._id as Id<"users">,
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
+      /* handled by reactive state */
     }
   };
 
@@ -108,7 +132,7 @@ export default function LiveRoomsPage() {
               placeholder="Enter Room Name"
               value={roomNameInput}
               onChange={(e) => setRoomNameInput(e.target.value)}
-              className="h-9 px-3 w-48 text-sm focus:outline-none"
+              className="h-9 px-3 w-48 text-sm dark:placeholder:text-neutral-400 focus:outline-none"
             />
           </LiquidContainer>
           <LiquidContainer radius="12px">
@@ -122,6 +146,10 @@ export default function LiveRoomsPage() {
           </LiquidContainer>
         </form>
       </header>
+
+      {notice && (
+        <p className="text-xs font-medium text-destructive">{notice}</p>
+      )}
 
       {liveRooms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 text-center border border-dashed border-foreground/10 rounded-2xl bg-foreground/[0.02]">
@@ -175,7 +203,10 @@ export default function LiveRoomsPage() {
                     )}
                     <LiquidContainer radius="8px">
                       <button
-                        onClick={(e) => handleJoinRoom(e, room._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleJoinRoom(e, room._id);
+                        }}
                         disabled={joiningId === room._id}
                         className="h-7 px-4 bg-foreground/5 rounded-[8px] text-foreground text-[11px] font-bold flex items-center justify-center transition-colors"
                       >
