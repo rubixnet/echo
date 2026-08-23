@@ -1,28 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { useRoomState } from "@/hooks/useRoomState";
+import { useRoomState } from "@/hooks/useRoomContext";
 import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import { StarButton, ProgressBar } from "./Shared";
+import { ProgressBar } from "./Shared";
 import { TrackDropdownMenu } from "./TrackActionsMenu";
 import {
   Play,
   Pause,
   SkipForward,
   SkipBack,
-  Volume2,
-  VolumeX,
   Repeat,
   Loader2,
   Music,
   EllipsisVertical,
-  ListMusic,
-  Mic2,
   Shuffle,
-  MonitorSpeaker,
   Radio,
 } from "lucide-react";
 
@@ -40,11 +35,8 @@ export function DesktopMiniPlayer({
   const {
     isPlaying,
     isLoading,
-    togglePlay,
     activeMetadata,
     currentTimeSec,
-    volume,
-    setVolume,
     isOnLoop,
     setIsOnLoop,
     queue,
@@ -52,10 +44,7 @@ export function DesktopMiniPlayer({
   } = useAudioEngine();
 
   const { playNext, playPrevious } = useGlobalPlayback();
-  const { isGuest } = useRoomState();
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isVolumeExpanded, setIsVolumeExpanded] = useState(false);
+  const { isGuest, controlTogglePlay, openLockdown } = useRoomState();
 
   return (
     <>
@@ -84,8 +73,11 @@ export function DesktopMiniPlayer({
                     onClick={() => setIsDrawerOpen(true)}
                     className="relative group/cover w-8 h-8 rounded-md overflow-hidden shrink-0 shadow-sm"
                   >
-                    <img
-                      src={activeMetadata.coverUrl}
+                    <Image
+                      width={500}
+                      height={500}
+                      unoptimized
+                      src={activeMetadata.coverUrl || ""}
                       className="w-full h-full object-cover transition-transform"
                       alt="Cover"
                     />
@@ -123,9 +115,7 @@ export function DesktopMiniPlayer({
             <div className="flex-[1] basis-0 flex items-center justify-center gap-4">
               {isGuest ? (
                 <button
-                  onClick={() =>
-                    window.dispatchEvent(new CustomEvent("openLockdownModal"))
-                  }
+                  onClick={openLockdown}
                   className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors rounded-full border border-emerald-500/20 shadow-sm cursor-pointer"
                 >
                   <Radio size={14} className="animate-pulse" />
@@ -151,7 +141,7 @@ export function DesktopMiniPlayer({
                     <SkipBack size={24} strokeWidth={1} />
                   </button>
                   <button
-                    onClick={togglePlay}
+                    onClick={controlTogglePlay}
                     disabled={!activeMetadata}
                     className="text-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
                   >

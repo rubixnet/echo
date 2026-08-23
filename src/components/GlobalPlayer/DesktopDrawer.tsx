@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { cn } from "@/lib/utils";
@@ -152,8 +153,11 @@ export function DesktopDrawer({
             {activeTab === "cover" && (
               <div className="flex-1 flex items-center justify-center p-2">
                 <div className="w-full max-w-[220px] aspect-square rounded-xl shadow-xl overflow-hidden shrink-0 border border-foreground/5">
-                  <img
-                    src={activeMetadata.coverUrl}
+                  <Image
+                    width={500}
+                    height={500}
+                    unoptimized
+                    src={activeMetadata.coverUrl || ""}
                     className="w-full h-full object-cover"
                     alt="Cover"
                   />
@@ -167,7 +171,7 @@ export function DesktopDrawer({
                   Playing Next
                 </h3>
                 <div className="flex-1 liquid-scroll px-1 space-y-0.5">
-                  {upNextTracks.map((track: any, idx: number) => (
+                  {upNextTracks.map((track, idx) => (
                     <Track
                       key={track.id || track._id || `queue-${idx}`}
                       track={track}

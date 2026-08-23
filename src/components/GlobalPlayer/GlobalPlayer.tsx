@@ -1,42 +1,58 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { useRoomState } from "@/hooks/useRoomState";
+import { useRoomPlaybackSync } from "@/hooks/useRoomContext";
 import { DesktopDrawer } from "./DesktopDrawer";
 import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
 import { AddToPlaylistModal } from "../AddToPlaylistModal";
 import { GuestModal } from "./GuestModal";
 
-export default function GlobalPlayer({ user }: { user?: any }) {
-  const { togglePlay, activeMetadata, setOnTrackEnd, seekToTime } =
-    useAudioEngine();
+export default function GlobalPlayer() {
+  const { activeMetadata, setOnTrackEnd, pause } = useAudioEngine();
   const { playNext, playPrevious } = useGlobalPlayback();
-  const { isGuest, leaveRoom } = useRoomState();
+  const { isGuest, hostTogglePlay, hostSeekTo } = useRoomPlaybackSync();
+
   const playNextRef = useRef(playNext);
+  const guestRef = useRef(isGuest);
+
+  useEffect(() => {
+    playNextRef.current = playNext;
+    guestRef.current = isGuest;
+  }, [playNext, isGuest]);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
-  const checkGuestLockdown = () => {
-    if (isGuest) {
-      window.dispatchEvent(new CustomEvent("openLockdownModal"));
-      return true;
-    }
-    return false;
-  };
+  // Single source of truth for every play/pause + seek entry point:
+  // keyboard, mediaSession and all player surfaces route through here so
+  // hosts always broadcast to their listeners and guests stay locked.
+  const handleGlobalTogglePlay = useCallback(() => {
+    hostTogglePlay();
+  }, [hostTogglePlay]);
 
-  useEffect(() => {
-    playNextRef.current = playNext;
-  }, [playNext]);
+  const handleGlobalSeek = useCallback(
+    (targetTime: number) => {
+      hostSeekTo(targetTime);
+    },
+    [hostSeekTo],
+  );
 
   useEffect(() => {
     if (setOnTrackEnd) {
-      setOnTrackEnd(() => playNextRef.current(true));
+      setOnTrackEnd(() => {
+        // Only the host advances the queue. Listeners hold at the end of
+        // the track until the host broadcasts the next one.
+        if (guestRef.current) {
+          pause();
+          return;
+        }
+        playNextRef.current(true);
+      });
     }
-  }, [setOnTrackEnd]);
+  }, [setOnTrackEnd, pause, isGuest]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -44,14 +60,12 @@ export default function GlobalPlayer({ user }: { user?: any }) {
       if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
       if (e.code === "Space") {
         e.preventDefault();
-        if (!checkGuestLockdown()) {
-          togglePlay();
-        }
+        handleGlobalTogglePlay();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [togglePlay, isGuest]);
+  }, [handleGlobalTogglePlay]);
 
   useEffect(() => {
     if ("mediaSession" in navigator && activeMetadata) {
@@ -60,36 +74,37 @@ export default function GlobalPlayer({ user }: { user?: any }) {
         artist: activeMetadata.artist,
         artwork: [
           {
-            src: activeMetadata.coverUrl,
+            src: activeMetadata.coverUrl || "",
             sizes: "512x512",
             type: "image/jpeg",
           },
         ],
       });
-      navigator.mediaSession.setActionHandler("play", () => {
-        if (!checkGuestLockdown()) togglePlay();
-      });
-      navigator.mediaSession.setActionHandler("pause", () => {
-        if (!checkGuestLockdown()) togglePlay();
-      });
+      navigator.mediaSession.setActionHandler("play", handleGlobalTogglePlay);
+      navigator.mediaSession.setActionHandler("pause", handleGlobalTogglePlay);
       navigator.mediaSession.setActionHandler("previoustrack", () => {
-        if (!checkGuestLockdown()) playPrevious();
+        if (!isGuest) playPrevious();
       });
       navigator.mediaSession.setActionHandler("nexttrack", () => {
-        if (!checkGuestLockdown()) playNext(false);
+        if (!isGuest) playNext(false);
       });
       navigator.mediaSession.setActionHandler("seekto", (details) => {
-        if (!checkGuestLockdown() && details.seekTime !== undefined)
-          seekToTime(details.seekTime);
+        if (!isGuest && details.seekTime !== undefined) {
+          handleGlobalSeek(details.seekTime);
+        }
       });
     }
-  }, [activeMetadata, togglePlay, playNext, playPrevious, seekToTime, isGuest]);
+  }, [activeMetadata, isGuest, handleGlobalTogglePlay, handleGlobalSeek, playNext, playPrevious]);
 
   return (
     <>
       <GuestModal />
       <div className="hidden md:block">
-        <DesktopDrawer isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} />
+        <DesktopDrawer
+          isOpen={isDrawerOpen}
+          setIsOpen={setIsDrawerOpen}
+          setIsPlaylistModalOpen={setIsPlaylistModalOpen}
+        />
         <DesktopMiniPlayer
           isDrawerOpen={isDrawerOpen}
           setIsDrawerOpen={setIsDrawerOpen}
@@ -102,6 +117,7 @@ export default function GlobalPlayer({ user }: { user?: any }) {
       </div>
 
       <AddToPlaylistModal
+        key={`playlist-modal-${isPlaylistModalOpen}-${activeMetadata?.id || ""}`}
         isOpen={isPlaylistModalOpen}
         onClose={() => setIsPlaylistModalOpen(false)}
         trackId={activeMetadata?.id || null}
