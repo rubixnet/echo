@@ -3,11 +3,13 @@ import { internal } from "./_generated/api";
 
 const crons = cronJobs();
 
-// crons.interval(
-//   "clear-expired-rooms",
-//   { minutes: 1 },
-//   internal.rooms.clearExpiredRooms
-// );
+// Rooms whose host stopped sending heartbeats are torn down and every
+// member's activeRoomId pointer is cleared (see rooms.clearExpiredRooms).
+crons.interval(
+  "clear-expired-rooms",
+  { minutes: 1 },
+  internal.rooms.clearExpiredRooms,
+);
 
 crons.interval(
   "sync-daily-charts",

@@ -115,6 +115,13 @@ export default defineSchema({
     listeners: v.array(v.id("users")),
     isPublic: v.boolean(),
     lastActiveAt: v.number(),
+    lastEvent: v.optional(
+      v.object({
+        type: v.string(),
+        at: v.number(),
+        byUserId: v.optional(v.id("users")),
+      }),
+    ),
   }),
 
   playlists: defineTable({
