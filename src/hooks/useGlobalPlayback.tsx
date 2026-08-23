@@ -1,20 +1,32 @@
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
-import { normalizeTrack } from "@/lib/trackUtils";
+import { useRoomContext } from "@/hooks/useRoomContext";
+import {
+  normalizeTrack,
+  type NormalizableTrack,
+  type QueueItem,
+  type QueueType,
+} from "@/lib/trackUtils";
+import { decideSameTrackAction } from "@/lib/roomFollow";
 import { fetchRelatedTracks } from "@/lib/recommendations";
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 
-export type QueueType = "user" | "recommendation";
+export type { QueueType };
+
+type PlayableTrack = NormalizableTrack & {
+  thumbnails?: string | { url?: string }[];
+  image?: string;
+};
 
 export function useGlobalPlayback() {
   const user = useUser();
+  const userId = user?._id;
   const {
     forceSync,
     loadTrack,
     currentTrackUrl,
-    togglePlay,
     setActiveMetadata,
     setIsLoading,
     queue,
@@ -22,26 +34,61 @@ export function useGlobalPlayback() {
     setQueue,
     setQueueIndex,
     currentTimeSec,
+    durationSec,
+    isPlaying: localIsPlaying,
     seekToTime,
     isOnLoop,
     activeMetadata,
   } = useAudioEngine();
 
+  // Live room state - correct on every page (see RoomProvider).
+  const {
+    isInRoom,
+    isHost,
+    isGuest,
+    roomId,
+    controlTogglePlay,
+    controlRestart,
+    openLockdown,
+  } = useRoomContext();
+
   const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
-  const myRoom = useQuery(
-    api.rooms.getMyHosterRooms,
-    user?._id ? { userId: user._id } : "skip",
-  );
   const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
   const failureCountRef = useRef(0);
 
+  /** Hosts publish every transport action to the room; guests are locked. */
+  const broadcastTrackChange = useCallback(
+    async (trackId: string | undefined) => {
+      if (!isInRoom) return;
+      if (isGuest) return; // never happens - guests are blocked earlier
+      if (!roomId) return;
+      try {
+        await updateRoomTrack({
+          roomId,
+          trackId,
+          userId,
+        });
+      } catch {
+        // Room may have just closed; the live query will settle the UI.
+      }
+    },
+    [isInRoom, isGuest, roomId, userId, updateRoomTrack],
+  );
+
   const playTrack = async (
-    ytTrack: any,
+    ytTrack?: PlayableTrack | null,
     setLoadingId?: (id: string | null) => void,
-    queueList?: any[],
+    queueList?: QueueItem[],
     newQueueIndex?: number,
   ) => {
     if (!ytTrack) return;
+
+    // Listeners in a room cannot start their own playback.
+    if (isGuest && isInRoom) {
+      openLockdown();
+      return;
+    }
+
     const normalized = normalizeTrack(ytTrack);
     const videoId = normalized.id;
 
@@ -74,11 +121,22 @@ export function useGlobalPlayback() {
         Array.isArray(ytTrack.thumbnails) &&
         ytTrack.thumbnails.length > 0
       ) {
-        coverUrl = ytTrack.thumbnails[0].url || ytTrack.thumbnails[0];
+        const firstThumb = ytTrack.thumbnails[0];
+        coverUrl =
+          (typeof firstThumb === "string" ? firstThumb : firstThumb.url) ||
+          coverUrl;
       } else if (ytTrack.image) coverUrl = ytTrack.image;
 
       if (currentTrackUrl === pipeUrl) {
-        togglePlay();
+        // Same track picked again: pause if playing, resume if paused
+        // mid-track, restart from zero when it had finished.
+        const action = decideSameTrackAction(
+          localIsPlaying,
+          currentTimeSec,
+          durationSec,
+        );
+        if (action === "restart") controlRestart();
+        else controlTogglePlay();
         return;
       }
 
@@ -112,14 +170,11 @@ export function useGlobalPlayback() {
 
       setActiveMetadata(trackId ? { ...metadata, id: trackId } : metadata);
 
-      if (myRoom) {
-        await updateRoomTrack({ roomId: myRoom._id, trackId }).catch(
-          console.error,
-        );
-      }
+      // Host picked a new song -> everyone in the room hears it.
+      await broadcastTrackChange(trackId ?? undefined);
 
       failureCountRef.current = 0;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Playback failed for ID:", videoId, error);
       handleTrackFailure();
     } finally {
@@ -142,8 +197,22 @@ export function useGlobalPlayback() {
   };
 
   const playNext = async (isAutomatic: boolean = false) => {
+    // Guests never drive playback - they follow the host.
+    if (isGuest && isInRoom) {
+      openLockdown();
+      return;
+    }
+
     if (isAutomatic && isOnLoop) {
       forceSync(undefined, 0, true);
+      // Re-broadcast the restart so listeners loop along with the host.
+      if (isHost && isInRoom && roomId && activeMetadata?.id) {
+        updateRoomTrack({
+          roomId,
+          trackId: activeMetadata.id,
+          userId,
+        }).catch(() => {});
+      }
       return;
     }
 
@@ -154,11 +223,17 @@ export function useGlobalPlayback() {
     }
 
     if (activeMetadata) {
-      setIsLoading(true);
       const currentId =
         activeMetadata.youtubeId ||
         activeMetadata.id ||
         activeMetadata.audioUrl?.split("id=")[1];
+
+      if (!currentId) {
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
 
       try {
         const recommendations = await fetchRelatedTracks(
@@ -186,6 +261,10 @@ export function useGlobalPlayback() {
   };
 
   const playPrevious = () => {
+    if (isGuest && isInRoom) {
+      openLockdown();
+      return;
+    }
     if (currentTimeSec > 3) {
       seekToTime(0);
     } else if (queue && queueIndex > 0) {
@@ -194,7 +273,11 @@ export function useGlobalPlayback() {
     }
   };
 
-  const playNextPriority = (track: any) => {
+  const playNextPriority = (track: NormalizableTrack) => {
+    if (isGuest && isInRoom) {
+      openLockdown();
+      return;
+    }
     const normalized = {
       ...normalizeTrack(track),
       queueType: "user" as QueueType,
@@ -209,7 +292,11 @@ export function useGlobalPlayback() {
     setQueue(newQueue);
   };
 
-  const addToQueue = (track: any) => {
+  const addToQueue = (track: NormalizableTrack) => {
+    if (isGuest && isInRoom) {
+      openLockdown();
+      return;
+    }
     const normalized = {
       ...normalizeTrack(track),
       queueType: "user" as QueueType,
@@ -240,5 +327,8 @@ export function useGlobalPlayback() {
     playNextPriority,
     addToQueue,
     handleTrackFailure,
+    isHost,
+    isGuest,
+    isInRoom,
   };
 }

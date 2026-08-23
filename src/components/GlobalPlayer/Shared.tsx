@@ -1,12 +1,13 @@
 "use client";
 
+import NextImage from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { useRoomState } from "@/hooks/useRoomState";
+import { useRoomState } from "@/hooks/useRoomContext";
 import { cn } from "@/lib/utils";
 import {
   Play,
@@ -21,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { fetchRelatedTracks } from "@/lib/recommendations";
+import { Button } from "@/components/ui/button";
 
 export function ProgressBar({
   heightClass = "h-1.5",
@@ -29,9 +31,9 @@ export function ProgressBar({
   heightClass?: string;
   hoverHeightClass?: string;
 }) {
-  const { currentTimeSec, durationSec, duration, currentTimeStr, seekToTime } =
+  const { currentTimeSec, durationSec, duration, currentTimeStr } =
     useAudioEngine();
-  const { isGuest } = useRoomState();
+  const { isGuest, controlSeekTo } = useRoomState();
   const [isDragging, setIsDragging] = useState(false);
   const [dragValue, setDragValue] = useState(0);
 
@@ -66,7 +68,8 @@ export function ProgressBar({
             onChange={(e) => setDragValue(Number(e.target.value))}
             onMouseUp={(e) => {
               setIsDragging(false);
-              seekToTime(Number(e.currentTarget.value));
+              // Room-aware: hosts broadcast the seek to listeners.
+              controlSeekTo(Number(e.currentTarget.value));
             }}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0"
           />
@@ -114,7 +117,6 @@ export function PlaybackControls({
   const {
     isPlaying,
     isLoading,
-    togglePlay,
     activeMetadata,
     isOnLoop,
     setIsOnLoop,
@@ -123,22 +125,20 @@ export function PlaybackControls({
     queueIndex,
   } = useAudioEngine();
   const { playNext, playPrevious } = useGlobalPlayback();
-  const { isGuest } = useRoomState();
+  const { isGuest, controlTogglePlay, openLockdown } = useRoomState();
 
   if (isGuest) {
     return (
       <div className={cn("flex items-center justify-center py-2", className)}>
-        <button
-          onClick={() =>
-            window.dispatchEvent(new CustomEvent("openLockdownModal"))
-          }
-          className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors rounded-full border border-emerald-500/20 active:scale-95 cursor-pointer"
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={openLockdown}
+          className="text-emerald-500 border-emerald-500/20 hover:text-emerald-500"
         >
           <Radio size={16} className="animate-pulse" />
-          <span className="text-xs font-bold uppercase tracking-widest">
-            Live • Leave Room
-          </span>
-        </button>
+          Live • Leave Room
+        </Button>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export function PlaybackControls({
         <SkipBack size={iconSize} fill="currentColor" strokeWidth={1} />
       </button>
       <button
-        onClick={togglePlay}
+        onClick={controlTogglePlay}
         className="w-16 h-16 flex items-center justify-center bg-foreground text-background rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl"
       >
         {isLoading ? (
@@ -209,7 +209,7 @@ export function StarButton({ className }: { className?: string }) {
   );
   const isLiked = Boolean(
     activeMetadata?.id &&
-    likedSongs?.some((song: any) => song.trackId === activeMetadata.id),
+    likedSongs?.some((song) => song.trackId === activeMetadata.id),
   );
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
@@ -223,8 +223,8 @@ export function StarButton({ className }: { className?: string }) {
 
     try {
       await toggleLikeMutation({
-        userId: userId as any,
-        trackId: activeMetadata.id as any,
+        userId: userId,
+        trackId: activeMetadata.id,
         title: activeMetadata.title || "Unknown Track",
         artist:
           activeMetadata.artist ||
@@ -264,6 +264,7 @@ export function StarButton({ className }: { className?: string }) {
 
 export function useNextInQueue(limit: number = 4) {
   const { queue, queueIndex, setQueue, activeMetadata } = useAudioEngine();
+  const { isGuest, isInRoom } = useRoomState();
   const [isFetching, setIsFetching] = useState(false);
 
   const isFetchingRef = useRef(false);
@@ -274,6 +275,10 @@ export function useNextInQueue(limit: number = 4) {
     : [];
 
   useEffect(() => {
+    // Recommendations are a host-only feature: listeners follow the host's
+    // broadcast and must not build their own queues.
+    if (isGuest && isInRoom) return;
+
     const currentId =
       activeMetadata?.youtubeId ||
       activeMetadata?.id ||
@@ -311,6 +316,9 @@ export function useNextInQueue(limit: number = 4) {
         });
     }
   }, [
+    isGuest,
+    isInRoom,
+    activeMetadata,
     activeMetadata?.youtubeId,
     activeMetadata?.id,
     activeMetadata?.audioUrl,
@@ -330,9 +338,12 @@ export function PlaybackStatus({ isFetching }: { isFetching?: boolean }) {
     return (
       <div className="shrink-0 mb-6 flex items-center gap-4 bg-foreground/5 p-4 rounded-2xl border border-foreground/5">
         <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-md bg-neutral-200">
-          <img
-            src={source.coverUrl || activeMetadata?.coverUrl}
-            alt={source.name}
+          <NextImage
+            width={500}
+            height={500}
+            unoptimized
+            src={source.coverUrl || activeMetadata?.coverUrl || ""}
+            alt={source.name || ""}
             className="w-full h-full object-cover"
           />
         </div>
@@ -367,13 +378,13 @@ export function PlaybackStatus({ isFetching }: { isFetching?: boolean }) {
 export function useDominantColor(
   imageUrl?: string,
 ): [number, number, number] | null {
-  const [rgb, setRgb] = useState<[number, number, number] | null>(null);
+  const [state, setState] = useState<{
+    source: string;
+    rgb: [number, number, number] | null;
+  }>({ source: "", rgb: null });
 
   useEffect(() => {
-    if (!imageUrl) {
-      setRgb(null);
-      return;
-    }
+    if (!imageUrl) return;
 
     let isMounted = true;
     const img = new Image();
@@ -438,17 +449,22 @@ export function useDominantColor(
 
         if (isMounted) {
           if (bestColor) {
-            setRgb(bestColor);
+            setState({ source: imageUrl, rgb: bestColor });
           } else if (count > 0) {
-            setRgb([
-              Math.round(avgR / count),
-              Math.round(avgG / count),
-              Math.round(avgB / count),
-            ]);
+            setState({
+              source: imageUrl,
+              rgb: [
+                Math.round(avgR / count),
+                Math.round(avgG / count),
+                Math.round(avgB / count),
+              ],
+            });
+          } else {
+            setState({ source: imageUrl, rgb: null });
           }
         }
-      } catch (err) {
-        if (isMounted) setRgb(null);
+      } catch {
+        if (isMounted) setState({ source: imageUrl, rgb: null });
       }
     };
 
@@ -457,7 +473,7 @@ export function useDominantColor(
     } else {
       img.onload = extractVibrantColor;
       img.onerror = () => {
-        if (isMounted) setRgb(null);
+        if (isMounted) setState({ source: imageUrl, rgb: null });
       };
     }
 
@@ -466,7 +482,8 @@ export function useDominantColor(
     };
   }, [imageUrl]);
 
-  return rgb;
+  if (!imageUrl || state.source !== imageUrl) return null;
+  return state.rgb;
 }
 
 export function VibrantBackground({

@@ -5,7 +5,11 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { normalizeTrack } from "@/lib/trackUtils";
+import {
+  normalizeTrack,
+  type NormalizableTrack,
+  type CanonicalTrack,
+} from "@/lib/trackUtils";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -27,9 +31,9 @@ import {
 export type MenuSize = "sm" | "md" | "lg";
 
 export interface TrackActionMenuContentProps {
-  track: any;
+  track: NormalizableTrack | null;
   size?: MenuSize;
-  onOpenPlaylistModal?: (track: any) => void;
+  onOpenPlaylistModal?: (track: CanonicalTrack) => void;
   onClose?: () => void;
   ItemComponent?: React.ElementType;
   SeparatorComponent?: React.ElementType;
@@ -93,7 +97,7 @@ export function TrackActionMenuContent({
   const handleToggleLibrary = async () => {
     if (!user?._id || !normalized.id) return;
     await toggleSaveLibraryItem({
-      userId: user._id as any,
+      userId: user._id,
       itemType: "track",
       itemId: normalized.id,
       title: normalized.title,
@@ -199,9 +203,9 @@ export function TrackActionMenuContent({
 }
 
 export interface TrackDropdownMenuProps {
-  track: any;
+  track: NormalizableTrack | null;
   size?: MenuSize;
-  onOpenPlaylistModal?: (track: any) => void;
+  onOpenPlaylistModal?: (track: CanonicalTrack) => void;
   trigger?: React.ReactNode;
   align?: "start" | "center" | "end";
   side?: "top" | "bottom" | "left" | "right";

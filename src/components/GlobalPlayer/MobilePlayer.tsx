@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { useRoomState } from "@/hooks/useRoomState";
+import { useRoomState } from "@/hooks/useRoomContext";
 import {
   Play,
   Pause,
@@ -42,18 +43,16 @@ export function MobilePlayer({
     activeMetadata,
     isPlaying,
     isLoading,
-    togglePlay,
     currentTimeSec,
-    seekToTime,
     durationSec,
     isOnLoop,
     setIsOnLoop,
     queue,
     queueIndex,
-  } = useAudioEngine() as any;
+  } = useAudioEngine();
 
   const { playNext, playPrevious } = useGlobalPlayback();
-  const { isGuest } = useRoomState();
+  const { isGuest, controlTogglePlay, controlSeekTo } = useRoomState();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [mobileTab, setMobileTab] = useState<"cover" | "lyrics" | "queue">(
@@ -157,8 +156,8 @@ export function MobilePlayer({
               {activeMetadata ? (
                 <>
                   <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 shadow-sm">
-                    <img
-                      src={activeMetadata.coverUrl}
+                    <Image width={500} height={500} unoptimized
+                      src={activeMetadata.coverUrl || ""}
                       className="w-full h-full object-cover"
                       alt="Cover"
                     />
@@ -183,7 +182,7 @@ export function MobilePlayer({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        togglePlay();
+                        controlTogglePlay();
                       }}
                       className="w-10 h-10 flex items-center justify-center text-foreground hover:bg-foreground/5 active:scale-90 rounded-full transition-all shrink-0"
                     >
@@ -256,8 +255,8 @@ export function MobilePlayer({
         {mobileTab === "cover" && (
           <div className="flex-1 flex items-center justify-center px-2">
             <div className="w-full max-w-[320px] aspect-square rounded-2xl overflow-hidden shadow-2xl">
-              <img
-                src={activeMetadata?.coverUrl}
+              <Image width={500} height={500} unoptimized
+                src={activeMetadata?.coverUrl || ""}
                 className="w-full h-full object-cover"
                 alt="Cover"
               />
@@ -270,7 +269,7 @@ export function MobilePlayer({
               <SyncedLyrics
                 activeMetadata={activeMetadata}
                 currentTimeSec={currentTimeSec}
-                seekToTime={seekToTime}
+                seekToTime={controlSeekTo}
               />
             )}
           </div>
@@ -282,7 +281,7 @@ export function MobilePlayer({
               Playing Next
             </h3>
             <div className="flex-1 liquid-scroll px-1 space-y-0.5">
-              {upNextTracks.map((track: any, idx: number) => (
+              {upNextTracks.map((track, idx) => (
                 <Track
                   key={track.id || track._id || `queue-${idx}`}
                   track={track}
@@ -337,7 +336,6 @@ export function MobilePlayer({
               </button>
               <TrackDropdownMenu
                 track={activeMetadata}
-                preset="mobileDrawer"
                 size="lg"
                 side="top"
                 align="center"
@@ -387,7 +385,7 @@ export function MobilePlayer({
           </button>
 
           <button
-            onClick={togglePlay}
+            onClick={controlTogglePlay}
             disabled={!activeMetadata}
             className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center active:scale-90 transition-transform shadow-lg disabled:opacity-50"
           >
