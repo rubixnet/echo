@@ -10,16 +10,9 @@ export function calculateServerOffset(
   serverTime: number,
   clientReceiveTime: number,
 ): number {
-  // Round Trip Time (RTT) is the total time the request took to go there and back
   const rtt = clientReceiveTime - clientSendTime;
-
-  // Assume the network delay is symmetrical (it took half the RTT to get to the server)
   const networkLatency = rtt / 2;
-
-  // The time the server *actually* processed it, minus what our clock thought it should be
-  const offset = serverTime - (clientSendTime + networkLatency);
-
-  return offset;
+  return serverTime - (clientSendTime + networkLatency);
 }
 
 /**
@@ -31,22 +24,27 @@ export function calculateServerOffset(
  * @returns The target `currentTime` in seconds for the <audio> tag
  */
 
+/**
+ * Computes exact audio playback position in seconds.
+ */
 export function getPerfectSyncTime(
   serverStartTime: number | undefined,
   pausePosition: number,
   isPlaying: boolean,
-  serverOffset: number = 0, // Default to 0 if we haven't calculated it yet
+  serverOffset: number = 0,
+  durationSec: number = 0,
 ): number {
   if (!isPlaying || !serverStartTime) {
-    return pausePosition;
+    return Math.max(0, pausePosition || 0);
   }
 
-  // What time is it right now on the Server?
   const currentServerTime = Date.now() + serverOffset;
+  const elapsedMs = currentServerTime - serverStartTime;
+  const calculatedSec = Math.max(0, elapsedMs / 1000);
 
-  // How long has the song been playing since the host hit play?
-  const elapsedMilliseconds = currentServerTime - serverStartTime;
+  if (durationSec > 0 && calculatedSec >= durationSec) {
+    return durationSec;
+  }
 
-  // Convert to seconds for HTML5 Audio
-  return elapsedMilliseconds / 1000;
+  return calculatedSec;
 }

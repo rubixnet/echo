@@ -1,12 +1,15 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
+import type { Doc } from "../../convex/_generated/dataModel";
 
-const UserContext = createContext<any>(null);
+export type AppUser = (Doc<"users"> & { username?: string }) | null;
+
+const UserContext = createContext<AppUser>(null);
 
 interface UserProviderProp {
   children: React.ReactNode;
-  user: any;
+  user: AppUser;
 }
 
 export function UserProvider({ children, user }: UserProviderProp) {
