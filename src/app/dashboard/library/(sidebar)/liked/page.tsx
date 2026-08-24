@@ -47,7 +47,7 @@ export default function LikedSongsPage() {
         youtubeId: first.audioUrl?.split("id=")[1] || first.youtubeId,
       },
       setLoadingId,
-      sorted as any,
+      sorted,
       0,
     );
   };
@@ -71,12 +71,12 @@ export default function LikedSongsPage() {
           </span>
         </>
       }
-      tracks={likedSongs as any}
+      tracks={likedSongs}
       isLoading={isLoading}
       onPlayFirst={handlePlayFirst}
       emptyIcon={<Star className="mx-auto mb-4 text-foreground/30" size={48} />}
       emptyText="No favorite songs yet."
-      renderTrack={(track, index) => (
+      renderTrack={(track, _allTracks, index) => (
         <Track
           key={track._id}
           track={track}

@@ -1,12 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
 import { Star, ListMusic, History, Pin } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
+import type { Doc } from "../../../../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+
+type PlaylistSummary = Doc<"playlists"> & {
+  coverUrl?: string | null;
+  trackCount?: number;
+};
 
 export default function SidebarLayout({
   children,
@@ -141,7 +148,7 @@ function SidebarPlaylistItem({
   isActive,
   isLast,
 }: {
-  playlist: any;
+  playlist: PlaylistSummary;
   isActive: boolean;
   isLast: boolean;
 }) {
@@ -162,7 +169,7 @@ function SidebarPlaylistItem({
         >
           <div className="w-12 h-12 shrink-0 rounded-md bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm relative">
             {coverUrl ? (
-              <img
+              <Image width={500} height={500} unoptimized
                 src={coverUrl}
                 className="w-full h-full object-cover"
                 alt={playlist.name}

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
-import { History, Trash2 } from "lucide-react";
+import { History } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { Track } from "@/components/TrackComponent";
@@ -15,7 +15,6 @@ export default function ListeningHistoryPage() {
 
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const removeHistoryItem = useMutation(api.history.removeHistoryItem);
   const historySongs = useQuery(
     api.history.getUserHistory,
     user?._id ? { userId: user._id } : "skip",
@@ -44,22 +43,9 @@ export default function ListeningHistoryPage() {
         youtubeId: first.audioUrl?.split("id=")[1] || first.youtubeId,
       },
       setLoadingId,
-      sorted as any,
+      sorted,
       0,
     );
-  };
-
-  const handleRemoveFromHistory = async (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    track: any,
-  ) => {
-    e.stopPropagation();
-    if (!user?._id) return;
-    try {
-      await removeHistoryItem({ historyId: track._id });
-    } catch (error) {
-      console.error("Failed to remove song from history", error);
-    }
   };
 
   const coverNode = (
@@ -81,14 +67,14 @@ export default function ListeningHistoryPage() {
           </span>
         </>
       }
-      tracks={historySongs as any}
+      tracks={historySongs}
       isLoading={isLoading}
       onPlayFirst={handlePlayFirst}
       emptyIcon={
         <History className="mx-auto mb-4 text-foreground/30" size={48} />
       }
       emptyText="No history yet."
-      renderTrack={(track, index) => (
+      renderTrack={(track, _allTracks, index) => (
         <div className="group items-center">
           <Track
             key={track._id}

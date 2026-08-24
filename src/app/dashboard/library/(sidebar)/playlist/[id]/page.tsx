@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { use, useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
@@ -69,7 +70,7 @@ export default function PlaylistPage({
         youtubeId: first.audioUrl?.split("id=")[1] || first.youtubeId,
       },
       setLoadingId,
-      sorted as any,
+      sorted,
       0,
     );
   };
@@ -85,7 +86,7 @@ export default function PlaylistPage({
   ) : showGrid ? (
     <div className="grid grid-cols-2 grid-rows-2 w-full h-full">
       {tracks!.slice(0, 4).map((t, i) => (
-        <img
+        <Image width={500} height={500} unoptimized
           key={i}
           src={t?.coverUrl}
           className="w-full h-full object-cover"
@@ -94,7 +95,7 @@ export default function PlaylistPage({
       ))}
     </div>
   ) : (
-    <img
+    <Image width={500} height={500} unoptimized
       src={tracks![0]?.coverUrl}
       className="w-full h-full object-cover"
       alt=""
@@ -116,10 +117,10 @@ export default function PlaylistPage({
             </span>
           </>
         }
-        tracks={tracks as any}
+        tracks={tracks}
         isLoading={isLoading}
         onPlayFirst={handlePlayFirst}
-        renderTrack={(track, index) => (
+        renderTrack={(track) => (
           <Track
             key={track._id}
             track={track}
