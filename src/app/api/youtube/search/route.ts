@@ -7,7 +7,21 @@ const execAsync = promisify(exec);
 const ytmusic = new YTMusic();
 let isInitialized = false;
 
-const searchCache = new Map<string, { items: any[]; expires: number }>();
+interface SearchItem {
+  id: string;
+  title: string;
+  uploaderName: string;
+  artist: string;
+  artistId: string | null;
+  url: string;
+  thumbnail: string;
+  coverUrl: string;
+  duration: number | string;
+  type: string;
+  isOfficial: boolean;
+}
+
+const searchCache = new Map<string, { items: SearchItem[]; expires: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
 
 export async function GET(request: Request) {
@@ -35,7 +49,7 @@ export async function GET(request: Request) {
     const rawSongs = await ytmusic.searchSongs(query);
 
     if (rawSongs && rawSongs.length > 0) {
-      const items = rawSongs.map((song: any) => {
+      const items: SearchItem[] = rawSongs.map((song) => {
         const videoId = song.videoId;
         const artistName = song.artist?.name || "Unknown Artist";
         const thumbnail =
@@ -84,14 +98,14 @@ export async function GET(request: Request) {
         { maxBuffer: 10 * 1024 * 1024 },
       );
       stdoutString = stdout;
-    } catch (err: any) {
-      stdoutString = err.stdout || "";
+    } catch (err) {
+      stdoutString = (err as { stdout?: string })?.stdout || "";
     }
 
     const items = stdoutString
       .trim()
       .split("\n")
-      .map((line) => {
+      .map((line): SearchItem | null => {
         try {
           if (!line) return null;
           const data = JSON.parse(line);
@@ -121,15 +135,18 @@ export async function GET(request: Request) {
           return null;
         }
       })
-      .filter(Boolean);
+      .filter((item): item is SearchItem => item !== null);
 
     if (items.length > 0) {
       searchCache.set(cacheKey, { items, expires: now + CACHE_TTL });
     }
 
     return NextResponse.json({ items });
-  } catch (e: any) {
-    console.error("Search Fallback Error:", e.message);
+  } catch (e) {
+    console.error(
+      "Search Fallback Error:",
+      e instanceof Error ? e.message : e,
+    );
     return NextResponse.json(
       { error: "Search failed", items: [] },
       { status: 500 },

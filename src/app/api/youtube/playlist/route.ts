@@ -4,6 +4,19 @@ import { promisify } from "util";
 
 const execFileAsync = promisify(execFile);
 
+interface YtDlpEntry {
+  id?: string;
+  title?: string;
+  thumbnail?: string;
+  thumbnails?: { url?: string }[];
+  duration?: number;
+  artist?: string;
+  uploader?: string;
+  channel?: string;
+  uploader_id?: string;
+  view_count?: number;
+}
+
 function formatDuration(seconds?: number): string {
   if (!seconds || isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
@@ -39,10 +52,15 @@ export async function GET(request: Request) {
       throw new Error("Empty output from yt-dlp");
     }
 
-    const data = JSON.parse(stdout);
+    const data = JSON.parse(stdout) as {
+      title?: string;
+      uploader?: string;
+      channel?: string;
+      entries?: YtDlpEntry[];
+    };
 
-    const tracks = (data.entries || []).slice(0, 50).map((entry: any) => {
-      const videoId = entry.id;
+    const tracks = (data.entries || []).slice(0, 50).map((entry) => {
+      const videoId = entry.id || "";
 
       let thumbnail =
         entry.thumbnails?.[entry.thumbnails.length - 1]?.url || entry.thumbnail;
@@ -69,7 +87,7 @@ export async function GET(request: Request) {
         thumbnail,
         coverUrl: thumbnail,
         duration: formatDuration(entry.duration),
-        views: entry.view_count || entry.views || 0,
+        views: entry.view_count || 0,
         url: `https://www.youtube.com/watch?v=${videoId}`,
         type: "stream",
       };
@@ -81,8 +99,11 @@ export async function GET(request: Request) {
       playlistId,
       tracks,
     });
-  } catch (error: any) {
-    console.error("yt-dlp extraction error:", error?.message || error);
+  } catch (error) {
+    console.error(
+      "yt-dlp extraction error:",
+      error instanceof Error ? error.message : error,
+    );
     return NextResponse.json(
       { error: "Failed to parse playlist" },
       { status: 500 },

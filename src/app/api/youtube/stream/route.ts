@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       statusText: googleResponse.statusText,
       headers: responseHeaders,
     });
-  } catch (e: any) {
+  } catch (e) {
     console.error("Stream Proxy Error:", e);
     return NextResponse.json({ error: "Streaming failed" }, { status: 500 });
   }
