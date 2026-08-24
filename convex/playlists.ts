@@ -115,12 +115,12 @@ export const getPlaylistTracks = query({
       .withIndex("by_playlist", (q) => q.eq("playlistId", args.playlistId))
       .order("desc")
       .collect();
-    return relations.map((rel: any) => {
+    return relations.map((rel) => {
       const ytId = rel.trackId;
       const fallbackCover =
         ytId && ytId.length === 11
           ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg`
-          : null;
+          : "";
 
       return {
         _id: rel._id,
@@ -128,7 +128,7 @@ export const getPlaylistTracks = query({
         youtubeId: rel.trackId,
         title: rel.title || "Untitled Track",
         artist: rel.artist || "Unknown Artist",
-        coverUrl: rel.coverUrl || fallbackCover,
+        coverUrl: rel.coverUrl || fallbackCover || "",
         duration: rel.duration || "0:00",
         audioUrl: rel.audioUrl || `/api/youtube/stream?id=${rel.trackId}`,
         addedAt: rel.addedAt,

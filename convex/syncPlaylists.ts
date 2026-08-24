@@ -2,6 +2,26 @@ import { internalAction, internalMutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 
+interface YtPlaylistItem {
+  snippet?: {
+    title?: string;
+    videoOwnerChannelTitle?: string;
+    channelTitle?: string;
+    resourceId?: { videoId?: string };
+    thumbnails?: {
+      high?: { url?: string };
+      medium?: { url?: string };
+      default?: { url?: string };
+    };
+  };
+}
+
+interface YtVideoItem {
+  id: string;
+  contentDetails?: { duration?: string };
+}
+
+
 function parseISODuration(isoDuration?: string): string {
   if (!isoDuration) return "0:00";
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -518,7 +538,10 @@ export const syncPlaylistsByFrequency = internalAction({
 
         const playlistUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${cleanId}&key=${apiKey}`;
         const res = await fetch(playlistUrl);
-        const playlistData = await res.json();
+        const playlistData = (await res.json()) as {
+          items?: YtPlaylistItem[];
+          error?: { message?: string };
+        };
 
         if (
           !playlistData.items ||
@@ -532,14 +555,14 @@ export const syncPlaylistsByFrequency = internalAction({
         }
 
         const validItems = playlistData.items.filter(
-          (entry: any) =>
+          (entry) =>
             entry?.snippet?.resourceId?.videoId &&
             entry?.snippet?.title !== "Private video" &&
             entry?.snippet?.title !== "Deleted video",
         );
 
         const videoIds = validItems.map(
-          (entry: any) => entry.snippet.resourceId.videoId,
+          (entry) => entry.snippet!.resourceId!.videoId!,
         );
 
         const durationMap = new Map<string, string>();
@@ -547,7 +570,9 @@ export const syncPlaylistsByFrequency = internalAction({
           try {
             const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${videoIds.join(",")}&key=${apiKey}`;
             const videosRes = await fetch(videosUrl);
-            const videosData = await videosRes.json();
+            const videosData = (await videosRes.json()) as {
+              items?: YtVideoItem[];
+            };
 
             if (videosData.items) {
               for (const vObj of videosData.items) {
@@ -555,15 +580,15 @@ export const syncPlaylistsByFrequency = internalAction({
                 durationMap.set(vObj.id, parseISODuration(rawIso));
               }
             }
-          } catch (err) {
+          } catch {
             console.warn(
               `[DURATION WARN] Could not fetch durations for "${item.name}"`,
             );
           }
         }
 
-        const tracks = validItems.map((entry: any, index: number) => {
-          const videoId = String(entry.snippet.resourceId.videoId);
+        const tracks = validItems.map((entry, index: number) => {
+          const videoId = String(entry.snippet!.resourceId!.videoId);
           const thumbnails = entry.snippet?.thumbnails;
           const thumbnail =
             thumbnails?.high?.url ||

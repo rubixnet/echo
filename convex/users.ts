@@ -11,6 +11,16 @@ export const getProfile = query({
   },
 });
 
+export const getUserData = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_id", (q) => q.eq("_id", args.userId))
+      .unique();
+  },
+});
+
 export const getUserProfile = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -75,10 +85,9 @@ export const finalizeUser = mutation({
       throw new Error("User not found");
     }
 
-    const patchData: any = {
+    return await ctx.db.patch(user._id, {
       name: args.name,
       email: args.email,
-    };
-    return await ctx.db.patch(user._id, patchData);
+    });
   },
 });
