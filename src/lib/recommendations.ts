@@ -1,11 +1,11 @@
-import { normalizeTrack } from "./trackUtils";
+import { normalizeTrack, type NormalizableTrack, type QueueItem } from "./trackUtils";
 
-const inFlightRequests = new Map<string, Promise<any[]>>();
+const inFlightRequests = new Map<string, Promise<QueueItem[]>>();
 
 export async function fetchRelatedTracks(
   videoId: string,
-  existingQueue: any[] = [],
-): Promise<any[]> {
+  existingQueue: NormalizableTrack[] = [],
+): Promise<QueueItem[]> {
   if (!videoId) return [];
 
   if (inFlightRequests.has(videoId)) {
@@ -17,7 +17,7 @@ export async function fetchRelatedTracks(
       const res = await fetch(`/api/youtube/related?id=${videoId}`);
       if (!res.ok) return [];
 
-      const data = await res.json();
+      const data = (await res.json()) as { items?: unknown[] };
       if (!data.items || !Array.isArray(data.items)) return [];
 
       console.log(data);
@@ -26,11 +26,15 @@ export async function fetchRelatedTracks(
       );
 
       return data.items
-        .filter((item: any) => {
+        .filter(
+          (item): item is NormalizableTrack =>
+            !!item && typeof item === "object",
+        )
+        .filter((item) => {
           const id = item.youtubeId || item.id;
           return id && id !== videoId && !existingIds.has(id);
         })
-        .map((item: any) => ({
+        .map((item) => ({
           ...normalizeTrack(item),
           queueType: "recommendation" as const,
         }));

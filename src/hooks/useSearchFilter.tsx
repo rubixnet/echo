@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 
-export function useSearchFilter<T extends Record<string, any>>(
+export function useSearchFilter<T>(
   items: T[] | null | undefined,
   searchTerm: string,
-  keys: (keyof T)[] = ["title", "artist"],
+  keys: (keyof T)[] = ["title", "artist"] as (keyof T)[],
 ) {
   return useMemo(() => {
     if (!items) return [];
