@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
+import type { Id } from "../../convex/_generated/dataModel";
 import { useUser } from "@/hooks/useUser";
 import {
   X,
@@ -17,7 +20,9 @@ import { cn } from "@/lib/utils";
 import { useAudioEngine } from "@/components/AudioProvider";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
-import { normalizeTrack } from "@/lib/trackUtils";
+import { normalizeTrack, type NormalizableTrack } from "@/lib/trackUtils";
+
+type PlaylistSummary = Doc<"playlists"> & { coverUrl?: string | null };
 
 function ModalPlaylistItem({
   playlist,
@@ -25,7 +30,7 @@ function ModalPlaylistItem({
   isAdded,
   onAdd,
 }: {
-  playlist: any;
+  playlist: PlaylistSummary;
   trackId: string | null;
   isAdded: boolean;
   onAdd: (id: string) => void;
@@ -54,7 +59,7 @@ function ModalPlaylistItem({
           )}
         >
           {coverUrl ? (
-            <img
+            <Image width={500} height={500} unoptimized
               src={coverUrl}
               className="w-full h-full object-cover"
               alt={playlist.name}
@@ -94,7 +99,7 @@ interface AddToPlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
   trackId?: string | null;
-  track?: any;
+  track?: NormalizableTrack | null;
 }
 
 export function AddToPlaylistModal({
@@ -120,20 +125,13 @@ export function AddToPlaylistModal({
   const createPlaylist = useMutation(api.playlists.createPlaylist);
   const addTrack = useMutation(api.playlists.addTrack);
 
-  useEffect(() => {
-    if (isOpen) {
-      setAddedPlaylists(new Set());
-      setNewPlaylistName("");
-    }
-  }, [isOpen, effectiveTrackId]);
-
   if (!isOpen) return null;
 
   const handleAddToPlaylist = async (playlistId: string) => {
     if (!effectiveTrackId) return;
     try {
       await addTrack({
-        playlistId: playlistId as any,
+        playlistId: playlistId as Id<"playlists">,
         trackId: effectiveTrackId,
         title: normalized.title,
         artist: normalized.artist,
@@ -196,7 +194,7 @@ export function AddToPlaylistModal({
 
             {normalized.id ? (
               <div className="flex items-center gap-3 bg-foreground/5 p-2 rounded-xl border border-foreground/5">
-                <img
+                <Image width={500} height={500} unoptimized
                   src={normalized.coverUrl}
                   alt="Cover"
                   className="w-10 h-10 rounded-lg object-cover shadow-sm border border-foreground/5"

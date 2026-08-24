@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { Play, Pause } from "lucide-react";
 
@@ -16,13 +17,13 @@ export default function GlassPlayerDark() {
   return (
     <div className="min-h-screen relative flex flex-col justify-between p-6 font-sans select-none overflow-hidden bg-[#09090b] text-white">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center">
-        <img
+        <Image width={500} height={500} unoptimized
           src={albumPalette.coverUrl}
           alt="Base"
           className="absolute w-full h-full object-cover scale-110 opacity-15 filter blur-[90px] grayscale"
         />
 
-        <img
+        <Image width={500} height={500} unoptimized
           src={albumPalette.coverUrl}
           alt="Reveal"
           className="absolute w-full h-full object-cover scale-110 transition-all duration-300 ease-out"
@@ -82,7 +83,7 @@ export default function GlassPlayerDark() {
 
               {/* Larger Album Cover (48% size) */}
               <div className="w-[48%] aspect-square rounded-full border-2 border-white/40 relative overflow-hidden bg-neutral-900 z-40">
-                <img
+                <Image width={500} height={500} unoptimized
                   src={albumPalette.coverUrl}
                   alt="Album Art"
                   className="w-full h-full object-cover"
