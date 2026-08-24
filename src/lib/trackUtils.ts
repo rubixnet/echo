@@ -22,6 +22,12 @@ export interface TrackMetadata {
   };
 }
 
+export type QueueType = "user" | "recommendation";
+
+export type QueueItem = NormalizableTrack & {
+  queueType?: QueueType;
+};
+
 export interface CanonicalTrack {
   id: string;
   youtubeId: string;
@@ -43,7 +49,24 @@ export interface CanonicalTrack {
   };
 }
 
-export function extractYouTubeId(raw: any): string {
+export interface NormalizableTrack {
+  id?: string;
+  youtubeId?: string;
+  trackId?: string;
+  _id?: string;
+  url?: string;
+  audioUrl?: string;
+  title?: string;
+  artist?: string;
+  uploaderName?: string;
+  coverUrl?: string;
+  thumbnail?: string;
+  duration?: string | number;
+  source?: CanonicalTrack["source"];
+  isOfficial?: boolean;
+}
+
+export function extractYouTubeId(raw: unknown): string {
   if (!raw || typeof raw !== "string") return "";
 
   if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
@@ -61,7 +84,7 @@ export function extractYouTubeId(raw: any): string {
 }
 
 export function normalizeTrack(
-  track: any,
+  track: NormalizableTrack | null | undefined,
   defaultSourceType: CanonicalTrack["source"]["type"] = "search",
 ): CanonicalTrack {
   const ytId =
