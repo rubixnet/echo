@@ -17,7 +17,10 @@ export function GlobalSearchBar() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [fetchedSuggestions, setFetchedSuggestions] = useState<{
+    term: string;
+    items: string[];
+  }>({ term: "", items: [] });
   const [showHistoryPopover, setShowHistoryPopover] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
@@ -33,24 +36,32 @@ export function GlobalSearchBar() {
   }, []);
 
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setSuggestions([]);
-      setSelectedIndex(-1);
-      return;
-    }
+    const trimmed = searchTerm.trim();
+    if (!trimmed) return;
     const delayDebounceFn = setTimeout(async () => {
       try {
         const res = await fetch(
-          `/api/youtube/suggest?q=${encodeURIComponent(searchTerm)}`,
+          `/api/youtube/suggest?q=${encodeURIComponent(trimmed)}`,
         );
         const data = await res.json();
-        setSuggestions(data);
+        setFetchedSuggestions({
+          term: searchTerm,
+          items: Array.isArray(data)
+            ? data.filter((s): s is string => typeof s === "string")
+            : [],
+        });
       } catch (err) {
         console.error(err);
       }
     }, 150);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
+
+  const suggestions = useMemo(
+    () =>
+      fetchedSuggestions.term === searchTerm ? fetchedSuggestions.items : [],
+    [fetchedSuggestions, searchTerm],
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,10 +77,10 @@ export function GlobalSearchBar() {
   }, []);
 
   const handleSearchSubmit = async (
-    e: React.FormEvent,
+    e?: { preventDefault?: () => void },
     directQuery?: string,
   ) => {
-    e?.preventDefault();
+    e?.preventDefault?.();
     const finalQuery = directQuery || searchTerm;
     if (!finalQuery.trim()) return;
 
@@ -122,7 +133,7 @@ export function GlobalSearchBar() {
       setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
     } else if (e.key === "Enter" && selectedIndex >= 0) {
       e.preventDefault();
-      handleSearchSubmit(e as any, combinedList[selectedIndex].text);
+      handleSearchSubmit(e, combinedList[selectedIndex].text);
     } else if (e.key === "Escape") {
       setShowHistoryPopover(false);
       searchInputRef.current?.blur();
@@ -194,9 +205,9 @@ export function GlobalSearchBar() {
               <div className="flex items-center justify-end gap-2 mt-2">
                 <button
                   type="button"
-                  onClick={() =>
-                    clearSearchHistory({ userId: user?._id || "skip" })
-                  }
+                  onClick={() => {
+                    if (user?._id) clearSearchHistory({ userId: user._id });
+                  }}
                   className="text-sm pr-2 text-foreground/50 hover:text-foreground transition-colors"
                 >
                   Clear Search History

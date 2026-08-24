@@ -17,7 +17,12 @@ export function LiquidDrop({
   return (
     <div
       className={cn("relative", className)}
-      style={{ ...style, ["--liquid-radius" as any]: radius }}
+      style={
+        {
+          ...style,
+          "--liquid-radius": radius,
+        } as React.CSSProperties
+      }
       {...props}
     >
       <div

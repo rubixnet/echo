@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, X } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
@@ -10,12 +10,14 @@ interface LibrarySearchBarProps {
   onChange: (val: string) => void;
 }
 
-export function LibrarySearchBar({ value, onChange }: LibrarySearchBarProps) {
-  const [mounted, setMounted] = useState(false);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function LibrarySearchBar({ value, onChange }: LibrarySearchBarProps) {
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (!mounted) return null;
 
