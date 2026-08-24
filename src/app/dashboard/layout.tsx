@@ -25,7 +25,7 @@ export default async function DashboardLayout({
     profile = await fetchQuery(api.users.getProfile, {
       workosID: payload.userId as string,
     });
-  } catch (err) {
+  } catch {
     console.error("Invalid session token");
     redirect("/api/auth/logout?reason=session_invalid");
   }

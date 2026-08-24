@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const data = await response.json();
 
     return NextResponse.json(data[1] || []);
-  } catch (error) {
+  } catch {
     return NextResponse.json([]);
   }
 }

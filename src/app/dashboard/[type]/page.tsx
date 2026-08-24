@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useMemo, useState } from "react";
 import { Music, TrendingUp } from "lucide-react";
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 import { Track } from "@/components/TrackComponent";
@@ -23,28 +23,25 @@ export default function TypePage({
 
   const category = categories?.find((c) => c.categoryId === typeId);
 
-  const [tracks, setTracks] = useState<TrackLike[]>([]);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const tracks: TrackLike[] = useMemo(() => {
+    if (!dbTracks) return [];
 
-  const { playTrack } = useGlobalPlayback();
-
-  useEffect(() => {
-    if (!dbTracks) return;
-
-    const mappedTracks: TrackLike[] = dbTracks.map((t, idx) => ({
+    return dbTracks.map((t, idx) => ({
       _id: t._id || t.youtubeId || `track-${idx}`,
       id: t._id || t.youtubeId || `track-${idx}`,
       youtubeId: t.youtubeId,
       title: t.title || "Untitled Track",
       artist: t.artist || "Unknown Artist",
-      thumbnail: t.thumbnail || t.coverUrl,
-      coverUrl: t.coverUrl || t.thumbnail,
+      thumbnail: t.thumbnail,
+      coverUrl: t.thumbnail,
       duration: t.duration || "3:30",
       url: `https://www.youtube.com/watch?v=${t.youtubeId}`,
     }));
+  }, [dbTracks]);
 
-    setTracks(mappedTracks);
-  }, [dbTracks, typeId]);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const { playTrack } = useGlobalPlayback();
 
   const isLoading = dbTracks === undefined || categories === undefined;
 
@@ -63,7 +60,7 @@ export default function TypePage({
     const first = sortedTracks[0];
     if (!first) return;
 
-    playTrack(first, setLoadingId, sortedTracks as any, 0);
+    playTrack(first, setLoadingId, sortedTracks, 0);
   };
 
   const categoryName = category?.name || typeId.toUpperCase();
@@ -100,7 +97,7 @@ export default function TypePage({
         <Music className="mx-auto mb-4 text-foreground/30" size={48} />
       }
       emptyText="No songs found in this category."
-      renderTrack={(track, index) => (
+      renderTrack={(track) => (
         <Track
           showDuration={true}
           key={track._id}

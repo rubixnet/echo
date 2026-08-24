@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState, useMemo } from "react";
+import Image from "next/image";
+import { use, useEffect, useState } from "react";
 import { Track } from "@/components/TrackComponent";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { Play, Shuffle, SearchIcon, Music2, Bookmark } from "lucide-react";
@@ -9,16 +10,24 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
 import { cn } from "@/lib/utils";
+import type { NormalizableTrack } from "@/lib/trackUtils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
+
+interface ArtistAlbum {
+  albumId?: string;
+  name?: string;
+  year?: string;
+  coverUrl?: string;
+}
 
 interface ArtistData {
   name: string;
   artistId: string;
   coverUrl: string;
-  topSongs: any[];
-  albums: any[];
-  songs: any[];
+  topSongs: NormalizableTrack[];
+  albums: ArtistAlbum[];
+  songs: NormalizableTrack[];
 }
 
 export default function ArtistPage({
@@ -49,7 +58,7 @@ export default function ArtistPage({
           `/api/youtube/artist?name=${encodeURIComponent(artistName)}`,
         );
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as ArtistData;
           setArtistData(data);
         }
       } catch (error) {
@@ -73,7 +82,7 @@ export default function ArtistPage({
   const handleToggleLibrary = async () => {
     if (!user?._id || !artistData) return;
     await toggleSaveLibraryItem({
-      userId: user._id as any,
+      userId: user._id,
       itemType: "artist",
       itemId: artistData.name,
       title: artistData.name,
@@ -101,7 +110,7 @@ export default function ArtistPage({
   const isBookmarked = useQuery(
     api.library.checkSaved,
     user?._id
-      ? { userId: user._id as any, itemType: "artist", itemId: artistName }
+      ? { userId: user._id, itemType: "artist", itemId: artistName }
       : "skip",
   );
 
@@ -131,7 +140,7 @@ export default function ArtistPage({
         <div className="relative z-20 flex items-end justify-between w-full">
           <div className="flex items-end gap-6">
             {artistData.coverUrl && (
-              <img
+              <Image width={500} height={500} unoptimized
                 src={artistData.coverUrl}
                 alt={artistData.name}
                 className="w-28 h-28 select-none md:w-40 md:h-40 rounded-full object-cover border-2 border-foreground/10 shrink-0"
@@ -167,7 +176,7 @@ export default function ArtistPage({
                 </ButtonGroup>
 
                 <Button
-                  onClick={(e: any) => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     handleToggleLibrary();
                   }}
