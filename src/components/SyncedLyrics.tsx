@@ -5,6 +5,7 @@ import { Loader2, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { TrackMetadata } from "@/lib/trackUtils";
 
 interface LyricLine {
   time: number;
@@ -12,7 +13,7 @@ interface LyricLine {
 }
 
 interface SyncedLyricsProps {
-  activeMetadata: any;
+  activeMetadata: (TrackMetadata & { syncedLyrics?: string }) | null;
   currentTimeSec: number;
   seekToTime: (time: number) => void;
 }
@@ -41,7 +42,7 @@ export function SyncedLyrics({
         try {
           setLyrics(JSON.parse(activeMetadata.syncedLyrics));
           setError(false);
-        } catch (e) {}
+        } catch {}
         return;
       }
 
@@ -65,14 +66,14 @@ export function SyncedLyrics({
 
           if (activeMetadata.id) {
             saveLyricsToDB({
-              trackId: activeMetadata.id as any,
+              trackId: activeMetadata.id,
               syncedLyrics: JSON.stringify(data.lyrics),
             }).catch(console.error);
           }
         } else {
           setError(true);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Lyrics Engine failed:", err);
         setError(true);
       } finally {

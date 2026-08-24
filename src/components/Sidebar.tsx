@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   Home,
   Search,
   Radio,
-  ListPlus,
   Pin,
   ListMusic,
   Star,
@@ -14,39 +14,71 @@ import {
   Bookmark,
   History,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Doc } from "../../convex/_generated/dataModel";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
 
+function subscribeToSidebarState(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener("sidebar-toggle", onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener("sidebar-toggle", onChange);
+  };
+}
+
+function getSidebarSnapshot() {
+  return localStorage.getItem("sidebar-open") ?? "true";
+}
+
+function NavItem({
+  href,
+  icon: Icon,
+  visual,
+  label,
+}: {
+  href: string;
+  icon?: LucideIcon;
+  visual?: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium",
+        "text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
+      )}
+    >
+      {visual ? visual : Icon && <Icon size={18} strokeWidth={2} />}
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
+
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
+  const isOpen =
+    useSyncExternalStore(
+      subscribeToSidebarState,
+      getSidebarSnapshot,
+      () => "true",
+    ) === "true";
+
   const user = useUser();
   const playlists = useQuery(
     api.playlists?.getUserPlaylists,
     user?._id ? { userId: user._id } : "skip",
   );
 
-  useEffect(() => {
-    setIsMounted(true);
-    const savedState = localStorage.getItem("sidebar-open");
-    if (savedState !== null) {
-      setIsOpen(savedState === "true");
-    }
-  }, []);
-
   const toggleSidebar = (state: boolean) => {
-    setIsOpen(state);
     localStorage.setItem("sidebar-open", String(state));
+    window.dispatchEvent(new Event("sidebar-toggle"));
   };
-
-  if (!isMounted)
-    return (
-      <div className="fixed hidden md:block top-3 left-4 bottom-20 w-56 z-900" />
-    );
 
   if (!isOpen) {
     return (
@@ -58,31 +90,6 @@ export default function Sidebar() {
       </Button>
     );
   }
-
-  const NavItem = ({
-    href,
-    icon: Icon,
-    visual,
-    label,
-  }: {
-    href: string;
-    icon?: any;
-    visual?: React.ReactNode;
-    label: string;
-  }) => {
-    return (
-      <Link
-        href={href}
-        className={cn(
-          "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium",
-          "text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
-        )}
-      >
-        {visual ? visual : Icon && <Icon size={18} strokeWidth={2} />}
-        <span className="truncate">{label}</span>
-      </Link>
-    );
-  };
 
   return (
     <div className="fixed lg:static hidden md:block top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto">
@@ -172,7 +179,9 @@ export default function Sidebar() {
   );
 }
 
-function SidebarPlaylistItem({ playlist }: { playlist: any }) {
+type PlaylistSummary = Doc<"playlists"> & { coverUrl?: string | null };
+
+function SidebarPlaylistItem({ playlist }: { playlist: PlaylistSummary }) {
   const tracks = useQuery(api.playlists.getPlaylistTracks, {
     playlistId: playlist._id,
   });
@@ -190,7 +199,7 @@ function SidebarPlaylistItem({ playlist }: { playlist: any }) {
     >
       <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
         {coverUrl ? (
-          <img
+          <Image width={500} height={500} unoptimized
             src={coverUrl}
             className="w-full h-full object-cover"
             alt={playlist.name}

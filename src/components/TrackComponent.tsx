@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
@@ -29,7 +30,6 @@ import {
   Plus,
   Pin,
   Radio,
-  Music,
   Share,
   Star,
   ThumbsDown,
@@ -40,36 +40,45 @@ import { useAudioEngine } from "@/components/AudioProvider";
 import { useUser } from "@/hooks/useUser";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
-import { normalizeTrack } from "@/lib/trackUtils";
+import {
+  normalizeTrack,
+  type CanonicalTrack,
+  type NormalizableTrack,
+} from "@/lib/trackUtils";
 
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(
-    undefined,
+  const isMobile = React.useSyncExternalStore(
+    (onStoreChange) => {
+      const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+      mql.addEventListener("change", onStoreChange);
+      return () => mql.removeEventListener("change", onStoreChange);
+    },
+    () => window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`).matches,
+    () => false,
   );
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-
-  return !!isMobile;
+  return isMobile;
 }
 
+type MenuItemComponent = React.ComponentType<{
+  onClick?: (e: React.MouseEvent) => void;
+  className?: string;
+  children?: React.ReactNode;
+}>;
+
 interface TrackProps {
-  track: any;
+  track: NormalizableTrack | null;
   index?: number;
   variant: "grid" | "row";
   loadingId: string | null;
   setLoadingId: (id: string | null) => void;
-  onOpenPlaylistModal?: (track: any) => void;
+  onOpenPlaylistModal?: (track: CanonicalTrack) => void;
   playlistId?: string;
   showDuration?: boolean;
   className?: string;
@@ -98,8 +107,10 @@ export function Track({
   const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
   const toggleSaveLibraryItem = useMutation(api.library.toggleSaveItem);
-
-  if (!track) return null;
+  const suggestLess = useMutation(api.suggestLess.addToUserSuggestLessTracks);
+  const neverShowAgain = useMutation(
+    api.neverShowAgain.addToNeverShowAgainTracks,
+  );
 
   const normalized = normalizeTrack(track);
 
@@ -117,14 +128,7 @@ export function Track({
       : "skip",
   );
 
-  const suggestLess = useMutation(api.suggestLess.addToUserSuggestLessTracks);
-  const suggestLessSongs = useQuery(
-    api.suggestLess.getUserSuggestLessTracks,
-    user?._id ? { userId: user._id } : "skip",
-  );
-  const neverShowAgain = useMutation(
-    api.neverShowAgain.addToNeverShowAgainTracks,
-  );
+  if (!track) return null;
 
   const isLoading = loadingId === normalized.id;
   const isCurrent = currentTrackUrl?.includes(normalized.id) && isPlaying;
@@ -149,7 +153,7 @@ export function Track({
   const handleLike = async () => {
     if (!user?._id || !normalized.id) return;
     await toggleLikeMutation({
-      userId: user._id as any,
+      userId: user._id,
       trackId: normalized.id,
       title: normalized.title,
       artist: normalized.artist,
@@ -163,7 +167,7 @@ export function Track({
   const handleToggleLibrary = async () => {
     if (!user?._id || !normalized.id) return;
     await toggleSaveLibraryItem({
-      userId: user._id as any,
+      userId: user._id,
       itemType: "track",
       itemId: normalized.id,
       title: normalized.title,
@@ -180,12 +184,12 @@ export function Track({
   const handleRemoveFromPlaylist = async () => {
     if (!playlistId || !normalized.id) return;
     await removeTrackFromPlaylist({
-      playlistId: playlistId as any,
+      playlistId: playlistId as Id<"playlists">,
       trackId: normalized.id,
     });
   };
 
-  const handleOpenPlaylist = (e: any) => {
+  const handleOpenPlaylist = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDropdownOpen(false);
     setIsContextMenuOpen(false);
@@ -245,7 +249,7 @@ export function Track({
     isMobile ? "w-[260px] rounded-[24px]" : "w-[220px] rounded-2xl",
   );
 
-  const renderMenuItems = (Item: any, Separator: any) => (
+  const renderMenuItems = (Item: MenuItemComponent, Separator: MenuItemComponent) => (
     <div className="flex flex-col w-full text-primary">
       <div
         className={cn(
@@ -254,7 +258,7 @@ export function Track({
         )}
       >
         <button
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handleLike();
           }}
@@ -273,7 +277,7 @@ export function Track({
           />
         </button>
         <button
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handleToggleLibrary();
           }}
@@ -306,7 +310,7 @@ export function Track({
         )}
       >
         <Item
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handlePlayNext();
           }}
@@ -315,8 +319,9 @@ export function Track({
           <PlaySquare size={iconSize} className="text-primary/70" /> Play Next
         </Item>
         <Item
-          onClick={(e: any) => {
-            (e.stopPropagation(), handleAddToQueue());
+          onClick={(e) => {
+            e.stopPropagation();
+            handleAddToQueue();
           }}
           className={itemClassName}
         >
@@ -336,7 +341,7 @@ export function Track({
         />
         <Item
           className={itemClassName}
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handleSuggestLess();
           }}
@@ -346,7 +351,7 @@ export function Track({
         </Item>
         <Item
           className={itemClassName}
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handleNeverShowAgain();
           }}
@@ -358,7 +363,7 @@ export function Track({
           <Music size={iconSize} className="text-primary/70" /> View Song Info
         </Item> */}
         <Item
-          onClick={(e: any) => {
+          onClick={(e) => {
             e.stopPropagation();
             handleShare();
           }}
@@ -373,7 +378,7 @@ export function Track({
               className={cn("bg-primary/10 mx-2", isMobile ? "my-1.5" : "my-1")}
             />
             <Item
-              onClick={(e: any) => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleRemoveFromPlaylist();
               }}
@@ -403,7 +408,7 @@ export function Track({
               className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-50 dark:hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:bg-neutral-100/50"
             >
               <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 shadow-sm">
-                <img
+                <Image width={500} height={500} unoptimized
                   src={normalized.coverUrl}
                   alt={normalized.title}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
@@ -476,7 +481,7 @@ export function Track({
                   >
                     {normalized.artist}
                   </Link>
-                  <OfficialBadge isOfficial={track.isOfficial} />
+                  <OfficialBadge isOfficial={!!track.isOfficial} />
                 </div>
               </div>
             </div>
@@ -498,7 +503,7 @@ export function Track({
                   </span>
                 )}
                 <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
-                  <img
+                  <Image width={500} height={500} unoptimized
                     src={normalized.coverUrl}
                     className="w-full h-full object-cover select-none rounded-sm"
                     alt={normalized.title}
