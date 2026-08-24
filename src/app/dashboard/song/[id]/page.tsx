@@ -1,7 +1,3 @@
-export default function SongPage({
-  params,
-}: {
-  params: Promise<{ type: string }>;
-}) {
+export default function SongPage() {
   return <div>Song Page</div>;
 }

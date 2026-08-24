@@ -25,8 +25,8 @@ export default function LoginPage() {
             Welcome in.
           </h2>
           <p className="text-neutral-500 font-medium mb-10">
-            Sign in or create an account to start syncing. We'll show you around
-            once you're inside.
+            Sign in or create an account to start syncing. We&apos;ll show you
+            around once you&apos;re inside.
           </p>
 
           <div className="space-y-4">
