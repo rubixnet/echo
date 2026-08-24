@@ -1,46 +1,75 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Track } from "@/components/TrackComponent";
 import { GlobalSearchBar } from "@/components/GlobalSearchBar";
 
+interface SearchResultItem {
+  _id?: string;
+  id?: string;
+  youtubeId?: string;
+  title?: string;
+  artist?: string;
+  uploaderName?: string;
+  coverUrl?: string;
+  thumbnail?: string;
+  audioUrl?: string;
+  url?: string;
+  duration?: number | string;
+  isOfficial?: boolean;
+}
+
+interface ArtistResult {
+  name: string;
+  avatarUrl: string;
+}
+
+interface SearchResponse {
+  items?: SearchResultItem[];
+  artists?: {
+    name?: string;
+    avatarUrl?: string;
+    thumbnail?: string;
+  }[];
+}
+
+interface DonePhase {
+  status: "done";
+  query: string;
+  items: SearchResultItem[];
+  artists: ArtistResult[];
+}
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
 
-  const [ytResults, setYtResults] = useState<any[]>([]);
-  const [artists, setArtists] = useState<{ name: string; avatarUrl: string }[]>(
-    [],
-  );
-  const [isSearchingYt, setIsSearchingYt] = useState(false);
+  const [phase, setPhase] = useState<DonePhase>({
+    status: "done",
+    query: "",
+    items: [],
+    artists: [],
+  });
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
+  const active = phase.query === query ? phase : null;
+  const ytResults = active?.items ?? [];
+  const artists = active?.artists ?? [];
+  const isSearchingYt = query !== "" && active === null;
+
   useEffect(() => {
-    if (query) {
-      executeSearch(query);
-    } else {
-      setYtResults([]);
-      setArtists([]);
-    }
-  }, [query]);
+    if (!query) return;
+    let cancelled = false;
 
-  const executeSearch = async (queryToSearch: string) => {
-    if (!queryToSearch.trim()) return;
+    fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`)
+      .then((res) => res.json().catch(() => ({ items: [], artists: [] })))
+      .then((data: SearchResponse) => {
+        if (cancelled) return;
 
-    setIsSearchingYt(true);
-    setYtResults([]);
-    setArtists([]);
-
-    try {
-      const res = await fetch(
-        `/api/youtube/search?q=${encodeURIComponent(queryToSearch)}`,
-      );
-      const data = await res.json().catch(() => ({ items: [], artists: [] }));
-
-      if (res.ok && data.items) {
-        const top6Songs = data.items.slice(0, 6).map((item: any) => ({
+        const top6Songs = (data.items ?? []).slice(0, 6).map((item) => ({
           ...item,
           _id: item._id || item.youtubeId || item.id,
           youtubeId: item.youtubeId || item.id,
@@ -50,15 +79,10 @@ export default function SearchPage() {
             `https://i.ytimg.com/vi/${item.youtubeId || item.id}/hqdefault.jpg`,
         }));
 
-        setYtResults(top6Songs);
-
-        const artistMap = new Map<
-          string,
-          { name: string; avatarUrl: string }
-        >();
+        const artistMap = new Map<string, ArtistResult>();
 
         if (data.artists && Array.isArray(data.artists)) {
-          data.artists.forEach((a: any) => {
+          data.artists.forEach((a) => {
             if (a.name) {
               artistMap.set(a.name.toLowerCase().trim(), {
                 name: a.name,
@@ -68,24 +92,34 @@ export default function SearchPage() {
           });
         }
 
-        top6Songs.forEach((song: any) => {
+        top6Songs.forEach((song) => {
           const artistName = song.artist || song.uploaderName;
           if (artistName && !artistMap.has(artistName.toLowerCase().trim())) {
             artistMap.set(artistName.toLowerCase().trim(), {
               name: artistName,
-              avatarUrl: song.coverUrl,
+              avatarUrl: song.coverUrl || "",
             });
           }
         });
 
-        setArtists(Array.from(artistMap.values()).slice(0, 6));
-      }
-    } catch (error) {
-      console.error("Search failed:", error);
-    } finally {
-      setIsSearchingYt(false);
-    }
-  };
+        setPhase({
+          status: "done",
+          query,
+          items: top6Songs,
+          artists: Array.from(artistMap.values()).slice(0, 6),
+        });
+      })
+      .catch((error) => {
+        console.error("Search failed:", error);
+        if (!cancelled) {
+          setPhase({ status: "done", query, items: [], artists: [] });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [query]);
 
   return (
     <div className="p-3 max-w-4xl mx-auto pt-4 md:pt-6 text-foreground antialiased pb-28">
@@ -153,7 +187,7 @@ export default function SearchPage() {
                   >
                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
                       {artist.avatarUrl ? (
-                        <img
+                        <Image width={500} height={500} unoptimized
                           src={artist.avatarUrl}
                           alt={artist.name}
                           className="w-full select-none h-full object-cover transition-transform duration-300"

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -14,6 +15,7 @@ import {
 import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
+import type { Doc } from "../../../../convex/_generated/dataModel";
 import { LibrarySearchBar } from "@/components/LibrarySearchBar";
 import { PlaylistContextMenu } from "@/components/PlaylistActions";
 import { Track } from "@/components/TrackComponent";
@@ -265,7 +267,7 @@ export default function LibraryHubPage() {
                   >
                     <div className="w-20 h-20 sm:w-24 sm:h-24 md:h-30 md:w-30 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
                       {artist.coverUrl ? (
-                        <img
+                        <Image width={500} height={500} unoptimized
                           src={artist.coverUrl}
                           alt={artist.title}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -310,7 +312,12 @@ function AccordionToggle({
   );
 }
 
-function LibraryPlaylistItem({ playlist }: { playlist: any }) {
+type LibraryPlaylist = Doc<"playlists"> & {
+  coverUrl?: string | null;
+  trackCount?: number;
+};
+
+function LibraryPlaylistItem({ playlist }: { playlist: LibraryPlaylist }) {
   const router = useRouter();
   const trackCount = playlist.trackCount || 0;
   const coverUrl = playlist.coverUrl;
@@ -322,7 +329,7 @@ function LibraryPlaylistItem({ playlist }: { playlist: any }) {
     >
       <div className="relative aspect-square w-full rounded-md overflow-hidden bg-foreground/5 border border-foreground/10 flex items-center justify-center shadow-sm mb-3">
         {coverUrl ? (
-          <img
+          <Image width={500} height={500} unoptimized
             src={coverUrl}
             className="w-full h-full object-cover"
             alt={playlist.name}

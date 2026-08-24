@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { TrendingUp, Music, Play } from "lucide-react";
+import { TrendingUp, Music } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -88,7 +89,7 @@ function PlaylistCard({
       className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
     >
       <div className="relative select-none aspect-square w-full rounded-md overflow-hidden bg-foreground/5 shadow-sm mb-3">
-        <img
+        <Image width={500} height={500} unoptimized
           src={category.coverUrl || fallbackImage}
           alt={category.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
