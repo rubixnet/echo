@@ -44,6 +44,7 @@ export async function GET(req: Request) {
       profile = await fetchMutation(api.users.createProfile, {
         workosId: workosUser.id,
         email: workosUser.email,
+        name: displayName || undefined,
       });
       isNewUser = true;
     }

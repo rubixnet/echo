@@ -1,4 +1,4 @@
-const { google } = require('googleapis');
+import { google } from 'googleapis';
 
 const API_KEY = 'YOUR_YOUTUBE_API_KEY';
 
@@ -155,6 +155,7 @@ async function fetchOfficialPlaylists() {
 
 fetchOfficialPlaylists();
 
+/*
 results: {
   {
     "Alternative Indie Rock": {
@@ -525,3 +526,4 @@ results: {
     }
   }
 }
+*/

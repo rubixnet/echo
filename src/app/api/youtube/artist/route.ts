@@ -4,7 +4,41 @@ import YTMusic from "ytmusic-api";
 const ytmusic = new YTMusic();
 let initialized = false;
 
-function getBestCoverUrl(thumbnails: any[], videoId?: string): string {
+interface Thumbnail {
+  url?: string;
+}
+
+interface YtSearchResult {
+  artistId?: string;
+  name?: string;
+  type?: string;
+}
+
+interface YtSong {
+  videoId?: string;
+  id?: string;
+  name?: string;
+  title?: string;
+  duration?: number | string;
+  thumbnails?: Thumbnail[];
+}
+
+interface YtArtistProfile {
+  name?: string;
+  thumbnails?: Thumbnail[];
+  topSongs?: YtSong[];
+}
+
+interface YtAlbum {
+  albumId?: string;
+  browseId?: string;
+  name?: string;
+  title?: string;
+  year?: string;
+  thumbnails?: Thumbnail[];
+}
+
+function getBestCoverUrl(thumbnails?: Thumbnail[], videoId?: string): string {
   if (Array.isArray(thumbnails) && thumbnails.length > 0) {
     const validThumb = thumbnails[thumbnails.length - 1]?.url;
     if (
@@ -50,13 +84,15 @@ export async function GET(request: Request) {
           artistId = searchResults[0].artistId;
           fallbackName = searchResults[0].name || nameOrId;
         } else {
-          const generalResults = await ytmusic.search(nameOrId);
+          const generalResults = (await ytmusic.search(
+            nameOrId,
+          )) as unknown as YtSearchResult[];
           const artistMatch = generalResults.find(
-            (item: any) => item.type === "ARTIST" || item.artistId,
+            (item) => item.type === "ARTIST" || item.artistId,
           );
           if (artistMatch) {
-            artistId = (artistMatch as any).artistId;
-            fallbackName = (artistMatch as any).name || nameOrId;
+            artistId = artistMatch.artistId || null;
+            fallbackName = artistMatch.name || nameOrId;
           }
         }
       } catch (err) {
@@ -68,7 +104,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Artist not found" }, { status: 404 });
     }
 
-    const [artistProfile, albums, artistSongs] = await Promise.all([
+    const [artistProfile, albumsRaw, songsRaw] = await Promise.all([
       ytmusic.getArtist(artistId).catch(() => null),
       ytmusic.getArtistAlbums(artistId).catch(() => []),
       ytmusic.getArtistSongs(artistId).catch(() => []),
@@ -81,10 +117,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const profile = artistProfile as any;
+    const profile = artistProfile as unknown as YtArtistProfile;
+    const albums = (albumsRaw || []) as unknown as YtAlbum[];
+    const artistSongs = (songsRaw || []) as unknown as YtSong[];
     const resolvedName = profile.name || fallbackName;
 
-    const formatTrack = (track: any) => {
+    const formatTrack = (track: YtSong) => {
       const vId = track.videoId || track.id || "";
       return {
         id: vId,
@@ -102,10 +140,10 @@ export async function GET(request: Request) {
     };
 
     const topSongs = (profile.topSongs || []).map(formatTrack);
-    const extraSongs = (artistSongs || []).map(formatTrack);
+    const extraSongs = artistSongs.map(formatTrack);
     const coverImage = getBestCoverUrl(profile.thumbnails);
 
-    const formattedAlbums = (albums || []).map((album: any) => ({
+    const formattedAlbums = albums.map((album) => ({
       albumId: album.albumId || album.browseId || "",
       name: album.name || album.title || "Untitled Album",
       year: album.year || "Album",

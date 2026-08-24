@@ -22,14 +22,18 @@ export async function GET(request: Request) {
     const match = captionRegex.exec(html);
     if (!match) throw new Error("No YouTube Captions");
 
-    const tracks = JSON.parse(match[1]);
+    const tracks = JSON.parse(match[1]) as {
+      vssId?: string;
+      languageCode?: string;
+      baseUrl?: string;
+    }[];
     let track = tracks.find(
-      (t: any) =>
+      (t) =>
         t.vssId === ".en" || t.languageCode === "en" || t.vssId === "a.en",
     );
     if (!track) track = tracks[0];
 
-    const transcriptRes = await fetch(track.baseUrl);
+    const transcriptRes = await fetch(track?.baseUrl || "");
     const transcriptXml = await transcriptRes.text();
 
     const textRegex = /<text start="([\d.]+)"[^>]*>([^<]+)<\/text>/g;
@@ -107,7 +111,7 @@ export async function GET(request: Request) {
     const lyrics = await Promise.any([getLrcLib(), getYoutubeCaptions()]);
 
     return NextResponse.json({ lyrics });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "No lyrics found anywhere" },
       { status: 404 },
