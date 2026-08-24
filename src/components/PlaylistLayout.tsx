@@ -8,7 +8,6 @@ import {
   ArrowUpDown,
   ArrowDownUp,
   SearchIcon,
-  Clock,
   Check,
   PenLine,
   Pin,
@@ -38,7 +37,7 @@ export type TrackLike = {
   coverUrl?: string;
   audioUrl?: string;
   youtubeId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 };
 
 type PlaylistLayoutProps = {
@@ -50,7 +49,11 @@ type PlaylistLayoutProps = {
   tracks: TrackLike[] | null | undefined;
   isLoading?: boolean;
   onPlayFirst?: (sortedTracks: TrackLike[]) => void;
-  renderTrack?: (track: TrackLike, allTracks: TrackLike[]) => ReactNode;
+  renderTrack?: (
+    track: TrackLike,
+    allTracks: TrackLike[],
+    index: number,
+  ) => ReactNode;
   emptyIcon?: ReactNode;
   emptyText?: string;
   className?: string;
@@ -95,7 +98,7 @@ export function PlaylistLayout({
 
   let imageUrl = coverUrl;
   if (!imageUrl && React.isValidElement(coverNode)) {
-    imageUrl = (coverNode.props as any).src;
+    imageUrl = (coverNode.props as { src?: string }).src;
   }
 
   const handleShuffle = () => {
@@ -139,9 +142,6 @@ export function PlaylistLayout({
 
   const isValidRgb = Array.isArray(rgb) && rgb.length >= 3 && !isNaN(rgb[0]);
 
-  const brightness = isValidRgb
-    ? (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000
-    : 255;
   const r = isValidRgb ? rgb[0] : 150;
   const g = isValidRgb ? rgb[1] : 150;
   const b = isValidRgb ? rgb[2] : 150;
@@ -475,7 +475,7 @@ export function PlaylistLayout({
         ) : (
           <div className="w-full">
             <div className="flex flex-col gap-1">
-              {sortedTracks.map((track) => {
+              {sortedTracks.map((track, trackIndex) => {
                 if (!track) return null;
 
                 const trackKey = track._id;
@@ -483,7 +483,7 @@ export function PlaylistLayout({
                 if (renderTrack) {
                   return (
                     <React.Fragment key={trackKey}>
-                      {renderTrack(track, sortedTracks)}
+                      {renderTrack(track, sortedTracks, trackIndex)}
                     </React.Fragment>
                   );
                 }

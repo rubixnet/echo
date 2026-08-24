@@ -22,13 +22,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import type { Doc } from "../../convex/_generated/dataModel";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+type PlaylistSummary = Doc<"playlists"> & { coverUrl?: string | null };
+
 export function usePlaylistActions(
-  playlist: any,
+  playlist: PlaylistSummary | null | undefined,
   options?: { onDeleteSuccess?: () => void },
 ) {
   const user = useUser();
@@ -69,6 +72,7 @@ export function usePlaylistActions(
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!playlist) return;
     if (!editName.trim() || editName === playlist.name) return;
     try {
       setIsPending(true);
@@ -217,7 +221,7 @@ export function PlaylistContextMenu({
   children,
   onOpenChange,
 }: {
-  playlist: any;
+  playlist: PlaylistSummary;
   children: React.ReactNode;
   onOpenChange?: (open: boolean) => void;
 }) {

@@ -3,21 +3,20 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Home, Search, Library, Radio, Settings } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";
 
-export default function MobileNavbar() {
-  const pathname = usePathname();
-
-  const NavItem = ({
-    href,
-    icon: Icon,
-    active,
-  }: {
-    href: string;
-    icon: any;
-    active?: boolean;
-  }) => (
+function NavItem({
+  href,
+  icon: Icon,
+  active,
+}: {
+  href: string;
+  icon: LucideIcon;
+  active?: boolean;
+}) {
+  return (
     <Link
       href={href}
       className={cn(
@@ -43,6 +42,10 @@ export default function MobileNavbar() {
       />
     </Link>
   );
+}
+
+export default function MobileNavbar() {
+  const pathname = usePathname();
 
   return (
     <div className="fixed bottom-0 left-0 w-full flex justify-center pb-4 px-3 z-50 pointer-events-none">
