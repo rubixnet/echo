@@ -6,7 +6,6 @@ design,
 - og images for all this pages!
 - update icons
 
-- fix issues that come after running bun lint
 - fixing current related as it's shit!
 
 - onboarding and settings page along with redesigned home page
