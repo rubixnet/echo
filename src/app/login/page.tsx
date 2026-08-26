@@ -44,17 +44,17 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-32 relative z-10">
         <div className="absolute top-8 left-8 sm:left-16 md:left-24 lg:left-32">
           <Link href="/" className="flex items-center gap-3 group">
-            <h1 className="text-2xl font-black tracking-tight text-neutral-900">
+            <h1 className="text-2xl font-black tracking-tight text-primary">
               Echo ♪
             </h1>
           </Link>
         </div>
 
         <div className="w-full max-w-sm mx-auto mt-12">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-neutral-900 mb-2">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-primary mb-2">
             Welcome in.
           </h2>
-          <p className="text-neutral-500 font-medium mb-10 leading-relaxed">
+          <p className="text-primary/70 font-medium mb-10 leading-relaxed">
             Sign in or create an account to start syncing. We&apos;ll show you
             around once you&apos;re inside.
           </p>
@@ -64,7 +64,7 @@ export default function LoginPage() {
               onClick={onGoogleLogin}
               className={cn(
                 buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full flex items-center justify-center text-primary gap-3 bg-background hover:bg-neutral-50 h-14 rounded-full",
+                "w-full flex items-center justify-center text-primary gap-3 bg-background hover:bg-background/90 h-14 rounded-full",
               )}
             >
               <svg
@@ -113,9 +113,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="hidden lg:flex lg:w-1/2 relative bg-neutral-100 items-center justify-center p-12 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-emerald-200/50 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-teal-100/60 rounded-full blur-[100px] -z-10 mix-blend-multiply" />
+      <div className="hidden lg:flex lg:w-1/2 relative bg-card/5 items-center justify-center p-12 overflow-hidden">
 
         <div className="relative w-full max-w-lg aspect-square">
           <div className="absolute inset-0 overflow-hidden flex flex-col">
@@ -128,15 +126,15 @@ export default function LoginPage() {
                   key={index}
                   className="min-w-full  h-full flex flex-col justify-center px-2"
                 >
-                  <div className=" bg-white/60 backdrop-blur-3xl border w-full border-white px-4 py-6 gap-2 rounded-[2rem] ">
+                  <div className=" bg-card backdrop-blur-3xl border w-full px-4 py-6 gap-2 rounded-[2rem] ">
                     {" "}
-                    <div className="w-16 h-16 rounded-2xl bg-white shadow-sm border border-neutral-100 flex items-center justify-center text-emerald-500 mb-8">
+                    <div className="w-16 h-16 rounded-2xl shadow-sm border border-neutral-500 flex items-center justify-center text-emerald-500 mb-8">
                       <slide.icon size={28} strokeWidth={2.5} />
                     </div>
-                    <h3 className="text-3xl font-extrabold tracking-tight text-neutral-900 mb-4">
+                    <h3 className="text-3xl font-extrabold tracking-tight text-primary/80 mb-4">
                       {slide.title}
                     </h3>
-                    <p className="text-neutral-500 font-medium leading-relaxed text-lg">
+                    <p className="text-primary/60 font-medium leading-relaxed text-lg">
                       {slide.desc}
                     </p>
                   </div>
@@ -153,8 +151,8 @@ export default function LoginPage() {
                   className={cn(
                     "h-2 rounded-full transition-all duration-500 ease-out",
                     currentSlide === index
-                      ? "w-8 bg-neutral-900"
-                      : "w-2 bg-neutral-300 hover:bg-neutral-400",
+                      ? "w-8 bg-primary"
+                      : "w-2 bg-primary/30 hover:bg-primary",
                   )}
                 />
               ))}
