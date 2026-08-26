@@ -13,6 +13,7 @@ import {
   X,
   Bookmark,
   History,
+  User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,7 @@ export default function Sidebar() {
             <NavItem href="/dashboard" icon={Home} label="Home" />
             <NavItem href="/dashboard/search" icon={Search} label="Search" />
             <NavItem href="/dashboard/rooms" icon={Radio} label="Live Rooms" />
+            <NavItem href="/dashboard/settings" icon={User} label="Profile" />
           </div>
 
           <div className="shrink-0 flex flex-col gap-0.5">

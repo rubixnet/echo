@@ -9,14 +9,18 @@ import { Search as SearchIcon, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
+import { useSearchParams } from "next/navigation";
 
 export function GlobalSearchBar() {
   const user = useUser();
+  const searchParams = useSearchParams()
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const searchQuery = searchParams.get("q")
+  const [searchTerm, setSearchTerm] = useState(searchQuery || "");
+
   const [fetchedSuggestions, setFetchedSuggestions] = useState<{
     term: string;
     items: string[];
@@ -30,6 +34,7 @@ export function GlobalSearchBar() {
     user?._id ? { userId: user._id } : "skip",
   );
   const clearSearchHistory = useMutation(api.search.clearSearchHistory);
+
 
   useEffect(() => {
     searchInputRef.current?.focus();
@@ -57,6 +62,32 @@ export function GlobalSearchBar() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== "Slash") return;
+
+      const target = event.target as HTMLElement;
+
+      const isTyping =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if (isTyping) return;
+
+      event.preventDefault();
+
+      searchInputRef.current?.focus();
+      setShowHistoryPopover(true);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+  
   const suggestions = useMemo(
     () =>
       fetchedSuggestions.term === searchTerm ? fetchedSuggestions.items : [],
@@ -97,8 +128,8 @@ export function GlobalSearchBar() {
     const isTyping = searchTerm.trim().length > 0;
     const matchedHistory = isTyping
       ? (searchHistory || []).filter((h) =>
-          h.searchQuery.toLowerCase().includes(searchTerm.toLowerCase()),
-        )
+        h.searchQuery.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
       : searchHistory || [];
     const historyTextSet = new Set(
       matchedHistory.map((h) => h.searchQuery.toLowerCase()),
