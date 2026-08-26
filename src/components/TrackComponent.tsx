@@ -217,6 +217,10 @@ export function Track({
       await suggestLess({
         userId: user._id,
         trackId: normalized.id,
+        title: normalized.title,
+        artist: normalized.artist,
+        coverUrl: normalized.coverUrl,
+        duration: normalized.duration,
       });
 
       console.log("Track added to Suggest Less");
@@ -237,6 +241,10 @@ export function Track({
       await neverShowAgain({
         userId: user._id,
         trackId: normalized.id,
+        title: normalized.title,
+        artist: normalized.artist,
+        coverUrl: normalized.coverUrl,
+        duration: normalized.duration,
       });
       console.log("Track added to Never Suggest Again");
     } catch (error) {

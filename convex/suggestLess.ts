@@ -16,12 +16,20 @@ export const addToUserSuggestLessTracks = mutation({
   args: {
     userId: v.id("users"),
     trackId: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.string(),
+    title: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("suggestLess", {
       userId: args.userId,
       trackId: args.trackId,
       dislikedAt: Date.now(),
+      title: args.title,
+      artist: args.artist,
+      coverUrl: args.coverUrl,
+      duration: args.duration,
     });
   },
 });
@@ -30,6 +38,10 @@ export const suggestLessTracks = mutation({
   args: {
     userId: v.id("users"),
     trackId: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.string(),
+    title: v.string(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -47,6 +59,10 @@ export const suggestLessTracks = mutation({
         userId: args.userId,
         trackId: args.trackId,
         dislikedAt: Date.now(),
+        title: args.title,
+        artist: args.artist,
+        coverUrl: args.coverUrl,
+        duration: args.duration,
       });
       return { disliked: true };
     }

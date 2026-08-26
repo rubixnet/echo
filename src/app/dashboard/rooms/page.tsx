@@ -92,7 +92,6 @@ export default function LiveRoomsPage() {
         userId: user._id as Id<"users">,
       });
     } catch {
-      /* handled by reactive state */
     }
   };
 
@@ -132,7 +131,7 @@ export default function LiveRoomsPage() {
               placeholder="Enter Room Name"
               value={roomNameInput}
               onChange={(e) => setRoomNameInput(e.target.value)}
-              className="h-9 px-3 w-48 text-sm dark:placeholder:text-neutral-400 focus:outline-none"
+              className="w-full h-9 px-3 bg-transparent text-foreground placeholder:text-foreground/40 text-sm focus:outline-none"
             />
           </LiquidContainer>
           <LiquidContainer radius="12px">

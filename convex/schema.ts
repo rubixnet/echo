@@ -48,6 +48,10 @@ export default defineSchema({
     userId: v.id("users"),
     trackId: v.string(),
     dislikedAt: v.number(),
+    title: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.string(),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
@@ -56,6 +60,10 @@ export default defineSchema({
     userId: v.id("users"),
     trackId: v.string(),
     hatedAt: v.number(),
+    title: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.string(),
   })
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),

@@ -17,20 +17,28 @@ export const addToNeverShowAgainTracks = mutation({
   args: {
     userId: v.id("users"),
     trackId: v.string(),
+    title: v.string(),
+    artist: v.string(),
+    coverUrl: v.string(),
+    duration: v.string(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("neverShowAgain", {
       userId: args.userId,
       trackId: args.trackId,
       hatedAt: Date.now(),
+      title: args.title,
+      artist: args.artist,
+      coverUrl: args.coverUrl,
+      duration: args.duration,
     });
   },
 });
 
-export const togglehated = mutation({
+export const removeFromNeverShowAgainTracks = mutation({
   args: {
     userId: v.id("users"),
-    trackId: v.string(),
+    trackId: v.string()
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -42,14 +50,8 @@ export const togglehated = mutation({
 
     if (existing) {
       await ctx.db.delete(existing._id);
-      return { hated: false };
     } else {
-      await ctx.db.insert("neverShowAgain", {
-        userId: args.userId,
-        trackId: args.trackId,
-        hatedAt: Date.now(),
-      });
-      return { hated: true };
+      return { neverShowAgain: false };
     }
-  },
-});
+  }
+})

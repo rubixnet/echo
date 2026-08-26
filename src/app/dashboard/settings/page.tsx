@@ -1,12 +1,27 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Music, MoreVertical, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropodown-menu";
+import { useTheme } from "next-themes";
+import {
+  LogOut,
+  Music,
+  Sun,
+  Moon,
+  Laptop,
+  Trash,
+  ChevronDown
+} from "lucide-react";
 
 type HatedTrack =
   | string
@@ -21,140 +36,200 @@ type HatedTrack =
 
 export default function SettingsPage() {
   const user = useUser();
+  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const userData = useQuery(
     api.users.getUserData,
     user?._id ? { userId: user._id } : "skip"
-
   );
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const hatedTrackIds = useQuery(
     api.neverShowAgain.getUserHatedTracks,
     user?._id ? { userId: user._id } : "skip"
   );
-  const toggleHated = useMutation(api.neverShowAgain.togglehated);
 
-  const handleUnhideTrack = async (trackId: string) => {
+  const removeFromNeverShowAgainTracks = useMutation(api.neverShowAgain.removeFromNeverShowAgainTracks);
+
+  const handleRemoveHatedTrack = async (trackId: string) => {
     if (!user?._id) return;
     try {
-      await toggleHated({ userId: user._id, trackId });
+      await removeFromNeverShowAgainTracks({ userId: user._id, trackId });
     } catch (error) {
-      console.error("Failed to unhide track", error);
+      console.error("Failed to remove track", error);
     }
   };
+
+  const username = userData?.name || "username";
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen px-10 bg-background w-full pb-32">
-      <main className="flex-1 w-full min-w-0 relative">
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10">
+    <div className="w-full min-h-full flex justify-center p-6 md:p-10 pb-32 text-foreground bg-background">
+      <main className="w-full max-w-3xl space-y-8">
 
-            <div className="space-y-2">
-              <div className="relative">
-                <span className="font-normal">
-                  <h3 className="text-4xl text-balance text-foreground">
-                    {userData?.name || "displayname"}
-                  </h3>
-                </span>
+        <div className="flex items-center justify-between pb-5">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground truncate">
+            {username}
+          </h1>
 
-                <div className=" flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  className="h-9 px-3 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-foreground/10 border border-foreground/10 rounded-xl gap-2"
+                >
+                  {!mounted ? (
+                    <span
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    />
+                  ) : theme === "dark" ? (
+                    <Moon size={14} className="text-primary" />
+                  ) : theme === "light" ? (
+                    <Sun size={14} className="text-primary" />
+                  ) : (
+                    <Laptop size={14} className="text-primary" />
+                  )}
 
-                  <a
-                    href="/api/auth/logout"
-                    title="Log out"
-                    className="flex items-center justify-center p-2 text-primary/70 hover:text-primary rounded-full transition-all duration-200"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+                  <span className="capitalize">
+                    {mounted ? theme || "system" : "system"}
+                  </span>
 
-          <div className="w-full max-w-5xl pt-10 space-y-5">
-            <div>
-              <h3 className="text-xl font-bold tracking-tight text-foreground">Favorite Genres</h3>
-            </div>
-            {userData === undefined ? (
-              <div className="text-sm text-foreground/50 animate-pulse">Loading genres...</div>
-            ) : userData?.favoriteGenres && userData.favoriteGenres.length > 0 ? (
-              <div className="flex flex-wrap gap-3">
-                {userData.favoriteGenres.map((genre: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="px-5 py-2.5 text-sm font-semibold rounded-full bg-foreground/[0.03] border border-foreground/10 text-foreground/80 hover:text-foreground hover:bg-foreground/10 transition-colors capitalize cursor-default"
-                  >
-                    {genre}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-foreground/50">Not genres selected</p>
-            )}
-          </div>
-          <div className="w-full max-w-5xl mt-16 space-y-6">
-            <div className="flex flex-col md:flex-row items-end gap-6 mb-8 pt-12 ">
-              <h2 className="text-xl font-bold tracking-tight text-foreground">
-                Never Show Again
-              </h2>
-            </div>
+                  <ChevronDown size={12} className="opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
 
-            <div className="flex flex-col w-full pb-10">
-              {hatedTrackIds === undefined ? (
-                <div className="text-sm text-foreground/50 animate-pulse px-4 py-8">Loading hidden tracks...</div>
-              ) : hatedTrackIds.length === 0 ? (
-                <div className="text-sm text-foreground/50">No hated tracks yet.</div>
-              ) : (
-                hatedTrackIds.map((track: HatedTrack) => {
-                  const isString = typeof track === "string";
-                  const trackId = isString ? track : (track.trackId || track._id || "");
-                  const songName = isString ? "Unknown Song" : (track.name || track.title || "Unknown Song");
-                  const artistName = isString ? "Hidden Artist" : (track.artist || "Hidden Artist");
-                  const coverUrl = isString ? null : track.coverUrl;
+              <DropdownMenuContent
+                align="end"
+                className="w-36 rounded-xl shadow-none"
+              >
+                <DropdownMenuItem
+                  onClick={() => setTheme("light")}
+                  className="cursor-pointer text-xs font-medium rounded-lg"
+                >
+                  <Sun size={13} className="mr-2 opacity-70" />
+                  Light
+                </DropdownMenuItem>
 
-                  return (
-                    <div key={trackId} className="group flex items-center justify-between py-2.5 px-4 rounded-md hover:bg-foreground/10 transition-colors cursor-default">
-                      <div className="flex items-center gap-4 overflow-hidden">
-                        <div className="w-10 h-10 shrink-0 bg-foreground/10 rounded overflow-hidden shadow-sm">
-                          {coverUrl ? (
-                            <Image width={500} height={500} unoptimized src={coverUrl} alt={songName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Music size={16} className="text-foreground/40" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="text-[15px] font-bold text-foreground truncate">{songName}</span>
-                          <span className="text-[13px] text-foreground/60 truncate mt-0.5">{artistName}</span>
-                        </div>
-                      </div>
+                <DropdownMenuItem
+                  onClick={() => setTheme("dark")}
+                  className="cursor-pointer text-xs font-medium rounded-lg"
+                >
+                  <Moon size={13} className="mr-2 opacity-70" />
+                  Dark
+                </DropdownMenuItem>
 
-                      <div className="flex items-center gap-6 shrink-0 pl-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleUnhideTrack(trackId);
-                          }}
-                          className="text-xs font-semibold h-8 hidden group-hover:flex transition-all bg-background"
-                        >
-                          Unhide
-                        </Button>
+                <DropdownMenuItem
+                  onClick={() => setTheme("system")}
+                  className="cursor-pointer text-xs font-medium rounded-lg"
+                >
+                  <Laptop size={13} className="mr-2 opacity-70" />
+                  System
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-                        <MoreVertical size={18} className="text-foreground/40 group-hover:text-foreground/80 hidden sm:block cursor-pointer transition-colors" />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <Button
+              size="sm"
+              asChild
+              className="h-9 w-9 p-0 text-foreground/70 hover:text-foreground hover:bg-foreground/10 border border-foreground/10 rounded-xl"
+              title="Log out"
+            >
+              <a href="/api/auth/logout">
+                <LogOut size={15} />
+              </a>
+            </Button>
           </div>
         </div>
+
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground">Never Show Again</h2>
+            {hatedTrackIds && hatedTrackIds.length > 0 && (
+              <span className="text-xs text-foreground/40 font-mono">
+                {hatedTrackIds.length} hidden
+              </span>
+            )}
+          </div>
+
+          {hatedTrackIds === undefined ? (
+            <div className="space-y-1.5">
+              {[1, 2].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-2">
+                  <div className="w-9 h-9 bg-foreground/10 rounded-xl animate-pulse shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 w-1/3 bg-foreground/10 rounded-lg animate-pulse" />
+                    <div className="h-2.5 w-1/5 bg-foreground/10 rounded-lg animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : hatedTrackIds.length === 0 ? (
+            <div className="py-8 text-center border-t border-foreground/10">
+              <p className="text-xs font-medium text-foreground/60">No hidden tracks</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-0.5 border-t border-foreground/10 pt-1">
+              {hatedTrackIds.map((track: HatedTrack) => {
+                const isString = typeof track === "string";
+                const trackId = isString ? track : (track.trackId || track._id || "");
+                const songName = isString ? "Unknown Song" : (track.name || track.title || "Unknown Song");
+                const artistName = isString ? "Hidden Artist" : (track.artist || "Hidden Artist");
+                const coverUrl = isString ? null : track.coverUrl;
+
+                return (
+                  <div
+                    key={trackId}
+                    className="group flex items-center justify-between p-2 rounded-xl hover:bg-foreground/[0.04] transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 pr-4">
+                      <div className="w-9 h-9 shrink-0 rounded-xl bg-card border border-foreground/10 overflow-hidden flex items-center justify-center">
+                        {coverUrl ? (
+                          <Image
+                            width={36}
+                            height={36}
+                            unoptimized
+                            src={coverUrl}
+                            alt={songName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Music className="w-4 h-4 text-foreground/40" />
+                        )}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-semibold text-foreground truncate">
+                          {songName}
+                        </span>
+                        <span className="text-[11px] text-foreground/60 truncate mt-0.5">
+                          {artistName}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveHatedTrack(trackId)}
+                      title="Remove from hidden list"
+                      className="h-8 w-8 p-0 text-foreground/40 hover:text-foreground hover:bg-foreground/10 rounded-xl transition-colors shrink-0"
+                    >
+                      <Trash size={14} />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
       </main>
     </div>
   );
