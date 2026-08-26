@@ -41,7 +41,6 @@ export function useGlobalPlayback() {
     activeMetadata,
   } = useAudioEngine();
 
-  // Live room state - correct on every page (see RoomProvider).
   const {
     isInRoom,
     isHost,
@@ -56,11 +55,10 @@ export function useGlobalPlayback() {
   const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
   const failureCountRef = useRef(0);
 
-  /** Hosts publish every transport action to the room; guests are locked. */
   const broadcastTrackChange = useCallback(
     async (trackId: string | undefined) => {
       if (!isInRoom) return;
-      if (isGuest) return; // never happens - guests are blocked earlier
+      if (isGuest) return;
       if (!roomId) return;
       try {
         await updateRoomTrack({
@@ -69,7 +67,6 @@ export function useGlobalPlayback() {
           userId,
         });
       } catch {
-        // Room may have just closed; the live query will settle the UI.
       }
     },
     [isInRoom, isGuest, roomId, userId, updateRoomTrack],
@@ -83,7 +80,6 @@ export function useGlobalPlayback() {
   ) => {
     if (!ytTrack) return;
 
-    // Listeners in a room cannot start their own playback.
     if (isGuest && isInRoom) {
       openLockdown();
       return;
@@ -128,8 +124,6 @@ export function useGlobalPlayback() {
       } else if (ytTrack.image) coverUrl = ytTrack.image;
 
       if (currentTrackUrl === pipeUrl) {
-        // Same track picked again: pause if playing, resume if paused
-        // mid-track, restart from zero when it had finished.
         const action = decideSameTrackAction(
           localIsPlaying,
           currentTimeSec,
@@ -153,10 +147,10 @@ export function useGlobalPlayback() {
       const durationStr =
         typeof ytTrack.duration === "number"
           ? `${Math.floor(ytTrack.duration / 60)}:${Math.floor(
-              ytTrack.duration % 60,
-            )
-              .toString()
-              .padStart(2, "0")}`
+            ytTrack.duration % 60,
+          )
+            .toString()
+            .padStart(2, "0")}`
           : ytTrack.duration || "0:00";
 
       const trackId = await ensureYoutubeTrack({
@@ -170,7 +164,6 @@ export function useGlobalPlayback() {
 
       setActiveMetadata(trackId ? { ...metadata, id: trackId } : metadata);
 
-      // Host picked a new song -> everyone in the room hears it.
       await broadcastTrackChange(trackId ?? undefined);
 
       failureCountRef.current = 0;
@@ -197,7 +190,6 @@ export function useGlobalPlayback() {
   };
 
   const playNext = async (isAutomatic: boolean = false) => {
-    // Guests never drive playback - they follow the host.
     if (isGuest && isInRoom) {
       openLockdown();
       return;
@@ -205,13 +197,12 @@ export function useGlobalPlayback() {
 
     if (isAutomatic && isOnLoop) {
       forceSync(undefined, 0, true);
-      // Re-broadcast the restart so listeners loop along with the host.
       if (isHost && isInRoom && roomId && activeMetadata?.id) {
         updateRoomTrack({
           roomId,
           trackId: activeMetadata.id,
           userId,
-        }).catch(() => {});
+        }).catch(() => { });
       }
       return;
     }

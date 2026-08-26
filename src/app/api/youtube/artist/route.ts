@@ -49,6 +49,7 @@ function getBestCoverUrl(thumbnails?: Thumbnail[], videoId?: string): string {
       return validThumb;
     }
   }
+  
   if (videoId) {
     return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
   }
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
 
   try {
     if (!initialized) {
-      await ytmusic.initialize().catch(() => {});
+      await ytmusic.initialize().catch(() => { });
       initialized = true;
     }
 
