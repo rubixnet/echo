@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropodown-menu";
 import {
   Play,
+  Check,
   Pause,
   Loader2,
   PlaySquare,
@@ -104,6 +105,8 @@ export function Track({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
+  const [copied, setCopied] = useState(false)
+
   const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
   const toggleSaveLibraryItem = useMutation(api.library.toggleSaveItem);
@@ -146,8 +149,12 @@ export function Track({
   const handleAddToQueue = () => addToQueue(normalized);
 
   const handleShare = () => {
-    const url = `${window.location.origin}/track/${normalized.id}`;
-    navigator.clipboard.writeText(url);
+    const url = `${window.location.origin}/dashboard/track/${normalized.id}`;
+
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    });
   };
 
   const handleLike = async () => {
@@ -359,9 +366,6 @@ export function Track({
           <Ban size={iconSize} className="text-primary/70" /> Never Show Me This
           Again!
         </Item>
-        {/* <Item className={itemClassName}>
-          <Music size={iconSize} className="text-primary/70" /> View Song Info
-        </Item> */}
         <Item
           onClick={(e) => {
             e.stopPropagation();
@@ -369,7 +373,23 @@ export function Track({
           }}
           className={itemClassName}
         >
-          <Share size={iconSize} className="text-primary/70" /> Share Link
+          {copied ? (
+            <>
+              <Check
+                size={iconSize}
+                className="text-primary/70 transition-all duration-300 ease-out blur-[0.3px]"
+              />
+              <span className="transition-all duration-300 ease-out blur-[0.4px]">
+                Link copied
+              </span>
+            </>
+          ) : (
+            <>
+              <Share size={iconSize} className="text-primary/70" />
+              <span>
+                Share</span>
+            </>
+          )}
         </Item>
 
         {playlistId && normalized.id && (
