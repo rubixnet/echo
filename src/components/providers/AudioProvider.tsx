@@ -10,7 +10,7 @@ import React, {
 import ReactPlayer from "react-player";
 import { useMutation } from "convex/react";
 import { useUser } from "@/hooks/useUser";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import {
   normalizeTrack,
   TrackMetadata,

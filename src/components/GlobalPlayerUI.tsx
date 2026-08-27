@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import {
     Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Repeat, Heart,
     Loader2, Music, EllipsisVertical, ListMusic, Mic2, Shuffle, MonitorSpeaker,

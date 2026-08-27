@@ -1,6 +1,14 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+const trackSchema = v.object({
+  title: v.string(),
+  trackId: v.string(),
+  coverUrl: v.string(),
+  artist: v.string(),
+  duration: v.optional(v.string()),
+});
+
 export default defineSchema({
   users: defineTable({
     name: v.string(),
@@ -11,6 +19,7 @@ export default defineSchema({
     onboarded: v.optional(v.boolean()),
     avatarUrl: v.optional(v.string()),
     favoriteGenres: v.optional(v.array(v.string())),
+    currentTrack: v.optional(trackSchema),
   }).index("workosId", ["workosId"]),
 
   tracks: defineTable({
@@ -43,6 +52,16 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
+
+
+  friends: defineTable({
+    userId: v.id("users"),
+    friendId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_friend", ["friendId"])
+    .index("by_user_and_friend", ["userId", "friendId"]),
 
   suggestLess: defineTable({
     userId: v.id("users"),

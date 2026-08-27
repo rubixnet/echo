@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useRoomState } from "@/hooks/useRoomContext";
 import { cn } from "@/lib/utils";

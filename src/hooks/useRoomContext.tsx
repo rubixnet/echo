@@ -12,7 +12,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { useUser } from "@/hooks/useUser";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useServerTimeOffset } from "@/hooks/useServerTimeOffset";
 import { resolveFollowAction } from "@/lib/roomFollow";
 

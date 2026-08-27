@@ -1,10 +1,10 @@
-import { AudioProvider } from "@/components/AudioProvider";
+import { AudioProvider } from "@/components/providers/AudioProvider";
 import type { AppUser } from "@/hooks/useUser";
 import { UserProvider } from "@/hooks/useUser";
 import { RoomProvider } from "@/hooks/useRoomContext";
 import GlobalPlayer from "@/components/GlobalPlayer/GlobalPlayer";
 import Sidebar from "@/components/Sidebar";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
+import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import Navbar from "@/components/Navbar/Navbar";
 
 export default function ClientLayout({
@@ -18,7 +18,6 @@ export default function ClientLayout({
     <UserProvider user={user}>
       <ConvexClientProvider>
         <AudioProvider>
-          {/* Room core: live membership + playback sync for EVERY page. */}
           <RoomProvider>
             <DashboardShell>{children}</DashboardShell>
           </RoomProvider>

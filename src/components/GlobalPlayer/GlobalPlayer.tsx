@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useRoomPlaybackSync } from "@/hooks/useRoomContext";
 import { DesktopDrawer } from "./DesktopDrawer";

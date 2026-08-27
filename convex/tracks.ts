@@ -34,45 +34,26 @@ export const ensureYoutubeTrack = mutation({
   },
 });
 
-export const saveTrack = mutation({
+const trackArgs = {
+  title: v.string(),
+  artist: v.string(),
+  coverUrl: v.string(),
+  trackId: v.string(),
+  duration: v.string(),
+};
+
+export const updateCurrentTrack = mutation({
   args: {
-    title: v.string(),
-    artist: v.string(),
-    storageId: v.id("_storage"),
-    coverUrl: v.string(),
+    userId: v.id("users"),
+    track: v.object(trackArgs),
   },
   handler: async (ctx, args) => {
-    const audioUrl = await ctx.storage.getUrl(args.storageId);
-    if (!audioUrl) throw new Error("failed to get audio url");
-    await ctx.db.insert("tracks", {
-      title: args.title,
-      source: "user_upload",
-      duration: "0:00",
-      artist: args.artist,
-      audioUrl: audioUrl,
-      coverUrl: args.coverUrl,
+    const { userId, track } = args;
+
+    await ctx.db.patch(userId, {
+      currentTrack: track,
     });
-  },
-});
 
-export const getRecommended = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("tracks").take(10);
-  },
-});
-
-export const search = query({
-  args: { searchQuery: v.string() },
-  handler: async (ctx, args) => {
-    if (args.searchQuery === "") {
-      return await ctx.db.query("tracks").order("desc").take(10);
-    }
-    return await ctx.db
-      .query("tracks")
-      .withSearchIndex("search_title", (q) =>
-        q.search("title", args.searchQuery),
-      )
-      .take(20);
+    return await ctx.db.get(userId);
   },
 });

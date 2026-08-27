@@ -6,6 +6,7 @@ import { useUser } from "@/hooks/useUser";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
+import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +21,10 @@ import {
   Moon,
   Laptop,
   Trash,
-  ChevronDown
+  ChevronDown,
+  Radio,
+  ListMusic,
+  Sparkles,
 } from "lucide-react";
 
 type HatedTrack =
@@ -34,9 +38,21 @@ type HatedTrack =
     coverUrl?: string;
   };
 
+type FriendActivity = {
+  _id: string;
+  username: string;
+  isOnline: boolean;
+  currentTrack?: {
+    title: string;
+    artist: string;
+  };
+  playlistCount: number;
+};
+
 export default function SettingsPage() {
   const user = useUser();
   const [mounted, setMounted] = useState(false);
+  const [friendTagInput, setFriendTagInput] = useState("");
   const { theme, setTheme } = useTheme();
 
   const userData = useQuery(
@@ -52,8 +68,15 @@ export default function SettingsPage() {
     api.neverShowAgain.getUserHatedTracks,
     user?._id ? { userId: user._id } : "skip"
   );
+  
+  const findFriend = useQuery(api.friends.findFriend, { userId: user?._id, friendId: friendId });
+  const friends = useQuery(api.friends.getFriends, user?._id ? { userId: user._id } : "skip");
+  const addFriend = useMutation(api.friends.addFriend);
+  const removeFriend = useMutation(api.friends.removeFriend);
 
-  const removeFromNeverShowAgainTracks = useMutation(api.neverShowAgain.removeFromNeverShowAgainTracks);
+  const removeFromNeverShowAgainTracks = useMutation(
+    api.neverShowAgain.removeFromNeverShowAgainTracks
+  );
 
   const handleRemoveHatedTrack = async (trackId: string) => {
     if (!user?._id) return;
@@ -64,6 +87,42 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAddFriend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!friendTagInput.trim()) return;
+    console.log("Adding friend:", friendTagInput);
+    setFriendTagInput("");
+  };
+
+  const mockFriends: FriendActivity[] = [
+    {
+      _id: "1",
+      username: "alex_waves",
+      isOnline: true,
+      currentTrack: {
+        title: "Starboy",
+        artist: "The Weeknd, Daft Punk",
+      },
+      playlistCount: 6,
+    },
+    {
+      _id: "2",
+      username: "sarah_m",
+      isOnline: true,
+      currentTrack: {
+        title: "Midnight City",
+        artist: "M83",
+      },
+      playlistCount: 12,
+    },
+    {
+      _id: "3",
+      username: "marcus_k",
+      isOnline: false,
+      playlistCount: 3,
+    },
+  ];
+
   const username = userData?.name || "username";
 
   if (!user) return null;
@@ -73,7 +132,7 @@ export default function SettingsPage() {
       <main className="w-full max-w-3xl space-y-8">
 
         <div className="flex items-center justify-between pb-5">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground truncate">
+          <h1 className="text-2xl font-bold tracking-tight capitalize text-foreground truncate">
             {username}
           </h1>
 
@@ -85,10 +144,7 @@ export default function SettingsPage() {
                   className="h-9 px-3 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-foreground/10 border border-foreground/10 rounded-xl gap-2"
                 >
                   {!mounted ? (
-                    <span
-                      className="h-3.5 w-3.5"
-                      aria-hidden="true"
-                    />
+                    <span className="h-3.5 w-3.5" aria-hidden="true" />
                   ) : theme === "dark" ? (
                     <Moon size={14} className="text-primary" />
                   ) : theme === "light" ? (
@@ -148,6 +204,110 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-foreground">Friends</h2>
+              <span className="text-xs text-foreground/40 font-mono">
+                ({mockFriends.length})
+              </span>
+            </div>
+
+            <form onSubmit={handleAddFriend} className="flex items-center gap-2">
+              <LiquidContainer radius="12px" className="w-48 sm:w-56 h-9 shadow-none">
+                <input
+                  type="text"
+                  placeholder="Add by username..."
+                  value={friendTagInput}
+                  onChange={(e) => setFriendTagInput(e.target.value)}
+                  className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
+                />
+              </LiquidContainer>
+              <LiquidContainer radius="12px" className="h-9 shrink-0 shadow-none">
+                <button
+                  type="submit"
+                  disabled={!friendTagInput.trim()}
+                  className="h-full px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
+                >
+                  Add Friend
+                </button>
+              </LiquidContainer>
+            </form>
+          </div>
+
+          <div className="flex flex-col gap-0.5 pt-1">
+            {mockFriends.map((friend) => (
+              <div
+                key={friend._id}
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-foreground/[0.04] transition-colors group"
+              >
+                <div className="flex items-center gap-3 min-w-0 pr-4">
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase">
+                      {friend.username.slice(0, 2)}
+                    </div>
+                    {friend.isOnline && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-semibold text-foreground truncate">
+                      {friend.username}
+                    </span>
+                    {friend.currentTrack ? (
+                      <span className="text-[11px] text-foreground/60 flex items-center gap-1.5 truncate mt-0.5">
+                        <Radio size={10} className="text-primary shrink-0 animate-pulse" />
+                        <span className="truncate">
+                          {friend.currentTrack.title} &bull; {friend.currentTrack.artist}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-foreground/40 mt-0.5">Offline</span>
+                    )}
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2.5 text-xs font-medium text-foreground/60 hover:bg-transparent rounded-xl gap-1.5 shrink-0"
+                  onClick={() => console.log("View playlists for:", friend.username)}
+                >
+                  <ListMusic size={13} />
+                  <span className="hidden sm:inline">Playlists</span>
+                  <span className="text-[10px] text-foreground/40 font-mono">
+                    ({friend.playlistCount})
+                  </span>
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">Favorite Genres</h2>
+          {userData === undefined ? (
+            <div className="flex gap-2">
+              <div className="h-7 w-20 bg-foreground/10 rounded-xl animate-pulse" />
+              <div className="h-7 w-16 bg-foreground/10 rounded-xl animate-pulse" />
+            </div>
+          ) : userData?.favoriteGenres && userData.favoriteGenres.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {userData.favoriteGenres.map((genre: string, idx: number) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-3 py-1 rounded-xl text-xs font-medium border border-foreground/10 bg-foreground/[0.03] text-foreground/80 hover:bg-foreground/10 transition-colors capitalize cursor-default"
+                >
+                  <Sparkles className="w-3 h-3 mr-1.5 text-foreground/50" />
+                  {genre}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-foreground/40">No favorite genres selected.</p>
+          )}
+        </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">

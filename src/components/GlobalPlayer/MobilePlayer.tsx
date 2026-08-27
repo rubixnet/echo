@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useRef } from "react";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useRoomState } from "@/hooks/useRoomContext";
 import {

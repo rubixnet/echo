@@ -17,7 +17,7 @@ import {
   ListPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { normalizeTrack, type NormalizableTrack } from "@/lib/trackUtils";

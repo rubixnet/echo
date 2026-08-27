@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
-import { ThemeProvider } from "next-themes";
+import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 export const metadata: Metadata = {
   title: "Echo",
@@ -15,23 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const theme = localStorage.getItem('theme');
-                const system = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                const effective = theme === 'system' || !theme ? system : theme;
-                if (effective === 'dark') document.documentElement.classList.add('dark');
-                else document.documentElement.classList.remove('dark');
-              } catch (e) {}
-            `,
-          }}
-        />
-      </head>
       <body className="bg-background text-foreground">
-        <ThemeProvider defaultTheme="system" attribute="class">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <ConvexClientProvider>
             <TooltipProvider>{children}</TooltipProvider>
           </ConvexClientProvider>

@@ -2,7 +2,7 @@
 
 import NextImage from "next/image";
 import { useState, useRef, useEffect } from "react";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";

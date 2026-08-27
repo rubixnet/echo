@@ -132,7 +132,7 @@ function makeEngine() {
   };
 }
 
-vi.mock("@/components/AudioProvider", () => ({
+vi.mock("@/components/providers/AudioProvider", () => ({
   useAudioEngine: () => makeEngine(),
 }));
 

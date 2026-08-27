@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { cn } from "@/lib/utils";
 import { Button, ButtonGroup } from "@/components/ui/button";
 import { SyncedLyrics } from "@/components/SyncedLyrics";

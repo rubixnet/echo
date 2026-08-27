@@ -1,6 +1,6 @@
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUser } from "@/hooks/useUser";
 import { useRoomContext } from "@/hooks/useRoomContext";
 import {

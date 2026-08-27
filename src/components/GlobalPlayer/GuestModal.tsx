@@ -1,7 +1,7 @@
 "use client";
 
 import { useRoomState } from "@/hooks/useRoomContext";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { Radio, LogOut } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { Button } from "@/components/ui/button";

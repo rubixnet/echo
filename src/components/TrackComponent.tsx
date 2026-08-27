@@ -37,7 +37,7 @@ import {
   Ban,
 } from "lucide-react";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { useAudioEngine } from "@/components/AudioProvider";
+import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUser } from "@/hooks/useUser";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";

@@ -21,6 +21,8 @@ design,
 - bad looking focus ring color for global player / dark mode
 - Encountered two children with the same key, `EARCQwChOA0`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Call
 
+- make liquid panel for light mode
+
 - slowly animating or opacity for the bentos!
 
 - adding cron job to update yt dlp
@@ -50,3 +52,9 @@ design,
 
 - onboarding of user like drawn ui!
 - make shuffle work!
+
+- simple change or layout animation for expanded friends profile! 
+
+- if hosting a room or not!
+
+- option if to show playlists, rooms or info to friends or not!

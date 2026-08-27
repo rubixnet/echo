@@ -2,7 +2,7 @@
 
 import { Zap, Globe2, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
@@ -60,11 +60,10 @@ export default function LoginPage() {
           </p>
 
           <div className="space-y-4">
-            <button
+            <Button
               onClick={onGoogleLogin}
               className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "w-full flex items-center justify-center text-primary gap-3 bg-background hover:bg-background/90 h-14 rounded-full",
+                "w-full flex items-center justify-center gap-3 h-14 ",
               )}
             >
               <svg
@@ -90,7 +89,7 @@ export default function LoginPage() {
                 />
               </svg>
               Continue with Google
-            </button>
+            </Button>
           </div>
 
           <p className="mt-8 text-center text-xs font-medium text-neutral-400">
