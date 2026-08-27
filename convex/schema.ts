@@ -12,7 +12,7 @@ const trackSchema = v.object({
 export default defineSchema({
   users: defineTable({
     name: v.string(),
-    displayName: v.optional(v.string()),
+    username: v.optional(v.string()),
     email: v.string(),
     workosId: v.string(),
     activeRoomId: v.optional(v.id("rooms")),
@@ -20,7 +20,11 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
     favoriteGenres: v.optional(v.array(v.string())),
     currentTrack: v.optional(trackSchema),
-  }).index("workosId", ["workosId"]),
+  })
+    .index("workosId", ["workosId"])
+    .searchIndex("search_username", {
+      searchField: "username",
+    }),
 
   tracks: defineTable({
     title: v.string(),

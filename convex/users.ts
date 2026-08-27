@@ -11,6 +11,22 @@ export const getProfile = query({
   },
 });
 
+export const searchUsers = query({
+  args: { query: v.string() },
+  handler: async (ctx, args) => {
+    if (!args.query.trim()) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("users")
+      .withSearchIndex("search_username", (q) =>
+        q.search("username", args.query)
+      )
+      .take(5);
+  },
+});
+
 export const getUserData = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -61,7 +77,7 @@ export const createProfile = mutation({
 
     return await ctx.db.insert("users", {
       workosId: args.workosId,
-      displayName: args.name || "",
+      username: args.name || "",
       email: args.email,
       name: args.name || "",
       onboarded: false,

@@ -68,15 +68,17 @@ export default function SettingsPage() {
     api.neverShowAgain.getUserHatedTracks,
     user?._id ? { userId: user._id } : "skip"
   );
-  
-  const findFriend = useQuery(api.friends.findFriend, { userId: user?._id, friendId: friendId });
+
+  const searchQuery = "hi"
+
+  const searchUsers = useQuery(api.users.searchUsers, { query: searchQuery });
   const friends = useQuery(api.friends.getFriends, user?._id ? { userId: user._id } : "skip");
-  const addFriend = useMutation(api.friends.addFriend);
-  const removeFriend = useMutation(api.friends.removeFriend);
+  const toggleFriend = useMutation(api.friends.toggleFriend);
 
   const removeFromNeverShowAgainTracks = useMutation(
     api.neverShowAgain.removeFromNeverShowAgainTracks
   );
+
 
   const handleRemoveHatedTrack = async (trackId: string) => {
     if (!user?._id) return;
@@ -94,35 +96,6 @@ export default function SettingsPage() {
     setFriendTagInput("");
   };
 
-  const mockFriends: FriendActivity[] = [
-    {
-      _id: "1",
-      username: "alex_waves",
-      isOnline: true,
-      currentTrack: {
-        title: "Starboy",
-        artist: "The Weeknd, Daft Punk",
-      },
-      playlistCount: 6,
-    },
-    {
-      _id: "2",
-      username: "sarah_m",
-      isOnline: true,
-      currentTrack: {
-        title: "Midnight City",
-        artist: "M83",
-      },
-      playlistCount: 12,
-    },
-    {
-      _id: "3",
-      username: "marcus_k",
-      isOnline: false,
-      playlistCount: 3,
-    },
-  ];
-
   const username = userData?.name || "username";
 
   if (!user) return null;
@@ -130,12 +103,10 @@ export default function SettingsPage() {
   return (
     <div className="w-full min-h-full flex justify-center p-6 md:p-10 pb-32 text-foreground bg-background">
       <main className="w-full max-w-3xl space-y-8">
-
         <div className="flex items-center justify-between pb-5">
           <h1 className="text-2xl font-bold tracking-tight capitalize text-foreground truncate">
             {username}
           </h1>
-
           <div className="flex items-center gap-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -209,7 +180,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-foreground">Friends</h2>
               <span className="text-xs text-foreground/40 font-mono">
-                ({mockFriends.length})
+                {/*  client side friend count */}
               </span>
             </div>
 
@@ -222,6 +193,7 @@ export default function SettingsPage() {
                   onChange={(e) => setFriendTagInput(e.target.value)}
                   className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
                 />
+
               </LiquidContainer>
               <LiquidContainer radius="12px" className="h-9 shrink-0 shadow-none">
                 <button
@@ -236,7 +208,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-0.5 pt-1">
-            {mockFriends.map((friend) => (
+            {friends?.map((friend) => (
               <div
                 key={friend._id}
                 className="flex items-center justify-between p-2 rounded-xl hover:bg-foreground/[0.04] transition-colors group"
@@ -245,6 +217,7 @@ export default function SettingsPage() {
                   <div className="relative">
                     <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase">
                       {friend.username.slice(0, 2)}
+
                     </div>
                     {friend.isOnline && (
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />

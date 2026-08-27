@@ -8,7 +8,6 @@ export const getUserHistory = query({
       .query("history")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
-
     return history.sort((a, b) => b.playedAt - a.playedAt);
   },
 });
