@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useUser } from "@/hooks/useUser";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery, useConvex } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
@@ -25,7 +25,9 @@ import {
   Radio,
   ListMusic,
   Sparkles,
+  X,
 } from "lucide-react";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 type HatedTrack =
   | string
@@ -38,47 +40,94 @@ type HatedTrack =
     coverUrl?: string;
   };
 
-type FriendActivity = {
-  _id: string;
-  username: string;
-  isOnline: boolean;
-  currentTrack?: {
-    title: string;
-    artist: string;
-  };
-  playlistCount: number;
-};
-
 export default function SettingsPage() {
   const user = useUser();
+  const convex = useConvex();
   const [mounted, setMounted] = useState(false);
   const [friendTagInput, setFriendTagInput] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const userData = useQuery(
     api.users.getUserData,
     user?._id ? { userId: user._id } : "skip"
   );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const friends = useQuery(
+    api.friends.getFriends,
+    user?._id ? { userId: user._id } : "skip"
+  );
 
   const hatedTrackIds = useQuery(
     api.neverShowAgain.getUserHatedTracks,
     user?._id ? { userId: user._id } : "skip"
   );
 
-  const searchQuery = "hi"
-
-  const searchUsers = useQuery(api.users.searchUsers, { query: searchQuery });
-  const friends = useQuery(api.friends.getFriends, user?._id ? { userId: user._id } : "skip");
   const toggleFriend = useMutation(api.friends.toggleFriend);
-
   const removeFromNeverShowAgainTracks = useMutation(
     api.neverShowAgain.removeFromNeverShowAgainTracks
   );
 
+  const handleAddFriend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const queryTerm = friendTagInput.trim();
+    if (!user?._id || !queryTerm) return;
+
+    try {
+      setLoading(true);
+      setErrorMsg(null);
+
+      const matches = await convex.query(api.users.searchUsers, {
+        query: queryTerm,
+      });
+
+      const targetUser = matches?.[0];
+
+      if (!targetUser) {
+        setErrorMsg("User not found with that username.");
+        return;
+      }
+
+      if (targetUser._id === user._id) {
+        setErrorMsg("You cannot add yourself.");
+        return;
+      }
+
+      const isAlreadyFriend = friends?.some((f) => f._id === targetUser._id);
+      if (isAlreadyFriend) {
+        setErrorMsg("Already in your friends list.");
+        return;
+      }
+
+      await toggleFriend({
+        userId: user._id,
+        friendId: targetUser._id,
+      });
+
+      setFriendTagInput("");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to add friend");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFriend = async (friendId: Id<"users">) => {
+    if (!user?._id) return;
+    try {
+      await toggleFriend({
+        userId: user._id,
+        friendId,
+      });
+    } catch (error) {
+      console.error("Failed to remove friend", error);
+    }
+  };
 
   const handleRemoveHatedTrack = async (trackId: string) => {
     if (!user?._id) return;
@@ -89,14 +138,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAddFriend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!friendTagInput.trim()) return;
-    console.log("Adding friend:", friendTagInput);
-    setFriendTagInput("");
-  };
-
-  const username = userData?.name || "username";
+  const username = userData?.username || userData?.name || "username";
 
   if (!user) return null;
 
@@ -180,7 +222,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-semibold text-foreground">Friends</h2>
               <span className="text-xs text-foreground/40 font-mono">
-                {/*  client side friend count */}
+                ({friends?.length ?? 0})
               </span>
             </div>
 
@@ -190,71 +232,100 @@ export default function SettingsPage() {
                   type="text"
                   placeholder="Add by username..."
                   value={friendTagInput}
-                  onChange={(e) => setFriendTagInput(e.target.value)}
+                  onChange={(e) => {
+                    setFriendTagInput(e.target.value);
+                    if (errorMsg) setErrorMsg(null);
+                  }}
                   className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
                 />
-
               </LiquidContainer>
               <LiquidContainer radius="12px" className="h-9 shrink-0 shadow-none">
                 <button
                   type="submit"
-                  disabled={!friendTagInput.trim()}
-                  className="h-full px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
+                  disabled={!friendTagInput.trim() || loading}
+                  className="h-full select-none px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
                 >
-                  Add Friend
+                  {loading ? "Adding..." : "Add Friend"}
                 </button>
               </LiquidContainer>
             </form>
           </div>
 
-          <div className="flex flex-col gap-0.5 pt-1">
-            {friends?.map((friend) => (
-              <div
-                key={friend._id}
-                className="flex items-center justify-between p-2 rounded-xl hover:bg-foreground/[0.04] transition-colors group"
-              >
-                <div className="flex items-center gap-3 min-w-0 pr-4">
-                  <div className="relative">
-                    <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase">
-                      {friend.username.slice(0, 2)}
+          {errorMsg && (
+            <p className="text-[11px] text-red-500 font-medium px-1">{errorMsg}</p>
+          )}
 
+          <div className="flex flex-col gap-0.5 pt-1">
+            {friends === undefined ? (
+              <div className="py-4 text-xs text-foreground/40 animate-pulse">
+                Loading friends...
+              </div>
+            ) : friends.length === 0 ? (
+              <div className="py-6 text-center border-t border-foreground/10">
+                <p className="text-xs font-medium text-foreground/40">No friends added yet.</p>
+              </div>
+            ) : (
+              friends.map((friend) => (
+                <div
+                  key={friend._id}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-foreground/[0.04] transition-colors group"
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-4">
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase">
+                        {friend.username.slice(0, 2)}
+                      </div>
+                      {friend.isOnline && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />
+                      )}
                     </div>
-                    {friend.isOnline && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />
-                    )}
+
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-foreground truncate">
+                        {friend.username}
+                      </span>
+                      {friend.currentTrack ? (
+                        <span className="text-[11px] text-foreground/60 flex items-center gap-1.5 truncate mt-0.5">
+                          <Radio size={10} className="text-primary shrink-0 animate-pulse" />
+                          <span className="truncate">
+                            {friend.currentTrack.title} &bull; {friend.currentTrack.artist}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-foreground/40 mt-0.5">
+                          {friend.isOnline ? "Online" : "Offline"}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-semibold text-foreground truncate">
-                      {friend.username}
-                    </span>
-                    {friend.currentTrack ? (
-                      <span className="text-[11px] text-foreground/60 flex items-center gap-1.5 truncate mt-0.5">
-                        <Radio size={10} className="text-primary shrink-0 animate-pulse" />
-                        <span className="truncate">
-                          {friend.currentTrack.title} &bull; {friend.currentTrack.artist}
-                        </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2.5 text-xs font-medium text-foreground/60 hover:bg-transparent rounded-xl gap-1.5"
+                      onClick={() => console.log("View playlists for:", friend.username)}
+                    >
+                      <ListMusic size={13} />
+                      <span className="hidden sm:inline">Playlists</span>
+                      <span className="text-[10px] text-foreground/40 font-mono">
+                        ({friend.playlistCount})
                       </span>
-                    ) : (
-                      <span className="text-[11px] text-foreground/40 mt-0.5">Offline</span>
-                    )}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveFriend(friend._id)}
+                      title="Remove friend"
+                      className="h-8 w-8 p-0 text-foreground/30 hover:text-red-500 hover:bg-foreground/5 rounded-xl transition-colors"
+                    >
+                      <X size={14} />
+                    </Button>
                   </div>
                 </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2.5 text-xs font-medium text-foreground/60 hover:bg-transparent rounded-xl gap-1.5 shrink-0"
-                  onClick={() => console.log("View playlists for:", friend.username)}
-                >
-                  <ListMusic size={13} />
-                  <span className="hidden sm:inline">Playlists</span>
-                  <span className="text-[10px] text-foreground/40 font-mono">
-                    ({friend.playlistCount})
-                  </span>
-                </Button>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -304,6 +375,7 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
+
           ) : hatedTrackIds.length === 0 ? (
             <div className="py-8 text-center border-t border-foreground/10">
               <p className="text-xs font-medium text-foreground/60">No hidden tracks</p>
@@ -312,9 +384,13 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-0.5 border-t border-foreground/10 pt-1">
               {hatedTrackIds.map((track: HatedTrack) => {
                 const isString = typeof track === "string";
-                const trackId = isString ? track : (track.trackId || track._id || "");
-                const songName = isString ? "Unknown Song" : (track.name || track.title || "Unknown Song");
-                const artistName = isString ? "Hidden Artist" : (track.artist || "Hidden Artist");
+                const trackId = isString ? track : track.trackId || track._id || "";
+                const songName = isString
+                  ? "Unknown Song"
+                  : track.name || track.title || "Unknown Song";
+                const artistName = isString
+                  ? "Hidden Artist"
+                  : track.artist || "Hidden Artist";
                 const coverUrl = isString ? null : track.coverUrl;
 
                 return (
@@ -362,7 +438,6 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
-
       </main>
     </div>
   );

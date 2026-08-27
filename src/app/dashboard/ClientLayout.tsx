@@ -1,11 +1,13 @@
+"use client"
 import { AudioProvider } from "@/components/providers/AudioProvider";
 import type { AppUser } from "@/hooks/useUser";
 import { UserProvider } from "@/hooks/useUser";
 import { RoomProvider } from "@/hooks/useRoomContext";
 import GlobalPlayer from "@/components/GlobalPlayer/GlobalPlayer";
 import Sidebar from "@/components/Sidebar";
-import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import Navbar from "@/components/Navbar/Navbar";
+import { useHeartbeat } from "@/hooks/useHeartbeat";
+
 
 export default function ClientLayout({
   children,
@@ -14,15 +16,14 @@ export default function ClientLayout({
   children: React.ReactNode;
   user: AppUser;
 }) {
+  useHeartbeat(user?._id);
   return (
     <UserProvider user={user}>
-      <ConvexClientProvider>
-        <AudioProvider>
-          <RoomProvider>
-            <DashboardShell>{children}</DashboardShell>
-          </RoomProvider>
-        </AudioProvider>
-      </ConvexClientProvider>
+      <AudioProvider>
+        <RoomProvider>
+          <DashboardShell>{children}</DashboardShell>
+        </RoomProvider>
+      </AudioProvider>
     </UserProvider>
   );
 }

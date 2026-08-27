@@ -6,6 +6,10 @@ design,
 - og images for all this pages!
 - update icons
 
+# icons, playlist cover and text on top! recommendationo engine, never show again, hated track filtering, on close test play, liquid panel for light mode update, onboarding page.
+
+- making efficient the update track logic so song gets updated only when it's played for 14 to 20 sec. 
+
 - fixing current related as it's shit!
 
 - onboarding and settings page along with redesigned home page
@@ -21,7 +25,6 @@ design,
 - bad looking focus ring color for global player / dark mode
 - Encountered two children with the same key, `EARCQwChOA0`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Call
 
-- make liquid panel for light mode
 
 - slowly animating or opacity for the bentos!
 
@@ -58,3 +61,5 @@ design,
 - if hosting a room or not!
 
 - option if to show playlists, rooms or info to friends or not!
+
+- updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url

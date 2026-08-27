@@ -17,7 +17,6 @@ export const searchUsers = query({
     if (!args.query.trim()) {
       return [];
     }
-
     return await ctx.db
       .query("users")
       .withSearchIndex("search_username", (q) =>
@@ -85,6 +84,7 @@ export const createProfile = mutation({
   },
 });
 
+
 export const finalizeUser = mutation({
   args: {
     workosId: v.string(),
@@ -107,3 +107,12 @@ export const finalizeUser = mutation({
     });
   },
 });
+
+export const heartbeat = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      lastSeen: Date.now()
+    })
+  }
+})

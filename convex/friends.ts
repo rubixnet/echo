@@ -1,39 +1,44 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
+const ONLINE_THRESHOLD_MS = 60 * 1000;
+
 export const getFriends = query({
-    args: {
-        userId: v.id("users"),
-    },
+    args: { userId: v.id("users") },
     handler: async (ctx, args) => {
         const friendships = await ctx.db
             .query("friends")
             .withIndex("by_user", (q) => q.eq("userId", args.userId))
             .collect();
 
-        const friendsDetails = await Promise.all(
+        const now = Date.now();
+
+        const friends = await Promise.all(
             friendships.map(async (f) => {
-                const friendUser = await ctx.db.get(f.friendId);
-                if (!friendUser) return null;
+                const friend = await ctx.db.get(f.friendId);
+                if (!friend) return null;
+
+
+                const userPlaylists = await ctx.db
+                    .query("playlists")
+                    .withIndex("by_user", (q) => q.eq("userId", friend._id))
+                    .collect();
+
+                const isOnline = Boolean(
+                    friend.lastSeen && now - friend.lastSeen < ONLINE_THRESHOLD_MS
+                );
 
                 return {
-                    friendshipId: f._id,
-                    createdAt: f.createdAt,
-                    user: {
-                        _id: friendUser._id,
-                        name: friendUser.name,
-                        username: friendUser.username,
-                        avatarUrl: friendUser.avatarUrl,
-                        currentTrack: friendUser.currentTrack,
-                        activeRoomId: friendUser.activeRoomId,
-                    },
+                    _id: friend._id,
+                    username: friend.username || friend.name || "User",
+                    isOnline,
+                    currentTrack: friend.currentTrack ?? null,
+                    playlistCount: userPlaylists.length,
                 };
             })
         );
 
-        return friendsDetails.filter(
-            (f): f is NonNullable<typeof f> => f !== null
-        );
+        return friends.filter((item): item is NonNullable<typeof item> => item !== null);
     },
 });
 

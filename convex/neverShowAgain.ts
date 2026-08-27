@@ -4,12 +4,12 @@ import { v } from "convex/values";
 export const getUserHatedTracks = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    const hated = await ctx.db
+    const hatedSongs = await ctx.db
       .query("neverShowAgain")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    return hated.map((hated) => hated.trackId);
+    return hatedSongs
   },
 });
 

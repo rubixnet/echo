@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import ClientLayout from "./ClientLayout";
-
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export default async function DashboardLayout({

@@ -12,11 +12,12 @@ const trackSchema = v.object({
 export default defineSchema({
   users: defineTable({
     name: v.string(),
-    username: v.optional(v.string()),
+    username: v.optional((v.string())),
     email: v.string(),
     workosId: v.string(),
     activeRoomId: v.optional(v.id("rooms")),
-    onboarded: v.optional(v.boolean()),
+    onboarded: (v.boolean()),
+    lastSeen: v.optional((v.number())),
     avatarUrl: v.optional(v.string()),
     favoriteGenres: v.optional(v.array(v.string())),
     currentTrack: v.optional(trackSchema),
