@@ -39,6 +39,7 @@ import {
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUser } from "@/hooks/useUser";
+import { useUserExclusions } from "@/hooks/useUserExclusions";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -101,11 +102,13 @@ export function Track({
   const { currentTrackUrl, isPlaying } = useAudioEngine();
   const user = useUser();
   const isMobile = useIsMobile();
+  const { isTrackExcluded } = useUserExclusions();
+
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
@@ -119,19 +122,21 @@ export function Track({
 
   const isLiked = useQuery(
     api.likes.checkLiked,
-    user?._id && normalized.id
+    user?._id && normalized?.id
       ? { userId: user._id, trackId: normalized.id }
       : "skip",
   );
 
   const isBookmarked = useQuery(
     api.library.checkSaved,
-    user?._id && normalized.id
+    user?._id && normalized?.id
       ? { userId: user._id, itemType: "track", itemId: normalized.id }
       : "skip",
   );
 
-  if (!track) return null;
+  if (!track || !normalized.id || isDismissed || isTrackExcluded(normalized.id)) {
+    return null;
+  }
 
   const isLoading = loadingId === normalized.id;
   const isCurrent = currentTrackUrl?.includes(normalized.id) && isPlaying;
@@ -150,10 +155,9 @@ export function Track({
 
   const handleShare = () => {
     const url = `${window.location.origin}/dashboard/track/${normalized.id}`;
-
     navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1200)
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
     });
   };
 
@@ -205,13 +209,8 @@ export function Track({
   };
 
   const handleSuggestLess = async () => {
-    if (!user?._id || !normalized.id) {
-      console.error("Missing user ID or track ID", {
-        userId: user?._id,
-        trackId: normalized.id,
-      });
-      return;
-    }
+    if (!user?._id || !normalized.id) return;
+    setIsDismissed(true);
 
     try {
       await suggestLess({
@@ -222,21 +221,16 @@ export function Track({
         coverUrl: normalized.coverUrl,
         duration: normalized.duration,
       });
-
-      console.log("Track added to Suggest Less");
     } catch (error) {
       console.error("Failed to suggest less:", error);
+      setIsDismissed(false);
     }
   };
 
   const handleNeverShowAgain = async () => {
-    if (!user?._id || !normalized.id) {
-      console.error("Missing user ID or track ID", {
-        userId: user?._id,
-        trackId: normalized.id,
-      });
-      return;
-    }
+    if (!user?._id || !normalized.id) return;
+    setIsDismissed(true);
+
     try {
       await neverShowAgain({
         userId: user._id,
@@ -246,9 +240,9 @@ export function Track({
         coverUrl: normalized.coverUrl,
         duration: normalized.duration,
       });
-      console.log("Track added to Never Suggest Again");
     } catch (error) {
       console.error("Failed to never suggest again:", error);
+      setIsDismissed(false);
     }
   };
 
@@ -394,8 +388,7 @@ export function Track({
           ) : (
             <>
               <Share size={iconSize} className="text-primary/70" />
-              <span>
-                Share</span>
+              <span>Share</span>
             </>
           )}
         </Item>
@@ -436,7 +429,10 @@ export function Track({
               className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-50 dark:hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:bg-neutral-100/50"
             >
               <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 shadow-sm">
-                <Image width={500} height={500} unoptimized
+                <Image
+                  width={500}
+                  height={500}
+                  unoptimized
                   src={normalized.coverUrl}
                   alt={normalized.title}
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
@@ -531,7 +527,10 @@ export function Track({
                   </span>
                 )}
                 <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
-                  <Image width={500} height={500} unoptimized
+                  <Image
+                    width={500}
+                    height={500}
+                    unoptimized
                     src={normalized.coverUrl}
                     className="w-full h-full object-cover select-none rounded-sm"
                     alt={normalized.title}

@@ -34,7 +34,7 @@ export const ensureYoutubeTrack = mutation({
   },
 });
 
-export const getCombinesUserExclusions = query({
+export const getCombinedUserExclusions = query({
   args: {
     userId: v.optional(v.id("users")),
   },
@@ -60,6 +60,8 @@ export const getCombinesUserExclusions = query({
     const hatedIds = neverShow.map((item) => item.trackId);
     const dislikeIds = suggestLess.map((item) => item.trackId);
     const sessionIds = Array.isArray(sessionHistory?.data) ? sessionHistory.data : [];
+
+    console.log(hatedIds, dislikeIds, sessionIds);
 
     return Array.from(new Set([...hatedIds, ...dislikeIds, ...sessionIds]));
   },

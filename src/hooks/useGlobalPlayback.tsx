@@ -2,6 +2,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUser } from "@/hooks/useUser";
+import { useUserExclusions } from "@/hooks/useUserExclusions";
 import { useRoomContext } from "@/hooks/useRoomContext";
 import {
   normalizeTrack,
@@ -10,7 +11,7 @@ import {
   type QueueType,
 } from "@/lib/trackUtils";
 import { decideSameTrackAction } from "@/lib/roomFollow";
-import { fetchRelatedTracks } from "@/lib/recommendations";
+import { fetchRelatedTracks } from "@/lib/fetchRelatedTracks";
 import { useRef, useCallback } from "react";
 
 export type { QueueType };
@@ -41,6 +42,7 @@ export function useGlobalPlayback() {
     activeMetadata,
   } = useAudioEngine();
 
+  const { exclusionSet } = useUserExclusions();
   const {
     isInRoom,
     isHost,
@@ -227,10 +229,11 @@ export function useGlobalPlayback() {
       setIsLoading(true);
 
       try {
-        const recommendations = await fetchRelatedTracks(
-          currentId,
-          queue || [],
-        );
+        const recommendations = await fetchRelatedTracks(currentId, {
+          existingQueue: queue,
+          userExclusions: exclusionSet,
+        });
+
         if (recommendations.length > 0) {
           const nextSong = recommendations[0];
           const currentQueue = queue || [activeMetadata];

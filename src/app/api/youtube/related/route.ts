@@ -1,22 +1,6 @@
 import { NextResponse } from "next/server";
-import YTMusic from "ytmusic-api";
 
-const ytmusic = new YTMusic();
-let isInitialized = false;
-
-interface YtSongSummary {
-  videoId?: string;
-  id?: string;
-  name?: string;
-  title?: string;
-  duration?: number | string;
-  artistId?: string;
-  artist?: { name?: string; artistId?: string };
-  artists?: { name?: string }[];
-  thumbnails?: { url?: string }[];
-}
-
-interface RelatedItem {
+export interface TrackItem {
   id: string;
   trackId: string;
   title: string;
@@ -27,135 +11,234 @@ interface RelatedItem {
   audioUrl: string;
 }
 
-const relatedCache = new Map<string, { items: RelatedItem[]; expires: number }>();
-const CACHE_TTL = 10 * 60 * 1000;
+interface StoredCache {
+  songs: TrackItem[];
+  expiresAt: number;
+}
+
+const PUBLIC_INNERTUBE_KEY = "AIzaSyAO_FJ2SlqAE4An4EkweVGNO583fbxD41E";
+const musicGraph = new Map<string, StoredCache>();
+const GRAPH_CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
+
+function parseDuration(durationStr?: string): number {
+  if (!durationStr) return 0;
+  const parts = durationStr.split(":").map(Number);
+  if (parts.some(isNaN)) return 0;
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return 0;
+}
+
+function collectTracksFromPayload(
+  obj: any,
+  collectedTracks: TrackItem[] = [],
+  trackedIds: Set<string> = new Set()
+): TrackItem[] {
+  if (!obj || typeof obj !== "object") return collectedTracks;
+
+  const rawTrack =
+    obj.playlistPanelVideoRenderer ||
+    obj.compactVideoRenderer ||
+    obj.videoRenderer;
+
+  if (rawTrack && rawTrack.videoId) {
+    const id = rawTrack.videoId;
+
+    if (!trackedIds.has(id)) {
+      trackedIds.add(id);
+
+      const title =
+        rawTrack.title?.runs?.map((r: any) => r.text).join("") ||
+        rawTrack.title?.simpleText ||
+        "Unknown Title";
+
+      const bylines =
+        rawTrack.longBylineText?.runs ||
+        rawTrack.shortBylineText?.runs ||
+        rawTrack.ownerText?.runs ||
+        [];
+
+      const artist = bylines[0]?.text || "Unknown Artist";
+      const artistId =
+        bylines[0]?.navigationEndpoint?.browseEndpoint?.browseId || null;
+
+      const durationStr =
+        rawTrack.lengthText?.runs?.[0]?.text ||
+        rawTrack.lengthText?.simpleText ||
+        "";
+      const duration = parseDuration(durationStr);
+
+      const thumbnails = rawTrack.thumbnail?.thumbnails || [];
+      const coverUrl =
+        thumbnails[thumbnails.length - 1]?.url ||
+        `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+
+      const normalizedTitle = title.toLowerCase();
+      const isInvalid =
+        duration > 720 ||
+        normalizedTitle.includes("full album") ||
+        normalizedTitle.includes("podcast") ||
+        normalizedTitle.includes("live stream");
+
+      if (!isInvalid) {
+        collectedTracks.push({
+          id,
+          trackId: id,
+          title,
+          artist,
+          artistId,
+          coverUrl,
+          duration,
+          audioUrl: `/api/youtube/stream?id=${id}`,
+        });
+      }
+    }
+  }
+
+  for (const key of Object.keys(obj)) {
+    collectTracksFromPayload(obj[key], collectedTracks, trackedIds);
+  }
+
+  return collectedTracks;
+}
+
+async function fetchYouTubeMusicRadio(videoId: string): Promise<TrackItem[]> {
+  const url = `https://music.youtube.com/youtubei/v1/next?key=${PUBLIC_INNERTUBE_KEY}`;
+  const payload = {
+    enablePersistentPlaylistPanel: true,
+    isAudioOnly: true,
+    videoId: videoId,
+    playlistId: `RDAMVM${videoId}`,
+    context: {
+      client: {
+        clientName: "WEB_REMIX",
+        clientVersion: "1.20240401.01.00",
+        hl: "en",
+        gl: "US",
+      },
+    },
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Origin": "https://music.youtube.com",
+      "Referer": "https://music.youtube.com/",
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  if (!res.ok) throw new Error(`Fetch error: ${res.status}`);
+  const data = await res.json();
+  return collectTracksFromPayload(data);
+}
+
+function processRelatedPool(
+  targetVideoId: string,
+  excludeIds: string[],
+  limit: number
+): TrackItem[] {
+  const blacklistSet = new Set<string>([targetVideoId, ...excludeIds]);
+  const cachedNode = musicGraph.get(targetVideoId);
+
+  if (!cachedNode || cachedNode.expiresAt <= Date.now()) {
+    return [];
+  }
+
+  const filteredResults: TrackItem[] = [];
+  const addedIds = new Set<string>();
+
+  for (const song of cachedNode.songs) {
+    if (blacklistSet.has(song.id) || addedIds.has(song.id)) {
+      continue;
+    }
+
+    addedIds.add(song.id);
+    filteredResults.push(song);
+
+    if (filteredResults.length >= limit) break;
+  }
+
+  return filteredResults;
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const targetVideoId = body.videoId;
+    const clientExclusions: string[] = Array.isArray(body.excludeIds)
+      ? body.excludeIds
+      : [];
+    const limit = Math.min(Number(body.limit) || 15, 50);
+
+    if (!targetVideoId) {
+      return NextResponse.json({ items: [] }, { status: 400 });
+    }
+
+    const currentTime = Date.now();
+    const cachedNode = musicGraph.get(targetVideoId);
+
+    if (!cachedNode || cachedNode.expiresAt <= currentTime) {
+      try {
+        const songPool = await fetchYouTubeMusicRadio(targetVideoId);
+        if (songPool.length > 0) {
+          musicGraph.set(targetVideoId, {
+            songs: songPool,
+            expiresAt: currentTime + GRAPH_CACHE_TTL,
+          });
+        }
+      } catch {
+        return NextResponse.json({ items: [] });
+      }
+    }
+
+    const results = processRelatedPool(targetVideoId, clientExclusions, limit);
+    return NextResponse.json({ items: results });
+  } catch {
+    return NextResponse.json({ items: [] }, { status: 500 });
+  }
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const videoId = searchParams.get("id");
+    const targetVideoId = searchParams.get("id");
     const excludeParam = searchParams.get("exclude") || "";
+    const limit = Math.min(Number(searchParams.get("limit")) || 15, 50);
 
-
-    if (!videoId) {
+    if (!targetVideoId) {
       return NextResponse.json({ items: [] }, { status: 400 });
     }
 
-    const excludeSet = new Set<string>([
-      videoId,
-      ...excludeParam
-        .split(",")
-        .map((id) => id.trim())
-        .filter(Boolean),
-    ]);
+    const clientExclusions = excludeParam
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
 
-    const now = Date.now();
+    const currentTime = Date.now();
+    const cachedNode = musicGraph.get(targetVideoId);
 
-    if (relatedCache.has(videoId) && relatedCache.get(videoId)!.expires > now) {
-      const cachedItems = relatedCache.get(videoId)!.items;
-      const filtered = cachedItems.filter(
-        (item) => !excludeSet.has(item.id || item.trackId),
-      );
-      return NextResponse.json({ items: filtered });
-    }
-
-    if (!isInitialized) {
-      await ytmusic.initialize().catch(() => {});
-      isInitialized = true;
-    }
-
-
-    let rawSongs = [] as unknown as YtSongSummary[];
-    let resolvedArtistName = "";
-
-    try {
-      const songInfo = (await ytmusic.getSong(videoId)) as unknown as {
-        artist?: { name?: string };
-      };
-      if (songInfo) {
-        resolvedArtistName = songInfo.artist?.name || "";
-      }
-    } catch (err) {
-      console.warn("[Related API] getSong lookup failed:", err);
-    }
-
-    if (resolvedArtistName) {
+    if (!cachedNode || cachedNode.expiresAt <= currentTime) {
       try {
-        rawSongs = (await ytmusic.searchSongs(
-          `${resolvedArtistName} top songs`,
-        )) as unknown as YtSongSummary[];
-      } catch (err) {
-        console.warn("[Related API] Artist top songs search failed:", err);
+        const songPool = await fetchYouTubeMusicRadio(targetVideoId);
+        if (songPool.length > 0) {
+          musicGraph.set(targetVideoId, {
+            songs: songPool,
+            expiresAt: currentTime + GRAPH_CACHE_TTL,
+          });
+        }
+      } catch {
+        return NextResponse.json({ items: [] });
       }
     }
 
-    if (!rawSongs || rawSongs.length === 0) {
-      try {
-        rawSongs = (await ytmusic.searchSongs(
-          "top trending music songs",
-        )) as unknown as YtSongSummary[];
-      } catch (err) {
-        console.warn("[Related API] General fallback search failed:", err);
-      }
-    }
-
-    if (!rawSongs || rawSongs.length === 0) {
-      return NextResponse.json({ items: [] });
-    }
-
-    const seenIds = new Set<string>();
-    const results: RelatedItem[] = [];
-
-    for (const song of rawSongs) {
-      const vId = song.videoId || song.id;
-      if (!vId || seenIds.has(vId) || excludeSet.has(vId)) continue;
-
-      const duration = typeof song.duration === "number" ? song.duration : 0;
-      const title = song.name || song.title || "Untitled Track";
-      const lowerTitle = title.toLowerCase();
-
-      if (duration > 600) continue;
-      if (
-        lowerTitle.includes("podcast") ||
-        lowerTitle.includes("episode") ||
-        lowerTitle.includes("full album") ||
-        lowerTitle.includes("live stream")
-      ) {
-        continue;
-      }
-
-      const artist =
-        song.artist?.name ||
-        (Array.isArray(song.artists) && song.artists[0]?.name) ||
-        resolvedArtistName ||
-        "Unknown Artist";
-
-      const thumbnail =
-        song.thumbnails?.[song.thumbnails.length - 1]?.url ||
-        `https://i.ytimg.com/vi/${vId}/hqdefault.jpg`;
-
-      const mappedTrack = {
-        id: vId,
-        trackId: vId,
-        title: title,
-        artist: artist,
-        artistId: song.artist?.artistId || null,
-        coverUrl: thumbnail,
-        duration: duration,
-        audioUrl: `/api/youtube/stream?id=${vId}`,
-      };
-
-      seenIds.add(vId);
-      results.push(mappedTrack);
-    }
-
-    if (results.length > 0) {
-      relatedCache.set(videoId, { items: results, expires: now + CACHE_TTL });
-    }
-
-    return NextResponse.json({ items: results.slice(0, 8) });
-  } catch (error) {
-    console.error("Related API Error:", error);
+    const results = processRelatedPool(targetVideoId, clientExclusions, limit);
+    return NextResponse.json({ items: results });
+  } catch {
     return NextResponse.json({ items: [] }, { status: 500 });
   }
 }

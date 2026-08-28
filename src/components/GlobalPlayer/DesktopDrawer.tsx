@@ -247,7 +247,6 @@ export function DesktopDrawer({
           </div>
 
           <Timeline className="mb-3" />
-
           <PlaybackControls iconSize={20} className="justify-between px-1" />
         </div>
       )}

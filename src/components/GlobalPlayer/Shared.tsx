@@ -22,7 +22,7 @@ import {
   Star,
   Loader2,
 } from "lucide-react";
-import { fetchRelatedTracks } from "@/lib/recommendations";
+import { fetchRelatedTracks } from "@/lib/fetchRelatedTracks";
 import { Button } from "@/components/ui/button";
 
 export function ProgressBar({
@@ -157,7 +157,7 @@ export function PlaybackControls({
       </button>
       <button
         onClick={controlTogglePlay}
-        className="w-16 h-16 flex items-center justify-center bg-foreground text-background rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl"
+        className="w-16 h-16 flex items-center justify-center bg-foreground text-background rounded-full active:scale-98 transition-transform shadow-xl"
       >
         {isLoading ? (
           <Loader2
@@ -217,9 +217,6 @@ export function StarButton({ className }: { className?: string }) {
 
   const handleLike = async () => {
     if (!activeMetadata?.id || !userId) return;
-
-    console.log(normalized.duration);
-
     try {
       await toggleLikeMutation({
         userId: userId,

@@ -22,6 +22,7 @@ onboarding page.
 
 - creating users mix playlist as wlel
 - fixing current related as it's shit!
+- remove from past queue as well if user adds to never show again! 
 
 - onboarding with redesigned home page
 - showing people list with that user name maybe or dropdown panel or popover for user

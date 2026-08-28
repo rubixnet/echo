@@ -25,7 +25,6 @@ export default function SidebarLayout({
   const { isOpen } = useSidebar();
   const pathname = usePathname();
 
-  console.log(isOpen);
   const { playlists, likedSongs, historySongs, isLoading } = useLibraryData(
     user?._id,
   );
