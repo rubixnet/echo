@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useState } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -11,9 +11,12 @@ import {
   ListMusic,
   Star,
   X,
-  Bookmark,
+  MicVocal,
   History,
   User,
+  Music,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,12 +58,19 @@ export function useSidebar() {
 
 export default function Sidebar() {
   const { isOpen, toggleSidebar } = useSidebar();
+  const [isPinsOpen, setIsPinsOpen] = useState(false);
 
   const user = useUser();
   const playlists = useQuery(
     api.playlists?.getUserPlaylists,
     user?._id ? { userId: user._id } : "skip",
   );
+
+  const pinnedPlaylists = playlists?.filter((p) => p.isPinned);
+
+  function handleChevronClick() {
+    setIsPinsOpen(!isPinsOpen);
+  }
 
   if (!isOpen) {
     return (
@@ -89,7 +99,6 @@ export default function Sidebar() {
           </button>
         </div>
 
-
         <div className="flex-1 overflow-hidden px-2 py-2 flex flex-col gap-6">
           <div className="shrink-0 flex flex-col gap-0.5">
             <NavItem href="/dashboard" icon={Home} label="Home" />
@@ -103,27 +112,53 @@ export default function Sidebar() {
               <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
                 Library
               </span>
-              <button className="text-[10px] font-bold text-foreground/50 hover:text-primary transition-colors">
-                Edit
+            </div>
+
+            <div className="flex items-center text-foreground/85 group rounded-md hover:bg-foreground/5 hover:text-primary">
+              <Link
+                href="/dashboard/library#pins"
+                className={cn(
+                  "flex items-center w-full gap-3 px-3 py-1.5 transition-colors text-xs font-medium"
+                )}
+              >
+                <Pin size={18} strokeWidth={2} />
+                <span className="truncate">Pins</span>
+              </Link>
+              <button onClick={handleChevronClick} className="text-foreground/50 w-12 h-7 flex justify-center rounded-r-lg items-center hover:text-foreground group-hover:bg-foreground/5 cursor-pointer" >
+                {
+                  isPinsOpen ? (
+                    <ChevronUp size={20} strokeWidth={2.5} />
+                  ) : (
+                    <ChevronDown size={20} strokeWidth={2.5} />
+                  )
+                }
               </button>
             </div>
+            {isPinsOpen && (
+              <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 ml-2 mr-2 pb-1">
+                <div className="flex-1 flex flex-col gap-0.5 min-h-0">
+                  {pinnedPlaylists?.map((p) => (
+                    <SidebarPlaylistItem key={p._id} playlist={p} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <NavItem
               href="/dashboard/library/history"
               label="Recently Played"
-              visual={
-                <div className="w-5 h-5 shrink-0 rounded-[4px] bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm">
-                  <History size={12} className="text-white" />
-                </div>
-              }
+              icon={History}
             />
             <NavItem
-              href="/dashboard/library#added"
-              icon={Bookmark}
-              label="Recently Saved"
+              icon={Music}
+              href="/dashboard/library#songs"
+              label="Songs"
             />
-
-            <NavItem href="/dashboard/library#pins" icon={Pin} label="Pins" />
+            <NavItem
+              icon={MicVocal}
+              href="/dashboard/library#artists"
+              label="Artists"
+            />
           </div>
 
           <div className="flex-1 flex flex-col gap-0.5 min-h-0">
@@ -151,7 +186,7 @@ export default function Sidebar() {
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4 scrollbar-thin [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 hover:[&::-webkit-scrollbar-thumb]:bg-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
               {playlists?.map((p) => (
                 <SidebarPlaylistItem key={p._id} playlist={p} />
               ))}

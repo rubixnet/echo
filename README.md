@@ -8,14 +8,9 @@ design,
 
 # icons, playlist cover and text on top! 
 
-recommendationo engine, never show again, hated track filtering, on close test play, 
-onboarding page.
-
-- remove playlist layout sidebar if sidebar is open
+- on close test play, onboarding page.
 
 - fix styling for track component
-
-- showing pins in library sidebar as well
 - adding popups
 
 - showing other playlists on search page as well when the user is not searching, below there
@@ -48,7 +43,6 @@ onboarding page.
 - adding visit artist option on track!
 - let user visit artist where artist data is present
 
-- option to loop song, one at a time, shuffle, repeat, random play order.
 
 - option to connect and check what song are my friends listening to.
 - create og image for that particular song with particular link for that use.
@@ -56,21 +50,16 @@ onboarding page.
 - controls bento grid for the user, showing navbar options, track component grid
 - and audio player! maybe!
 - background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
-- later share playlists option with friends, import playlists and more
+- later share playlists option with friends and more
 - ask for favorite geners during onboarding and then show them on the dashboard top and below other ones as explore!
 
 - browser or yt dlp script to get the playlist songs and info from browser itself!
-
 - landscape mode for mobile!
-- sharing what your friends are listening to, which songs or playlists!
-
 - onboarding of user like drawn ui!
-- make shuffle work!
-
 - simple change or layout animation for expanded friends profile! 
-
-- if hosting a room or not!
-
 - option if to show playlists, rooms or info to friends or not!
-
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
+
+later! 
+
+- loop shuffle work 

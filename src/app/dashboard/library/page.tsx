@@ -217,7 +217,7 @@ export default function LibraryHubPage() {
           </section>
 
           {filteredTracks.length > 0 && (
-            <section className="space-y-4">
+            <section className="space-y-4" id="songs">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">
                   {isSearching ? "Matching Songs" : "Recently Saved Songs"}
@@ -246,7 +246,7 @@ export default function LibraryHubPage() {
           )}
 
           {filteredArtists.length > 0 && (
-            <section className="space-y-4">
+            <section className="space-y-4" id="artists">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">Artists</h2>
                 {filteredArtists.length > SECTION_LIMITS.artists && (
