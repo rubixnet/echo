@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const ensureYoutubeTrack = mutation({
@@ -31,6 +31,81 @@ export const ensureYoutubeTrack = mutation({
       source: "youtube",
       trackId: args.trackId,
     });
+  },
+});
+
+export const getCombinesUserExclusions = query({
+  args: {
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    if (!args.userId) return []
+
+    const [neverShow, suggestLess, sessionHistory] = await Promise.all([
+      ctx.db
+        .query("neverShowAgain")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .collect(),
+      ctx.db
+        .query("suggestLess")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .collect(),
+      ctx.db
+        .query("relatedTracksData")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+        .first(),
+    ]);
+
+
+    const hatedIds = neverShow.map((item) => item.trackId);
+    const dislikeIds = suggestLess.map((item) => item.trackId);
+    const sessionIds = Array.isArray(sessionHistory?.data) ? sessionHistory.data : [];
+
+    return Array.from(new Set([...hatedIds, ...dislikeIds, ...sessionIds]));
+  },
+});
+
+export const updateTrackSessionHistory = mutation({
+  args: {
+    userId: v.id("users"),
+    trackId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("relatedTracksData")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .first();
+
+    if (existing) {
+      const currentList: string[] = Array.isArray(existing.data) ? existing.data : [];
+      if (!currentList.includes(args.trackId)) {
+        currentList.push(args.trackId);
+        await ctx.db.patch(existing._id, {
+          data: currentList.slice(-100),
+          updatedAt: Date.now(),
+        });
+      }
+    } else {
+      await ctx.db.insert("relatedTracksData", {
+        userId: args.userId,
+        data: [args.trackId],
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+export const cleanupStaleSessions = mutation({
+  handler: async (ctx) => {
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+    const staleRecords = await ctx.db
+      .query("relatedTracksData")
+      .filter((q) => q.lt(q.field("updatedAt"), twoHoursAgo))
+      .collect();
+
+    for (const record of staleRecords) {
+      await ctx.db.delete(record._id);
+    }
   },
 });
 

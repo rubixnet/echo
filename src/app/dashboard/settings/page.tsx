@@ -334,7 +334,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Favorite Genres</h2>
+          <h2 className="text-sm font-semibold text-foreground">Your Favorite Genres</h2>
           {userData === undefined ? (
             <div className="flex gap-2">
               <div className="h-7 w-20 bg-foreground/10 rounded-xl animate-pulse" />

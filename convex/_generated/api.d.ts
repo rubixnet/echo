@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as crons from "../crons.js";
+import type * as exclusions from "../exclusions.js";
 import type * as friends from "../friends.js";
 import type * as history from "../history.js";
 import type * as http from "../http.js";
@@ -34,6 +35,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   crons: typeof crons;
+  exclusions: typeof exclusions;
   friends: typeof friends;
   history: typeof history;
   http: typeof http;

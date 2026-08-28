@@ -58,7 +58,6 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_user_and_track", ["userId", "trackId"]),
 
-
   friends: defineTable({
     userId: v.id("users"),
     friendId: v.id("users"),
@@ -213,7 +212,14 @@ export default defineSchema({
     updatedAt: v.number(),
     data: v.any(),
   })
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_updatedAt", ["updatedAt"]),
+
+  userExclusions: defineTable({
+    userId: v.id("users"),
+    trackIds: v.array(v.string()),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 
   playlistTracks: defineTable({
     playlistId: v.id("playlists"),

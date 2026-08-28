@@ -6,15 +6,16 @@ design,
 - og images for all this pages!
 - update icons
 
-# icons, playlist cover and text on top! recommendationo engine, never show again, hated track filtering, on close test play, onboarding page.
+# icons, playlist cover and text on top! 
+
+recommendationo engine, never show again, hated track filtering, on close test play, 
+onboarding page.
 
 - remove playlist layout sidebar if sidebar is open
 
 - fix styling for track component
-- making efficient the update track logic so song gets updated only when it's played for 14 to 20 sec. 
 
 - showing pins in library sidebar as well
-
 - adding popups
 
 - showing other playlists on search page as well when the user is not searching, below there
@@ -22,7 +23,8 @@ design,
 - creating users mix playlist as wlel
 - fixing current related as it's shit!
 
-- onboarding and settings page along with redesigned home page
+- onboarding with redesigned home page
+- showing people list with that user name maybe or dropdown panel or popover for user
 
 - updating recommendations so that the current song doesn't show up in related data, nor the past songs!
 - setting up lyrics
