@@ -42,7 +42,6 @@ export const getUserLibrary = query({
       userId: item.userId,
       trackId: item.itemId,
       id: item.itemId,
-      youtubeId: item.itemId,
       title: item.title,
       artist: item.subtitle || "Unknown Artist",
       coverUrl: item.coverUrl || "",

@@ -280,7 +280,7 @@ export function useNextInQueue(limit: number = 4) {
     if (isGuest && isInRoom) return;
 
     const currentId =
-      activeMetadata?.youtubeId ||
+      activeMetadata?.trackId ||
       activeMetadata?.id ||
       activeMetadata?.audioUrl?.split("id=")[1];
 
@@ -319,7 +319,7 @@ export function useNextInQueue(limit: number = 4) {
     isGuest,
     isInRoom,
     activeMetadata,
-    activeMetadata?.youtubeId,
+    activeMetadata?.trackId,
     activeMetadata?.id,
     activeMetadata?.audioUrl,
     upcomingTracks.length,

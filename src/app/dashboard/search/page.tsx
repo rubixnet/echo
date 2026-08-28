@@ -10,7 +10,7 @@ import { GlobalSearchBar } from "@/components/GlobalSearchBar";
 interface SearchResultItem {
   _id?: string;
   id?: string;
-  youtubeId?: string;
+  trackId?: string;
   title?: string;
   artist?: string;
   uploaderName?: string;
@@ -71,12 +71,12 @@ export default function SearchPage() {
 
         const top6Songs = (data.items ?? []).slice(0, 6).map((item) => ({
           ...item,
-          _id: item._id || item.youtubeId || item.id,
-          youtubeId: item.youtubeId || item.id,
+          _id: item._id || item.trackId || item.id,
+          trackId: item.trackId || item.id,
           coverUrl:
             item.coverUrl ||
             item.thumbnail ||
-            `https://i.ytimg.com/vi/${item.youtubeId || item.id}/hqdefault.jpg`,
+            `https://i.ytimg.com/vi/${item.trackId || item.id}/hqdefault.jpg`,
         }));
 
         const artistMap = new Map<string, ArtistResult>();
@@ -144,7 +144,7 @@ export default function SearchPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-y-1 gap-x-6">
                 {ytResults.map((track) => {
                   const videoId =
-                    track.url?.split("?v=")[1] || track.youtubeId || track.id;
+                    track.url?.split("?v=")[1] || track.trackId || track.id;
                   return (
                     <Track
                       key={videoId}

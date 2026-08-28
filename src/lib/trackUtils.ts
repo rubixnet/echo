@@ -1,6 +1,6 @@
 export interface TrackMetadata {
   id?: string;
-  youtubeId?: string;
+  trackId?: string;
   title?: string;
   artist?: string;
   coverUrl?: string;
@@ -30,7 +30,7 @@ export type QueueItem = NormalizableTrack & {
 
 export interface CanonicalTrack {
   id: string;
-  youtubeId: string;
+  trackId: string;
   title: string;
   artist: string;
   coverUrl: string;
@@ -51,7 +51,7 @@ export interface CanonicalTrack {
 
 export interface NormalizableTrack {
   id?: string;
-  youtubeId?: string;
+  trackId?: string;
   trackId?: string;
   _id?: string;
   url?: string;
@@ -66,7 +66,7 @@ export interface NormalizableTrack {
   isOfficial?: boolean;
 }
 
-export function extractYouTubeId(raw: unknown): string {
+export function extracttrackId(raw: unknown): string {
   if (!raw || typeof raw !== "string") return "";
 
   if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
@@ -88,12 +88,12 @@ export function normalizeTrack(
   defaultSourceType: CanonicalTrack["source"]["type"] = "search",
 ): CanonicalTrack {
   const ytId =
-    extractYouTubeId(track?.youtubeId) ||
-    extractYouTubeId(track?.id) ||
-    extractYouTubeId(track?.trackId) ||
-    extractYouTubeId(track?.audioUrl) ||
-    extractYouTubeId(track?.url) ||
-    extractYouTubeId(track?._id);
+    extracttrackId(track?.trackId) ||
+    extracttrackId(track?.id) ||
+    extracttrackId(track?.trackId) ||
+    extracttrackId(track?.audioUrl) ||
+    extracttrackId(track?.url) ||
+    extracttrackId(track?._id);
 
   const durationStr =
     typeof track?.duration === "number"
@@ -102,7 +102,7 @@ export function normalizeTrack(
 
   return {
     id: ytId,
-    youtubeId: ytId,
+    trackId: ytId,
     title: track?.title || "Unknown Track",
     artist: track?.artist || track?.uploaderName || "Unknown Artist",
     coverUrl:

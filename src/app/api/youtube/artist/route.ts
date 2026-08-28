@@ -127,7 +127,7 @@ export async function GET(request: Request) {
       const vId = track.videoId || track.id || "";
       return {
         id: vId,
-        youtubeId: vId,
+        trackId: vId,
         title: track.name || track.title || "Untitled Track",
         artist: resolvedName,
         coverUrl: getBestCoverUrl(track.thumbnails, vId),

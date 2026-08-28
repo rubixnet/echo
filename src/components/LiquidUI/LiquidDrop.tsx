@@ -5,6 +5,7 @@ interface LiquidDropProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   radius?: string;
+  hideTopLeftBorderRadius?: boolean;
 }
 
 export function LiquidDrop({
@@ -12,11 +13,16 @@ export function LiquidDrop({
   className,
   radius = "50px",
   style,
+  hideTopLeftBorderRadius = false,
   ...props
 }: LiquidDropProps) {
   return (
     <div
-      className={cn("relative", className)}
+      className={cn(
+        "relative rounded-(--liquid-radius)",
+        hideTopLeftBorderRadius && "rounded-tl-none",
+        className
+      )}
       style={
         {
           ...style,
@@ -26,13 +32,13 @@ export function LiquidDrop({
       {...props}
     >
       <div
-        className="hidden dark:block absolute inset-0 rounded-(--liquid-radius) pointer-events-none"
+        className="hidden dark:block absolute inset-0 rounded-[inherit] pointer-events-none"
         style={{
           boxShadow: "0 3px 5px 0 rgba(0, 0, 0, 0.4)",
         }}
       >
         <div
-          className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
+          className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
           style={{
             backdropFilter: "blur(18px) saturate(160%)",
             WebkitBackdropFilter: "blur(18px) saturate(160%)",
@@ -40,13 +46,13 @@ export function LiquidDrop({
           }}
         />
         <div
-          className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
+          className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none"
           style={{
             boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.2)",
           }}
         >
           <div
-            className="absolute inset-0 rounded-(--liquid-radius)"
+            className="absolute inset-0 rounded-[inherit]"
             style={{
               padding: "1px",
               background:
@@ -60,14 +66,15 @@ export function LiquidDrop({
         </div>
       </div>
 
+
       <div
-        className="block dark:hidden absolute inset-0 rounded-(--liquid-radius) pointer-events-none"
+        className="block dark:hidden absolute inset-0 rounded-[inherit] pointer-events-none"
         style={{
           boxShadow: "0 3px 8px 0 rgba(0, 0, 0, 0.08)",
         }}
       >
         <div
-          className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
+          className="absolute inset-0 z-0 rounded-[inherit] pointer-events-none"
           style={{
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
@@ -75,13 +82,13 @@ export function LiquidDrop({
           }}
         />
         <div
-          className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
+          className="absolute inset-0 z-10 rounded-[inherit] pointer-events-none"
           style={{
             boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.8)",
           }}
         >
           <div
-            className="absolute inset-0 rounded-(--liquid-radius)"
+            className="absolute inset-0 rounded-[inherit]"
             style={{
               padding: "1px",
               background:

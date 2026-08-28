@@ -36,7 +36,7 @@ export type TrackLike = {
   duration?: string;
   coverUrl?: string;
   audioUrl?: string;
-  youtubeId?: string;
+  trackId?: string;
   [key: string]: unknown;
 };
 

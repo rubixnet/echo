@@ -602,7 +602,7 @@ export const syncPlaylistsByFrequency = internalAction({
             "Unknown Artist";
 
           return {
-            youtubeId: videoId,
+            trackId: videoId,
             title: String(entry.snippet?.title || "Untitled Track"),
             artist:
               String(rawArtist).replace(" - Topic", "").trim() ||
@@ -641,7 +641,7 @@ export const replaceCategoryTracks = internalMutation({
     playlistId: v.string(),
     tracks: v.array(
       v.object({
-        youtubeId: v.string(),
+        trackId: v.string(),
         title: v.string(),
         artist: v.string(),
         thumbnail: v.string(),

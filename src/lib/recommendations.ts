@@ -22,7 +22,7 @@ export async function fetchRelatedTracks(
 
       console.log(data);
       const existingIds = new Set(
-        existingQueue.map((t) => t.youtubeId || t.id).filter(Boolean),
+        existingQueue.map((t) => t.trackId || t.id).filter(Boolean),
       );
 
       return data.items
@@ -31,7 +31,7 @@ export async function fetchRelatedTracks(
             !!item && typeof item === "object",
         )
         .filter((item) => {
-          const id = item.youtubeId || item.id;
+          const id = item.trackId || item.id;
           return id && id !== videoId && !existingIds.has(id);
         })
         .map((item) => ({

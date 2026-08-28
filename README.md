@@ -8,7 +8,12 @@ design,
 
 # icons, playlist cover and text on top! recommendationo engine, never show again, hated track filtering, on close test play, liquid panel for light mode update, onboarding page.
 
+- remove playlist layout sidebar if sidebar is open
+
+- fix styling for track component
 - making efficient the update track logic so song gets updated only when it's played for 14 to 20 sec. 
+
+- hide playlist layout sidebar if sidebar is open
 
 - fixing current related as it's shit!
 

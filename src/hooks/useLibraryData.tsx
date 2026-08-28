@@ -16,7 +16,7 @@ export function useLibraryData(userId: string | undefined) {
     .map((item) => ({
       _id: item._id,
       id: item.itemId,
-      youtubeId: item.itemId,
+      trackId: item.itemId,
       title: item.title,
       artist: item.subtitle || "Unknown Artist",
       coverUrl: item.coverUrl || "",

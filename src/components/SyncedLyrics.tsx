@@ -33,9 +33,9 @@ export function SyncedLyrics({
   const activeLyricRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
-    const youtubeId =
-      activeMetadata?.youtubeId || activeMetadata?.audioUrl?.split("id=")[1];
-    if (!youtubeId) return;
+    const trackId =
+      activeMetadata?.trackId || activeMetadata?.audioUrl?.split("id=")[1];
+    if (!trackId) return;
 
     const fetchLyrics = async () => {
       if (activeMetadata.syncedLyrics) {
@@ -52,7 +52,7 @@ export function SyncedLyrics({
 
       try {
         const res = await fetch(
-          `/api/lyrics?id=${youtubeId}&title=${encodeURIComponent(activeMetadata.title || "")}&artist=${encodeURIComponent(activeMetadata.artist || "")}`,
+          `/api/lyrics?id=${trackId}&title=${encodeURIComponent(activeMetadata.title || "")}&artist=${encodeURIComponent(activeMetadata.artist || "")}`,
         );
 
         if (!res.ok) {
@@ -83,7 +83,7 @@ export function SyncedLyrics({
 
     fetchLyrics();
   }, [
-    activeMetadata?.youtubeId,
+    activeMetadata?.trackId,
     activeMetadata?.audioUrl,
     activeMetadata?.syncedLyrics,
     activeMetadata?.id,

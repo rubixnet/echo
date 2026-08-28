@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useRoomPlaybackSync } from "@/hooks/useRoomContext";
+import { useUser } from "@/hooks/useUser";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { DesktopDrawer } from "./DesktopDrawer";
 import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
@@ -11,9 +14,14 @@ import { AddToPlaylistModal } from "../AddToPlaylistModal";
 import { GuestModal } from "./GuestModal";
 
 export default function GlobalPlayer() {
-  const { activeMetadata, setOnTrackEnd, pause } = useAudioEngine();
+  const user = useUser();
+  const userId = user?._id;
+
+  const { activeMetadata, isPlaying, setOnTrackEnd, pause } = useAudioEngine();
   const { playNext, playPrevious } = useGlobalPlayback();
   const { isGuest, hostTogglePlay, hostSeekTo } = useRoomPlaybackSync();
+
+  const updateCurrentTrack = useMutation(api.tracks.updateCurrentTrack);
 
   const playNextRef = useRef(playNext);
   const guestRef = useRef(isGuest);
@@ -26,9 +34,36 @@ export default function GlobalPlayer() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
-  // Single source of truth for every play/pause + seek entry point:
-  // keyboard, mediaSession and all player surfaces route through here so
-  // hosts always broadcast to their listeners and guests stay locked.
+  useEffect(() => {
+    if (!userId) return;
+
+    let timer: NodeJS.Timeout | null = null;
+
+    if (isPlaying && activeMetadata && activeMetadata.id) {
+      timer = setTimeout(() => {
+        updateCurrentTrack({
+          userId,
+          track: {
+            trackId: activeMetadata.id,
+            title: activeMetadata.title,
+            artist: activeMetadata.artist,
+            coverUrl: activeMetadata.coverUrl || "",
+            duration: activeMetadata.duration || "0:00",
+          },
+        }).catch(() => { });
+      }, 5000);
+    } else if (!isPlaying) {
+      updateCurrentTrack({
+        userId,
+        track: undefined,
+      }).catch(() => { });
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [userId, isPlaying, activeMetadata, updateCurrentTrack]);
+
   const handleGlobalTogglePlay = useCallback(() => {
     hostTogglePlay();
   }, [hostTogglePlay]);
@@ -43,8 +78,6 @@ export default function GlobalPlayer() {
   useEffect(() => {
     if (setOnTrackEnd) {
       setOnTrackEnd(() => {
-        // Only the host advances the queue. Listeners hold at the end of
-        // the track until the host broadcasts the next one.
         if (guestRef.current) {
           pause();
           return;

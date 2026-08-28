@@ -53,7 +53,7 @@ function NavItem({
       href={href}
       className={cn(
         "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium",
-        "text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
+        "text-foreground/85 hover:bg-foreground/5 hover:text-primary",
       )}
     >
       {visual ? visual : Icon && <Icon size={18} strokeWidth={2} />}
@@ -85,7 +85,7 @@ export default function Sidebar() {
     return (
       <Button
         onClick={() => toggleSidebar(true)}
-        className="fixed top-3 hidden md:flex left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/60 hover:text-foreground shadow-sm transition-colors p-0"
+        className="fixed top-3 hidden md:flex left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/85 hover:text-primary shadow-sm transition-colors p-0"
       >
         <ListMusic size={16} />
       </Button>
@@ -96,17 +96,18 @@ export default function Sidebar() {
     <div className="fixed lg:static hidden md:block top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto">
       <LiquidDrop
         radius="16px"
-        className="w-full h-full overflow-hidden flex flex-col"
+        className="w-full h-full lg:rounded-tr-[25px] lg:rounded-tl-none overflow-hidden lg:-mt-0.5 lg:-ml-0.5 flex flex-col"
       >
         <div className="flex items-center justify-between shrink-0">
           <span className="text-xs font-bold tracking-tight text-foreground"></span>
           <button
             onClick={() => toggleSidebar(false)}
-            className="text-foreground/40 px-4 py-3 hover:text-foreground transition-colors"
+            className="text-foreground/40 px-4 py-3 lg:pb-1 lg:mt-1.5 hover:text-primary transition-colors"
           >
             <X size={18} strokeWidth={2.5} />
           </button>
         </div>
+
 
         <div className="flex-1 overflow-hidden px-2 py-2 flex flex-col gap-6">
           <div className="shrink-0 flex flex-col gap-0.5">
@@ -121,7 +122,7 @@ export default function Sidebar() {
               <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
                 Library
               </span>
-              <button className="text-[10px] font-bold text-foreground/50 hover:text-foreground transition-colors">
+              <button className="text-[10px] font-bold text-foreground/50 hover:text-primary transition-colors">
                 Edit
               </button>
             </div>
@@ -196,7 +197,7 @@ function SidebarPlaylistItem({ playlist }: { playlist: PlaylistSummary }) {
     <Link
       href={`/dashboard/library/playlist/${playlist._id}`}
       className={cn(
-        "flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-foreground",
+        "flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-primary",
       )}
     >
       <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">

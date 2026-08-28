@@ -18,7 +18,7 @@ interface YtSongSummary {
 
 interface RelatedItem {
   id: string;
-  youtubeId: string;
+  trackId: string;
   title: string;
   artist: string;
   artistId: string | null;
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     if (relatedCache.has(videoId) && relatedCache.get(videoId)!.expires > now) {
       const cachedItems = relatedCache.get(videoId)!.items;
       const filtered = cachedItems.filter(
-        (item) => !excludeSet.has(item.id || item.youtubeId),
+        (item) => !excludeSet.has(item.id || item.trackId),
       );
       return NextResponse.json({ items: filtered });
     }
@@ -136,7 +136,7 @@ export async function GET(request: Request) {
 
       const mappedTrack = {
         id: vId,
-        youtubeId: vId,
+        trackId: vId,
         title: title,
         artist: artist,
         artistId: song.artist?.artistId || null,

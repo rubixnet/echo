@@ -32,11 +32,11 @@ export default defineSchema({
     artist: v.string(),
     duration: v.optional(v.string()),
     source: v.string(),
-    youtubeId: v.optional(v.string()),
+    trackId: v.string(),
     audioUrl: v.string(),
     coverUrl: v.string(),
   })
-    .index("by_youtubeId", ["youtubeId"])
+    .index("by_trackId", ["trackId"])
     .searchIndex("search_title", { searchField: "title" }),
 
   history: defineTable({
@@ -121,7 +121,7 @@ export default defineSchema({
 
   category_tracks: defineTable({
     categoryId: v.string(),
-    youtubeId: v.string(),
+    trackId: v.string(),
     title: v.string(),
     artist: v.string(),
     thumbnail: v.string(),

@@ -36,7 +36,7 @@ export const addToHistory = mutation({
     } else {
       track = await ctx.db
         .query("tracks")
-        .withIndex("by_youtubeId", (q) => q.eq("youtubeId", args.trackId))
+        .withIndex("by_trackId", (q) => q.eq("trackId", args.trackId))
         .first();
     }
 

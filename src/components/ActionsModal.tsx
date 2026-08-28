@@ -23,10 +23,10 @@ export function ActionsModal({ isOpen, onClose, track, playlistId }: ActionsModa
 
     const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
-    const removeTrackFromPlaylist = useMutation(api.playlists.removeTrack);
+    const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
     const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
-    const isLiked = useQuery(api.tracks.checkLiked,
+    const isLiked = useQuery(api.likes.checkLiked,
         (user?._id && track?._id) ? { userId: user._id, trackId: track._id as any } : "skip"
     );
 
@@ -40,24 +40,24 @@ export function ActionsModal({ isOpen, onClose, track, playlistId }: ActionsModa
 
     if (!isOpen || !track) return null;
 
-    const youtubeId = track.youtubeId || track.url?.split("?v=")[1] || track.audioUrl?.split("id=")[1] || track.id;
+    const trackId = track.trackId || track.url?.split("?v=")[1] || track.audioUrl?.split("id=")[1] || track.id;
     const coverUrl = track.thumbnail || track.coverUrl || "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256";
     const title = track.title || "Unknown Track";
     const artist = track.uploaderName || track.artist || "Unknown Artist";
 
 
     const handlePlayNext = () => {
-        playNextPriority({ ...track, youtubeId, coverUrl, title, artist });
+        playNextPriority({ ...track, trackId, coverUrl, title, artist });
         onClose();
     };
 
     const handleAddToQueue = () => {
-        addToQueue({ ...track, youtubeId, coverUrl, title, artist });
+        addToQueue({ ...track, trackId, coverUrl, title, artist });
         onClose();
     };
 
     const handleShare = () => {
-        const url = track.url || `https://youtube.com/watch?v=${youtubeId}`;
+        const url = track.url || `https://youtube.com/watch?v=${trackId}`;
         navigator.clipboard.writeText(url);
         onClose();
     };
@@ -82,7 +82,7 @@ export function ActionsModal({ isOpen, onClose, track, playlistId }: ActionsModa
                 artist,
                 coverUrl,
                 duration: track.duration || "0:00",
-                audioUrl: track.audioUrl || track.url || `/api/youtube/stream?id=${youtubeId}`,
+                audioUrl: track.audioUrl || track.url || `/api/youtube/stream?id=${trackId}`,
             });
             onClose();
         } catch (e) {

@@ -167,7 +167,7 @@ function primeConvexMocks(opts: {
         track: opts.trackId
           ? {
               _id: "t1",
-              youtubeId: opts.trackId,
+              trackId: opts.trackId,
               title: "Song",
               artist: "Artist",
               coverUrl: "",

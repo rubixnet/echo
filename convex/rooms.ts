@@ -20,7 +20,7 @@ async function resolveTrack(ctx: QueryCtx, trackId?: string | null) {
 
   const youtubeTrack = await ctx.db
     .query("tracks")
-    .withIndex("by_youtubeId", (q) => q.eq("youtubeId", trackId))
+    .withIndex("by_trackId", (q) => q.eq("trackId", trackId))
     .first();
   if (youtubeTrack) return youtubeTrack;
 

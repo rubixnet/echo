@@ -1,9 +1,9 @@
-import { mutation, query } from "./_generated/server";
+import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const ensureYoutubeTrack = mutation({
   args: {
-    youtubeId: v.string(),
+    trackId: v.string(),
     title: v.string(),
     artist: v.string(),
     audioUrl: v.string(),
@@ -13,7 +13,7 @@ export const ensureYoutubeTrack = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("tracks")
-      .withIndex("by_youtubeId", (q) => q.eq("youtubeId", args.youtubeId))
+      .withIndex("by_trackId", (q) => q.eq("trackId", args.trackId))
       .unique();
 
     if (existing) {
@@ -29,7 +29,7 @@ export const ensureYoutubeTrack = mutation({
         args.coverUrl ||
         "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop",
       source: "youtube",
-      youtubeId: args.youtubeId,
+      trackId: args.trackId,
     });
   },
 });

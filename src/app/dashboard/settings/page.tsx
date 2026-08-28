@@ -227,7 +227,7 @@ export default function SettingsPage() {
             </div>
 
             <form onSubmit={handleAddFriend} className="flex items-center gap-2">
-              <LiquidContainer radius="12px" className="w-48 sm:w-56 h-9 shadow-none">
+              <LiquidContainer radius="14px" className="w-48 sm:w-56 h-9 shadow-none">
                 <input
                   type="text"
                   placeholder="Add by username..."
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                   className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
                 />
               </LiquidContainer>
-              <LiquidContainer radius="12px" className="h-9 shrink-0 shadow-none">
+              <LiquidContainer radius="14px" className="h-9 shrink-0 shadow-none">
                 <button
                   type="submit"
                   disabled={!friendTagInput.trim() || loading}

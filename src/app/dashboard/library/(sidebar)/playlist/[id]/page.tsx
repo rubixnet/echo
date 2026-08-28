@@ -67,7 +67,7 @@ export default function PlaylistPage({
     playTrack(
       {
         ...first,
-        youtubeId: first.audioUrl?.split("id=")[1] || first.youtubeId,
+        trackId: first.audioUrl?.split("id=")[1] || first.trackId,
       },
       setLoadingId,
       sorted,

@@ -27,15 +27,15 @@ export default function TypePage({
     if (!dbTracks) return [];
 
     return dbTracks.map((t, idx) => ({
-      _id: t._id || t.youtubeId || `track-${idx}`,
-      id: t._id || t.youtubeId || `track-${idx}`,
-      youtubeId: t.youtubeId,
+      _id: t._id || t.trackId || `track-${idx}`,
+      id: t._id || t.trackId || `track-${idx}`,
+      trackId: t.trackId,
       title: t.title || "Untitled Track",
       artist: t.artist || "Unknown Artist",
       thumbnail: t.thumbnail,
       coverUrl: t.thumbnail,
       duration: t.duration || "3:30",
-      url: `https://www.youtube.com/watch?v=${t.youtubeId}`,
+      url: `https://www.youtube.com/watch?v=${t.trackId}`,
     }));
   }, [dbTracks]);
 

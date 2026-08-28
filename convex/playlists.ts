@@ -125,7 +125,6 @@ export const getPlaylistTracks = query({
       return {
         _id: rel._id,
         trackId: rel.trackId,
-        youtubeId: rel.trackId,
         title: rel.title || "Untitled Track",
         artist: rel.artist || "Unknown Artist",
         coverUrl: rel.coverUrl || fallbackCover || "",

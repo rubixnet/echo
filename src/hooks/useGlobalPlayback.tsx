@@ -139,7 +139,7 @@ export function useGlobalPlayback() {
         artist: ytTrack.uploaderName || ytTrack.artist || "Unknown Artist",
         coverUrl,
         audioUrl: pipeUrl,
-        youtubeId: videoId,
+        trackId: videoId,
       };
 
       loadTrack(pipeUrl, metadata);
@@ -154,7 +154,7 @@ export function useGlobalPlayback() {
           : ytTrack.duration || "0:00";
 
       const trackId = await ensureYoutubeTrack({
-        youtubeId: videoId,
+        trackId: videoId,
         title: metadata.title,
         artist: metadata.artist,
         audioUrl: pipeUrl,
@@ -215,7 +215,7 @@ export function useGlobalPlayback() {
 
     if (activeMetadata) {
       const currentId =
-        activeMetadata.youtubeId ||
+        activeMetadata.trackId ||
         activeMetadata.id ||
         activeMetadata.audioUrl?.split("id=")[1];
 

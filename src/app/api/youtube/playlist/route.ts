@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       return {
         _id: videoId,
         id: videoId,
-        youtubeId: videoId,
+        trackId: videoId,
         title: entry.title || "Untitled Track",
         artist,
         thumbnail,

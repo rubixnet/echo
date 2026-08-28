@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { ProgressBar } from "./Shared";
 import { TrackDropdownMenu } from "./TrackActionsMenu";
+import { StarButton } from "./Shared";
 import {
   Play,
   Pause,
@@ -181,7 +182,7 @@ export function DesktopMiniPlayer({
             </div>
 
             <div className="flex-[1.5] basis-0 flex items-center justify-end gap-3 min-w-0 pl-8">
-              {/* <StarButton /> */}
+              <StarButton />
               {/* <button onClick={() => setIsDrawerOpen(true)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><Mic2 size={20} strokeWidth={2} /></button> */}
               {/* <button disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><ListMusic size={20} strokeWidth={2} /></button> */}
               {/* <button disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><MonitorSpeaker size={20} strokeWidth={2} /></button> */}
