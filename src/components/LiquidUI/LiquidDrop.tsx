@@ -34,15 +34,15 @@ export function LiquidDrop({
         <div
           className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            backdropFilter: "blur(24px) saturate(150%)",
-            WebkitBackdropFilter: "blur(24px) saturate(150%)",
-            background: "rgba(20, 20, 20, 0.4)",
+            backdropFilter: "blur(18px) saturate(160%)",
+            WebkitBackdropFilter: "blur(18px) saturate(160%)",
+            background: "rgba(20, 20, 20, 0.50)",
           }}
         />
         <div
           className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
+            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.2)",
           }}
         >
           <div
@@ -50,7 +50,7 @@ export function LiquidDrop({
             style={{
               padding: "1px",
               background:
-                "linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 40%, transparent 100%)",
+                "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 40%, transparent 100%)",
               WebkitMask:
                 "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",
@@ -59,24 +59,25 @@ export function LiquidDrop({
           />
         </div>
       </div>
+
       <div
         className="block dark:hidden absolute inset-0 rounded-(--liquid-radius) pointer-events-none"
         style={{
-          boxShadow: "0 3px 5px 0 rgba(0, 0, 0, 0.1)",
+          boxShadow: "0 3px 8px 0 rgba(0, 0, 0, 0.08)",
         }}
       >
         <div
           className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            backdropFilter: "blur(24px) saturate(150%)",
-            WebkitBackdropFilter: "blur(24px) saturate(150%)",
-            background: "rgba(255, 255, 255, 0.55)",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            background: "rgba(255, 255, 255, 0.3)",
           }}
         />
         <div
           className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)",
+            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.8)",
           }}
         >
           <div
@@ -84,7 +85,7 @@ export function LiquidDrop({
             style={{
               padding: "1px",
               background:
-                "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 40%, transparent 100%)",
+                "linear-gradient(180deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.15) 40%, transparent 100%)",
               WebkitMask:
                 "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",

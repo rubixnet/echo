@@ -35,10 +35,10 @@ export function LiquidPanel({
         <div
           className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            backdropFilter: "blur(24px) saturate(150%)",
-            WebkitBackdropFilter: "blur(24px) saturate(150%)",
+            backdropFilter: "blur(12px) saturate(160%)",
+            WebkitBackdropFilter: "blur(12px) saturate(160%)",
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(48,48,48,0.65) 60%, rgba(51,51,51,0.8) 100%)",
+              "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(48,48,48,0.38) 60%, rgba(51,51,51,0.5) 100%)",
           }}
         />
         <div
@@ -54,7 +54,7 @@ export function LiquidPanel({
             style={{
               padding: "1px",
               background:
-                "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.1) 100%)",
+                "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.05) 70%, rgba(255,255,255,0.15) 100%)",
               WebkitMask:
                 "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",
@@ -63,28 +63,29 @@ export function LiquidPanel({
           />
         </div>
       </div>
+
       <div
         className="block dark:hidden absolute inset-0 rounded-(--liquid-radius) pointer-events-none"
         style={{
           boxShadow:
-            "inset 0 -1px 4px 0 rgba(0, 0, 0, 0.05), 0 3px 5px 0 rgba(0, 0, 0, 0.1)",
+            "inset 0 -1px 4px 0 rgba(0, 0, 0, 0.03), 0 3px 5px 0 rgba(0, 0, 0, 0.08)",
         }}
       >
         <div
           className="absolute inset-0 z-0 rounded-(--liquid-radius) pointer-events-none"
           style={{
-            backdropFilter: "blur(24px) saturate(150%)",
-            WebkitBackdropFilter: "blur(24px) saturate(150%)",
+            backdropFilter: "blur(14px) saturate(160%)",
+            WebkitBackdropFilter: "blur(14px) saturate(160%)",
             background:
-              "linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0.4) 100%)",
+              "linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.22) 60%, rgba(255,255,255,0.15) 100%)",
           }}
         />
         <div
           className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
           style={{
             background:
-              "linear-gradient(0deg, rgba(255,255,255,0.4) 0%, transparent 7%)",
-            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.5)",
+              "linear-gradient(0deg, rgba(255,255,255,0.3) 0%, transparent 7%)",
+            boxShadow: "inset 0 1px 1px 0 rgba(255, 255, 255, 0.7)",
           }}
         >
           <div
@@ -92,7 +93,7 @@ export function LiquidPanel({
             style={{
               padding: "1px",
               background:
-                "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.02) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.02) 70%, rgba(0,0,0,0.1) 100%)",
+                "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 30%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.3) 100%)",
               WebkitMask:
                 "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
               WebkitMaskComposite: "xor",
