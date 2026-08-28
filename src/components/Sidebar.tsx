@@ -37,32 +37,7 @@ function getSidebarSnapshot() {
   return localStorage.getItem("sidebar-open") ?? "true";
 }
 
-function NavItem({
-  href,
-  icon: Icon,
-  visual,
-  label,
-}: {
-  href: string;
-  icon?: LucideIcon;
-  visual?: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium",
-        "text-foreground/85 hover:bg-foreground/5 hover:text-primary",
-      )}
-    >
-      {visual ? visual : Icon && <Icon size={18} strokeWidth={2} />}
-      <span className="truncate">{label}</span>
-    </Link>
-  );
-}
-
-export default function Sidebar() {
+export function useSidebar() {
   const isOpen =
     useSyncExternalStore(
       subscribeToSidebarState,
@@ -70,16 +45,22 @@ export default function Sidebar() {
       () => "true",
     ) === "true";
 
+  const toggleSidebar = (state: boolean) => {
+    localStorage.setItem("sidebar-open", String(state));
+    window.dispatchEvent(new Event("sidebar-toggle"));
+  };
+
+  return { isOpen, toggleSidebar };
+}
+
+export default function Sidebar() {
+  const { isOpen, toggleSidebar } = useSidebar();
+
   const user = useUser();
   const playlists = useQuery(
     api.playlists?.getUserPlaylists,
     user?._id ? { userId: user._id } : "skip",
   );
-
-  const toggleSidebar = (state: boolean) => {
-    localStorage.setItem("sidebar-open", String(state));
-    window.dispatchEvent(new Event("sidebar-toggle"));
-  };
 
   if (!isOpen) {
     return (
@@ -212,6 +193,31 @@ function SidebarPlaylistItem({ playlist }: { playlist: PlaylistSummary }) {
         )}
       </div>
       <span className="truncate capitalize">{playlist.name}</span>
+    </Link>
+  );
+}
+
+function NavItem({
+  href,
+  icon: Icon,
+  visual,
+  label,
+}: {
+  href: string;
+  icon?: LucideIcon;
+  visual?: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 px-3 py-1.5 rounded-md transition-colors text-xs font-medium",
+        "text-foreground/85 hover:bg-foreground/5 hover:text-primary",
+      )}
+    >
+      {visual ? visual : Icon && <Icon size={18} strokeWidth={2} />}
+      <span className="truncate">{label}</span>
     </Link>
   );
 }

@@ -9,6 +9,7 @@ import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
 import type { Doc } from "../../../../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/Sidebar";
 
 type PlaylistSummary = Doc<"playlists"> & {
   coverUrl?: string | null;
@@ -21,8 +22,10 @@ export default function SidebarLayout({
   children: React.ReactNode;
 }) {
   const user = useUser();
+  const { isOpen } = useSidebar();
   const pathname = usePathname();
 
+  console.log(isOpen);
   const { playlists, likedSongs, historySongs, isLoading } = useLibraryData(
     user?._id,
   );
@@ -37,107 +40,108 @@ export default function SidebarLayout({
 
   return (
     <div className="flex bg-background text-foreground">
-      <aside className="hidden lg:block w-72 md:w-80 shrink-0 relative z-20">
-        <div className="absolute right-0 top-0 bottom-0 w-px bg-foreground/10 pointer-events-none" />
-        <div className="sticky top-[40px] h-[calc(100vh-40px)] overflow-y-auto liquid-scroll">
-          {isLoading ? (
-            <SidebarLayoutSkeleton />
-          ) : (
-            <div className="flex flex-col w-full px-3 pb-52 pt-0">
-              {historySongs.length > 0 && (
-                <>
-                  <Link
-                    href="/dashboard/library/history"
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg transition-colors group",
-                      pathname === "/dashboard/library/history"
-                        ? "bg-foreground/[0.08]"
-                        : "hover:bg-foreground/[0.04]",
+      {!isOpen && (
+        <aside className="hidden lg:block w-72 md:w-80 shrink-0 relative z-20">
+          <div className="absolute right-0 top-0 bottom-0 w-px bg-foreground/10 pointer-events-none" />
+          <div className="sticky top-[40px] h-[calc(100vh-40px)] overflow-y-auto liquid-scroll">
+            {isLoading ? (
+              <SidebarLayoutSkeleton />
+            ) : (
+              <div className="flex flex-col w-full px-3 pb-52 pt-0">
+                {historySongs.length > 0 && (
+                  <>
+                    <Link
+                      href="/dashboard/library/history"
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg transition-colors group",
+                        pathname === "/dashboard/library/history"
+                          ? "bg-foreground/[0.08]"
+                          : "hover:bg-foreground/[0.04]",
+                      )}
+                    >
+                      <div className="w-12 h-12 shrink-0 rounded-md bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm">
+                        <History
+                          size={20}
+                          className="fill-transparent text-white"
+                        />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span
+                          className={cn(
+                            "text-sm font-bold truncate transition-colors",
+                            pathname === "/dashboard/library/history"
+                              ? "text-foreground"
+                              : "text-foreground/80 group-hover:text-foreground",
+                          )}
+                        >
+                          Recently Played
+                        </span>
+                        <span className="text-xs font-medium text-foreground/50 truncate">
+                          {historySongs.length === 1
+                            ? "1 song"
+                            : `${historySongs.length} songs`}
+                        </span>
+                      </div>
+                    </Link>
+
+                    {(likedSongs.length > 0 || sortedPlaylists.length > 0) && (
+                      <div className="h-px bg-foreground/5 ml-[68px] my-1" />
                     )}
-                  >
-                    <div className="w-12 h-12 shrink-0 rounded-md bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm">
-                      <History
-                        size={20}
-                        className="fill-transparent text-white"
-                      />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span
-                        className={cn(
-                          "text-sm font-bold truncate transition-colors",
-                          pathname === "/dashboard/library/history"
-                            ? "text-foreground"
-                            : "text-foreground/80 group-hover:text-foreground",
-                        )}
-                      >
-                        Recently Played
-                      </span>
-                      <span className="text-xs font-medium text-foreground/50 truncate">
-                        {historySongs.length === 1
-                          ? "1 song"
-                          : `${historySongs.length} songs`}
-                      </span>
-                    </div>
-                  </Link>
+                  </>
+                )}
 
-                  {(likedSongs.length > 0 || sortedPlaylists.length > 0) && (
-                    <div className="h-px bg-foreground/5 ml-[68px] my-1" />
-                  )}
-                </>
-              )}
+                {likedSongs.length > 0 && (
+                  <>
+                    <Link
+                      href="/dashboard/library/liked"
+                      className={cn(
+                        "flex items-center gap-3 p-2 rounded-lg transition-colors group",
+                        pathname === "/dashboard/library/liked"
+                          ? "bg-foreground/[0.08]"
+                          : "hover:bg-foreground/[0.04]",
+                      )}
+                    >
+                      <div className="w-12 h-12 shrink-0 rounded-md bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
+                        <Star size={20} className="fill-white text-white" />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span
+                          className={cn(
+                            "text-sm font-bold truncate transition-colors",
+                            pathname === "/dashboard/library/liked"
+                              ? "text-foreground"
+                              : "text-foreground/80 group-hover:text-foreground",
+                          )}
+                        >
+                          Favorite Songs
+                        </span>
+                        <span className="text-xs font-medium text-foreground/50 truncate">
+                          {likedSongs.length === 1
+                            ? "1 song"
+                            : `${likedSongs.length} songs`}
+                        </span>
+                      </div>
+                    </Link>
 
-              {likedSongs.length > 0 && (
-                <>
-                  <Link
-                    href="/dashboard/library/liked"
-                    className={cn(
-                      "flex items-center gap-3 p-2 rounded-lg transition-colors group",
-                      pathname === "/dashboard/library/liked"
-                        ? "bg-foreground/[0.08]"
-                        : "hover:bg-foreground/[0.04]",
+                    {sortedPlaylists.length > 0 && (
+                      <div className="h-px bg-foreground/5 ml-[68px] my-1" />
                     )}
-                  >
-                    <div className="w-12 h-12 shrink-0 rounded-md bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
-                      <Star size={20} className="fill-white text-white" />
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                      <span
-                        className={cn(
-                          "text-sm font-bold truncate transition-colors",
-                          pathname === "/dashboard/library/liked"
-                            ? "text-foreground"
-                            : "text-foreground/80 group-hover:text-foreground",
-                        )}
-                      >
-                        Favorite Songs
-                      </span>
-                      <span className="text-xs font-medium text-foreground/50 truncate">
-                        {likedSongs.length === 1
-                          ? "1 song"
-                          : `${likedSongs.length} songs`}
-                      </span>
-                    </div>
-                  </Link>
+                  </>
+                )}
 
-                  {sortedPlaylists.length > 0 && (
-                    <div className="h-px bg-foreground/5 ml-[68px] my-1" />
-                  )}
-                </>
-              )}
-
-              {sortedPlaylists.map((p, index) => (
-                <SidebarPlaylistItem
-                  key={p._id}
-                  playlist={p}
-                  isActive={pathname === `/dashboard/library/playlist/${p._id}`}
-                  isLast={index === sortedPlaylists.length - 1}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </aside>
-
+                {sortedPlaylists.map((p, index) => (
+                  <SidebarPlaylistItem
+                    key={p._id}
+                    playlist={p}
+                    isActive={pathname === `/dashboard/library/playlist/${p._id}`}
+                    isLast={index === sortedPlaylists.length - 1}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </aside>
+      )}
       <main className="flex-1 min-w-0 pt-0 relative z-10">{children}</main>
     </div>
   );
