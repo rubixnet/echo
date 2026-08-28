@@ -9,6 +9,7 @@ import { api } from "../../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
 import { useRoomState } from "@/hooks/useRoomContext";
 import { cn } from "@/lib/utils";
+import { normalizeTrack } from "@/lib/trackUtils";
 import {
   Play,
   Pause,
@@ -42,8 +43,8 @@ export function ProgressBar({
     : 0;
   const currentDragStr = isDragging
     ? `${Math.floor(dragValue / 60)}:${Math.floor(dragValue % 60)
-        .toString()
-        .padStart(2, "0")}`
+      .toString()
+      .padStart(2, "0")}`
     : currentTimeStr;
 
   return (
@@ -68,7 +69,6 @@ export function ProgressBar({
             onChange={(e) => setDragValue(Number(e.target.value))}
             onMouseUp={(e) => {
               setIsDragging(false);
-              // Room-aware: hosts broadcast the seek to listeners.
               controlSeekTo(Number(e.currentTarget.value));
             }}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 m-0"
@@ -200,42 +200,35 @@ export function PlaybackControls({
 
 export function StarButton({ className }: { className?: string }) {
   const user = useUser();
-  const { activeMetadata } = useAudioEngine();
+  const { activeMetadata, duration } = useAudioEngine();
   const userId = user?._id;
+
+  const normalized = normalizeTrack(activeMetadata);
 
   const likedSongs = useQuery(
     api.likes.getMyLikes,
     userId ? { userId } : "skip",
   );
   const isLiked = Boolean(
-    activeMetadata?.id &&
-    likedSongs?.some((song) => song.trackId === activeMetadata.id),
+    normalized.id &&
+    likedSongs?.some((song) => song.trackId === normalized.id),
   );
   const toggleLikeMutation = useMutation(api.likes.toggleLike);
 
   const handleLike = async () => {
     if (!activeMetadata?.id || !userId) return;
 
-    const durationStr =
-      typeof activeMetadata.duration === "number"
-        ? `${Math.floor(activeMetadata.duration / 60)}:${(activeMetadata.duration % 60).toString().padStart(2, "0")}`
-        : activeMetadata.duration || "0:00";
+    console.log(normalized.duration);
 
     try {
       await toggleLikeMutation({
         userId: userId,
-        trackId: activeMetadata.id,
-        title: activeMetadata.title || "Unknown Track",
-        artist:
-          activeMetadata.artist ||
-          activeMetadata.uploaderName ||
-          "Unknown Artist",
-        coverUrl:
-          activeMetadata.coverUrl ||
-          activeMetadata.thumbnail ||
-          "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256",
-        duration: durationStr,
-        audioUrl: activeMetadata.audioUrl || "",
+        trackId: normalized.id,
+        title: normalized.title,
+        artist: normalized.artist,
+        coverUrl: normalized.coverUrl,
+        duration: duration,
+        audioUrl: normalized.audioUrl,
       });
     } catch (error) {
       console.error(error);

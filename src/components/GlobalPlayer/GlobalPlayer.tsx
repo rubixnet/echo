@@ -59,7 +59,7 @@ export default function GlobalPlayer() {
           userId,
           track: trackPayload,
         }).catch(() => { });
-      }, 15000);
+      }, 8000);
     }
     else if (!isPlaying) {
       updateCurrentTrack({

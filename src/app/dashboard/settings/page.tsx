@@ -273,7 +273,11 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-3 min-w-0 pr-4">
                     <div className="relative">
                       <div className="w-8 h-8 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase">
-                        {friend.username.slice(0, 2)}
+                        {friend.currentTrack?.coverUrl ? <Image width={20} height={20} unoptimized
+                          src={friend.currentTrack.coverUrl}
+                          className="w-full h-full object-cover rounded-lg"
+                          alt={friend.currentTrack.title}
+                        /> : friend.username.slice(0, 2)}
                       </div>
                       {friend.isOnline && (
                         <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-background" />

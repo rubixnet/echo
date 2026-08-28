@@ -15,8 +15,9 @@ design,
 
 - showing pins in library sidebar as well
 
-- showing other playlists on search page as well when the user is not searching, below there
+- adding popups
 
+- showing other playlists on search page as well when the user is not searching, below there
 
 - creating users mix playlist as wlel
 - fixing current related as it's shit!

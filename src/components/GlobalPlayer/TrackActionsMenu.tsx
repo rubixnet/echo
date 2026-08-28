@@ -111,6 +111,16 @@ export function TrackActionMenuContent({
     });
   };
 
+  const trackInfo = {
+    trackId: normalized.id,
+    title: normalized.title,
+    artist: normalized.artist,
+    coverUrl: normalized.coverUrl,
+    duration: normalized.duration,
+  };
+
+
+
   const handleShare = () => {
     const url = `${window.location.origin}/track/${normalized.id}`;
     navigator.clipboard.writeText(url);
@@ -119,7 +129,7 @@ export function TrackActionMenuContent({
   const handleSuggestLess = async () => {
     if (!user?._id || !normalized.id) return;
     try {
-      await suggestLess({ userId: user._id, trackId: normalized.id });
+      await suggestLess({ userId: user._id, ...trackInfo });
     } catch (err) {
       console.error(err);
     }
@@ -128,7 +138,7 @@ export function TrackActionMenuContent({
   const handleNeverShowAgain = async () => {
     if (!user?._id || !normalized.id) return;
     try {
-      await neverShowAgain({ userId: user._id, trackId: normalized.id });
+      await neverShowAgain({ userId: user._id, ...trackInfo });
     } catch (err) {
       console.error(err);
     }
@@ -166,7 +176,7 @@ export function TrackActionMenuContent({
         {isBookmarked ? "Remove from Library" : "Save to Library"}
       </ItemComponent>
 
-      <ItemComponent onClick={handleAction(() => {})} className={itemClassName}>
+      <ItemComponent onClick={handleAction(() => { })} className={itemClassName}>
         <Radio size={sizeStyles.icon} className="text-primary/70" />
         Create Station
       </ItemComponent>

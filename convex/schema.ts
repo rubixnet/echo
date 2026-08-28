@@ -207,6 +207,14 @@ export default defineSchema({
     .index("by_user_and_type", ["userId", "itemType"])
     .index("by_user_and_item", ["userId", "itemType", "itemId"]),
 
+
+  relatedTracksData: defineTable({
+    userId: v.id("users"),
+    updatedAt: v.number(),
+    data: v.any(),
+  })
+    .index("by_user", ["userId"]),
+
   playlistTracks: defineTable({
     playlistId: v.id("playlists"),
     trackId: v.string(),
