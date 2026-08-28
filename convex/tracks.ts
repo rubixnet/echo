@@ -45,7 +45,7 @@ const trackArgs = {
 export const updateCurrentTrack = mutation({
   args: {
     userId: v.id("users"),
-    track: v.object(trackArgs),
+    track: v.optional(v.object(trackArgs)),
   },
   handler: async (ctx, args) => {
     const { userId, track } = args;

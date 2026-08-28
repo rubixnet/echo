@@ -6,15 +6,19 @@ design,
 - og images for all this pages!
 - update icons
 
-# icons, playlist cover and text on top! recommendationo engine, never show again, hated track filtering, on close test play, liquid panel for light mode update, onboarding page.
+# icons, playlist cover and text on top! recommendationo engine, never show again, hated track filtering, on close test play, onboarding page.
 
 - remove playlist layout sidebar if sidebar is open
 
 - fix styling for track component
 - making efficient the update track logic so song gets updated only when it's played for 14 to 20 sec. 
 
-- hide playlist layout sidebar if sidebar is open
+- showing pins in library sidebar as well
 
+- showing other playlists on search page as well when the user is not searching, below there
+
+
+- creating users mix playlist as wlel
 - fixing current related as it's shit!
 
 - onboarding and settings page along with redesigned home page
@@ -28,8 +32,6 @@ design,
 - mobile player controls on closed and testing songs playing when closed
 
 - bad looking focus ring color for global player / dark mode
-- Encountered two children with the same key, `EARCQwChOA0`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version. Call
-
 
 - slowly animating or opacity for the bentos!
 

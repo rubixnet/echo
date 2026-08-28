@@ -39,20 +39,29 @@ export default function GlobalPlayer() {
 
     let timer: NodeJS.Timeout | null = null;
 
-    if (isPlaying && activeMetadata && activeMetadata.id) {
+    if (
+      isPlaying &&
+      activeMetadata?.id &&
+      activeMetadata.title &&
+      activeMetadata.artist
+    ) {
+
+      const trackPayload = {
+        trackId: activeMetadata.id,
+        title: activeMetadata.title,
+        artist: activeMetadata.artist,
+        coverUrl: activeMetadata.coverUrl || "",
+        duration: String(activeMetadata.duration ?? "0:00"),
+      };
+
       timer = setTimeout(() => {
         updateCurrentTrack({
           userId,
-          track: {
-            trackId: activeMetadata.id,
-            title: activeMetadata.title,
-            artist: activeMetadata.artist,
-            coverUrl: activeMetadata.coverUrl || "",
-            duration: activeMetadata.duration || "0:00",
-          },
+          track: trackPayload,
         }).catch(() => { });
-      }, 5000);
-    } else if (!isPlaying) {
+      }, 15000);
+    }
+    else if (!isPlaying) {
       updateCurrentTrack({
         userId,
         track: undefined,
