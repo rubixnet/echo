@@ -18,7 +18,6 @@ export default defineSchema({
     activeRoomId: v.optional(v.id("rooms")),
     onboarded: (v.boolean()),
     lastSeen: v.optional((v.number())),
-    avatarUrl: v.optional(v.string()),
     favoriteGenres: v.optional(v.array(v.string())),
     currentTrack: v.optional(trackSchema),
   })

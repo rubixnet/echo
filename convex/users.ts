@@ -49,6 +49,8 @@ export const getUserProfile = query({
 export const completedOnboarding = mutation({
   args: {
     userId: v.id("users"),
+    name: v.string(),
+    username: v.string(),
     genres: v.array(v.string()),
   },
   handler: async (ctx, args) => {

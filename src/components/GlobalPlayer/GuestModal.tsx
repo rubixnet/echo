@@ -3,7 +3,7 @@
 import { useRoomState } from "@/hooks/useRoomContext";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { Radio, LogOut } from "lucide-react";
-import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { Button } from "@/components/ui/button";
 
 export function GuestModal() {
@@ -23,7 +23,7 @@ export function GuestModal() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <LiquidContainer
+      <LiquidPanel
         radius="24px"
         className="w-full max-w-md animate-in zoom-in-95 duration-200"
       >
@@ -42,7 +42,6 @@ export function GuestModal() {
           <div className="flex w-full gap-3">
             <Button
               variant="outline"
-              size="sm"
               className="flex-1"
               onClick={closeLockdown}
             >
@@ -53,7 +52,7 @@ export function GuestModal() {
             </Button>
           </div>
         </div>
-      </LiquidContainer>
+      </LiquidPanel>
     </div>
   );
 }

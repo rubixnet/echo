@@ -21,6 +21,7 @@ design,
 - option if to show playlists, rooms or info to friends or not!
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
+- make buttons consistent
 - increase surface area of buttons / menus or stuff on mobile like track component dot menu,
 - create og image for that particular song with particular link for that use.
 - background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
