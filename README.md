@@ -20,11 +20,6 @@ design,
 - option if to show playlists, rooms or info to friends or not!
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
-- make buttons consistent
-- increase surface area of buttons / menus or stuff on mobile like track component dot menu,
-- create og image for that particular song with particular link for that use.
-
-
 - onboarding with redesigned home page
 - controls bento grid for the user, showing navbar options, track component grid ui idea figma
 - onboarding of user like drawn ui!
@@ -35,11 +30,15 @@ design,
 - play a song automatically / or load the past one the user was playing.
 - setting up lyrics
 - host lyrics and try hosting app if possible, run bun lint and fix all the errors.
+
 - adding cron job to update yt dlp
 - browser or yt dlp script to get the playlist songs and info from browser itself!
 
 later! 
+- create og image for that particular song with particular link for that use. // for song sharing
+- make buttons consistent
 - testing swipe and sliding down the player on mobile! 
+- increase surface area of buttons / menus or stuff on mobile like track component dot menu,
 - bad looking focus ring color for global player / dark mode
 - consistent text inside inputs
 - loop shuffle work 

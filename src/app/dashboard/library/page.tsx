@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   History,
   Star,
@@ -16,7 +16,11 @@ import { useUser } from "@/hooks/useUser";
 import { useLibraryData } from "@/hooks/useLibraryData";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
 import type { Doc } from "../../../../convex/_generated/dataModel";
-import { LibrarySearchBar } from "@/components/LibrarySearchBar";
+import {
+  LibrarySearchBar,
+  LibraryFilter,
+  SortOrder,
+} from "@/components/LibrarySearchBar";
 import { PlaylistContextMenu } from "@/components/PlaylistActions";
 import { Track } from "@/components/TrackComponent";
 import Link from "next/link";
@@ -32,6 +36,8 @@ export default function LibraryHubPage() {
   const user = useUser();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState<LibraryFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState<{
@@ -50,6 +56,10 @@ export default function LibraryHubPage() {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const toggleSort = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
   const {
     playlists,
     likedSongs,
@@ -59,20 +69,49 @@ export default function LibraryHubPage() {
     isLoading,
   } = useLibraryData(user?._id);
 
-  const filteredPlaylists = useSearchFilter(playlists, searchTerm, ["name"]);
-  const filteredTracks = useSearchFilter(libraryTracks, searchTerm, [
+  const searchedPlaylists = useSearchFilter(playlists, searchTerm, ["name"]);
+  const searchedTracks = useSearchFilter(libraryTracks, searchTerm, [
     "title",
     "artist",
   ]);
-  const filteredArtists = useSearchFilter(libraryArtists, searchTerm, [
-    "title",
-  ]);
+  const searchedArtists = useSearchFilter(libraryArtists, searchTerm, ["title"]);
 
-  const pinnedPlaylists = filteredPlaylists.filter((p) => p.isPinned);
+  const sortItems = <T extends { name?: string; title?: string }>(
+    items: T[],
+  ): T[] => {
+    return [...items].sort((a, b) => {
+      const nameA = (a.name || a.title || "").toLowerCase();
+      const nameB = (b.name || b.title || "").toLowerCase();
+      return sortOrder === "asc"
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    });
+  };
+
+  const filteredPlaylists = useMemo(
+    () => sortItems(searchedPlaylists),
+    [searchedPlaylists, sortOrder],
+  );
+
+  const filteredTracks = useMemo(
+    () => sortItems(searchedTracks),
+    [searchedTracks, sortOrder],
+  );
+
+  const filteredArtists = useMemo(
+    () => sortItems(searchedArtists),
+    [searchedArtists, sortOrder],
+  );
+
+  const pinnedPlaylists = useMemo(
+    () => filteredPlaylists.filter((p) => p.isPinned),
+    [filteredPlaylists],
+  );
 
   if (isLoading) {
     return <LibrarySkeleton />;
   }
+  
 
   const isSearching = Boolean(searchTerm.trim());
 
@@ -80,7 +119,8 @@ export default function LibraryHubPage() {
     ? pinnedPlaylists
     : pinnedPlaylists.slice(0, SECTION_LIMITS.pins);
 
-  const showCustomCards = !isSearching;
+  const showCustomCards =
+    !isSearching && (activeFilter === "all" || activeFilter === "playlists");
   const customCardsCount = showCustomCards
     ? (historySongs.length > 0 ? 1 : 0) + (likedSongs.length > 0 ? 1 : 0)
     : 0;
@@ -103,30 +143,45 @@ export default function LibraryHubPage() {
     ? filteredArtists
     : filteredArtists.slice(0, SECTION_LIMITS.artists);
 
-  const hasAnyResults =
-    pinnedPlaylists.length > 0 ||
-    filteredPlaylists.length > 0 ||
-    filteredTracks.length > 0 ||
-    filteredArtists.length > 0 ||
-    (!isSearching && (historySongs.length > 0 || likedSongs.length > 0));
+  const showPins =
+    (activeFilter === "all" || activeFilter === "pins") &&
+    pinnedPlaylists.length > 0;
+  const showPlaylists =
+    (activeFilter === "all" || activeFilter === "playlists") &&
+    (filteredPlaylists.length > 0 || showCustomCards);
+  const showTracks =
+    (activeFilter === "all" || activeFilter === "songs") &&
+    filteredTracks.length > 0;
+  const showArtists =
+    (activeFilter === "all" || activeFilter === "artists") &&
+    filteredArtists.length > 0;
+
+  const hasAnyResults = showPins || showPlaylists || showTracks || showArtists;
 
   return (
     <div className="px-6 lg:px-12 py-8 pb-12 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
-      <LibrarySearchBar value={searchTerm} onChange={setSearchTerm} />
+      <LibrarySearchBar
+        value={searchTerm}
+        onChange={setSearchTerm}
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        sortOrder={sortOrder}
+        onToggleSort={toggleSort}
+      />
 
-      {!hasAnyResults && isSearching ? (
+      {!hasAnyResults && (isSearching || activeFilter !== "all") ? (
         <div className="py-24 text-center">
           <p className="text-base font-semibold text-foreground/80">
-            No library results found for &ldquo;{searchTerm}&rdquo;
+            No {activeFilter !== "all" ? activeFilter : "library"} results found{" "}
+            {searchTerm && `for "${searchTerm}"`}
           </p>
           <p className="text-xs text-foreground/50 mt-1">
-            Check your spelling or try searching for another title, artist, or
-            playlist.
+            Check your spelling or try changing your active filters.
           </p>
         </div>
       ) : (
         <>
-          {pinnedPlaylists.length > 0 && (
+          {showPins && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">Pins</h2>
@@ -147,76 +202,78 @@ export default function LibraryHubPage() {
             </section>
           )}
 
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-tight">Your Library</h2>
-              {totalLibraryItems > SECTION_LIMITS.playlists && (
-                <AccordionToggle
-                  isExpanded={expandedSections.playlists}
-                  onToggle={() => toggleSection("playlists")}
-                  count={totalLibraryItems}
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {showCustomCards && historySongs.length > 0 && (
-                <div
-                  onClick={() => router.push(`/dashboard/library/history`)}
-                  className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-                >
-                  <div className="aspect-square w-full rounded-md overflow-hidden bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm mb-3">
-                    <History
-                      size={56}
-                      className="fill-transparent text-white drop-shadow-md"
-                    />
-                  </div>
-                  <h3 className="font-bold text-sm text-foreground truncate">
-                    Recently Played
-                  </h3>
-                  <p className="text-xs font-medium text-foreground/50 mt-0.5">
-                    {historySongs.length === 1
-                      ? "1 song"
-                      : `${historySongs.length} songs`}
-                  </p>
-                </div>
-              )}
-
-              {showCustomCards && likedSongs.length > 0 && (
-                <div
-                  onClick={() => router.push(`/dashboard/library/liked`)}
-                  className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
-                >
-                  <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
-                    <Star
-                      size={56}
-                      className="fill-white text-white drop-shadow-md"
-                    />
-                  </div>
-                  <h3 className="font-bold text-sm text-foreground truncate">
-                    Favorite Songs
-                  </h3>
-                  <p className="text-xs font-medium text-foreground/50 mt-0.5">
-                    {likedSongs.length === 1
-                      ? "1 song"
-                      : `${likedSongs.length} songs`}
-                  </p>
-                </div>
-              )}
-
-              {displayedPlaylists.map((p) => (
-                <LibraryPlaylistItem key={p._id} playlist={p} />
-              ))}
-            </div>
-
-            {filteredPlaylists.length === 0 && !showCustomCards && (
-              <div className="py-8 text-sm font-medium text-foreground/50">
-                No matching playlists.
+          {showPlaylists && (
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold tracking-tight">Your Library</h2>
+                {totalLibraryItems > SECTION_LIMITS.playlists && (
+                  <AccordionToggle
+                    isExpanded={expandedSections.playlists}
+                    onToggle={() => toggleSection("playlists")}
+                    count={totalLibraryItems}
+                  />
+                )}
               </div>
-            )}
-          </section>
 
-          {filteredTracks.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                {showCustomCards && historySongs.length > 0 && (
+                  <div
+                    onClick={() => router.push(`/dashboard/library/history`)}
+                    className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
+                  >
+                    <div className="aspect-square w-full rounded-md overflow-hidden bg-radial-[at_top_left] from-cyan-400 via-teal-700 to-slate-950 flex items-center justify-center shadow-sm mb-3">
+                      <History
+                        size={56}
+                        className="fill-transparent text-white drop-shadow-md"
+                      />
+                    </div>
+                    <h3 className="font-bold text-sm text-foreground truncate">
+                      Recently Played
+                    </h3>
+                    <p className="text-xs font-medium text-foreground/50 mt-0.5">
+                      {historySongs.length === 1
+                        ? "1 song"
+                        : `${historySongs.length} songs`}
+                    </p>
+                  </div>
+                )}
+
+                {showCustomCards && likedSongs.length > 0 && (
+                  <div
+                    onClick={() => router.push(`/dashboard/library/liked`)}
+                    className="group relative cursor-pointer rounded-md hover:border-foreground/10 transition-colors"
+                  >
+                    <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
+                      <Star
+                        size={56}
+                        className="fill-white text-white drop-shadow-md"
+                      />
+                    </div>
+                    <h3 className="font-bold text-sm text-foreground truncate">
+                      Favorite Songs
+                    </h3>
+                    <p className="text-xs font-medium text-foreground/50 mt-0.5">
+                      {likedSongs.length === 1
+                        ? "1 song"
+                        : `${likedSongs.length} songs`}
+                    </p>
+                  </div>
+                )}
+
+                {displayedPlaylists.map((p) => (
+                  <LibraryPlaylistItem key={p._id} playlist={p} />
+                ))}
+              </div>
+
+              {filteredPlaylists.length === 0 && !showCustomCards && (
+                <div className="py-8 text-sm font-medium text-foreground/50">
+                  No matching playlists.
+                </div>
+              )}
+            </section>
+          )}
+
+          {showTracks && (
             <section className="space-y-4" id="songs">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">
@@ -245,7 +302,7 @@ export default function LibraryHubPage() {
             </section>
           )}
 
-          {filteredArtists.length > 0 && (
+          {showArtists && (
             <section className="space-y-4" id="artists">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold tracking-tight">Artists</h2>
@@ -267,7 +324,10 @@ export default function LibraryHubPage() {
                   >
                     <div className="w-20 h-20 sm:w-24 sm:h-24 md:h-30 md:w-30 lg:w-40 lg:h-40 rounded-full overflow-hidden bg-foreground/10 border border-foreground/10 shadow-sm shrink-0">
                       {artist.coverUrl ? (
-                        <Image width={500} height={500} unoptimized
+                        <Image
+                          width={500}
+                          height={500}
+                          unoptimized
                           src={artist.coverUrl}
                           alt={artist.title}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -329,7 +389,10 @@ function LibraryPlaylistItem({ playlist }: { playlist: LibraryPlaylist }) {
     >
       <div className="relative aspect-square w-full rounded-md overflow-hidden bg-foreground/5 border border-foreground/10 flex items-center justify-center shadow-sm mb-3">
         {coverUrl ? (
-          <Image width={500} height={500} unoptimized
+          <Image
+            width={500}
+            height={500}
+            unoptimized
             src={coverUrl}
             className="w-full h-full object-cover"
             alt={playlist.name}
