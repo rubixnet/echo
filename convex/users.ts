@@ -26,6 +26,18 @@ export const searchUsers = query({
   },
 });
 
+export const updateGenrePreferences = mutation({
+  args: {
+    userId: v.id("users"),
+    genres: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch("users", args.userId, {
+      favoriteGenres: args.genres,
+    });
+  },
+});
+
 export const getUserData = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {

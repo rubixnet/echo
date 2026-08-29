@@ -9,11 +9,10 @@ design,
 # icons, playlist cover and text on top! 
 
 - on close test play mobile, onboarding page.
-
+- creating users mix playlist as well
 - fix styling for track component
 - adding popups
 - users popover in settings page
-- creating users mix playlist as well
 - remove from past queue as well if user adds to never show again! 
 - update playing from source in desktop drawer and mobile drawer
 - later share playlists option with friends and more
@@ -28,8 +27,9 @@ design,
 - play a song automatically / or load the past one the user was playing.
 - bad looking focus ring color for global player / dark mode
 - let user visit artist where artist data is present
-- landscape mode for mobile!
+- search on mobile
 
+- Search on library page on mobile
 - onboarding with redesigned home page
 - controls bento grid for the user, showing navbar options, track component grid
 - onboarding of user like drawn ui!

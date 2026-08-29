@@ -21,6 +21,7 @@ import {
   ListPlus,
   Radio,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import {
   Timeline,
@@ -55,6 +56,7 @@ export function MobilePlayer({
   const { isGuest, controlTogglePlay, controlSeekTo } = useRoomState();
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLandScapeMode, setIsLandScapeMode] = useState(false);
   const [mobileTab, setMobileTab] = useState<"cover" | "lyrics" | "queue">(
     "cover",
   );
@@ -147,11 +149,12 @@ export function MobilePlayer({
               style={
                 activeMetadata
                   ? {
-                      width: progressPercent > 7 ? `${progressPercent}%` : "6%",
-                    }
+                    width: progressPercent > 7 ? `${progressPercent}%` : "6%",
+                  }
                   : { width: 0 }
               }
             />
+
             <div className="w-full h-full flex items-center px-3 z-11 gap-3">
               {activeMetadata ? (
                 <>
@@ -170,6 +173,7 @@ export function MobilePlayer({
                       {activeMetadata.artist}
                     </p>
                   </div>
+
 
                   {isGuest ? (
                     <div className="w-10 h-10 flex items-center justify-center shrink-0">
@@ -248,7 +252,12 @@ export function MobilePlayer({
               ? "Queue"
               : "Now Playing"}
         </span>
-        <div className="w-11" />
+        <button
+          onClick={() => setIsExpanded(false)}
+          className="p-2 text-foreground/60 hover:text-foreground rounded-full transition-colors"
+        >
+          <ChevronDown size={28} strokeWidth={2} />
+        </button>
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col relative z-10 px-6">
@@ -307,21 +316,18 @@ export function MobilePlayer({
         </div>
 
         <div className="flex items-center justify-between w-full mb-6 px-2">
-          <LiquidContainer radius="999px">
-            <button
-              onClick={() =>
-                setMobileTab((prev) => (prev === "lyrics" ? "cover" : "lyrics"))
-              }
-              className={cn(
-                "w-10 h-10 flex items-center justify-center transition-colors",
-                mobileTab === "lyrics"
-                  ? "text-primary"
-                  : "text-foreground/70 hover:text-foreground",
-              )}
-            >
-              <Mic2 size={18} strokeWidth={2} />
-            </button>
-          </LiquidContainer>
+          <Button
+            size="mobileIcon"
+            onClick={() =>
+              setMobileTab((prev) => (prev === "lyrics" ? "cover" : "lyrics"))
+            }
+            className={cn(
+              "flex items-center justify-center transition-colors",
+              mobileTab === "lyrics" ? "text-primary" : "text-foreground/70 hover:text-foreground",
+            )}
+          >
+            <Mic2 size={32} strokeWidth={2} />
+          </Button>
 
           <LiquidContainer radius="999px">
             <div className="flex items-center h-10 px-1.5 gap-1">

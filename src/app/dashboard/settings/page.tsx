@@ -171,7 +171,7 @@ export default function SettingsPage() {
   if (!user) return null;
 
   return (
-    <div className="w-full min-h-full flex justify-center p-6 md:p-10 pb-32 text-foreground bg-background">
+    <div className="w-full min-h-full flex justify-center p-3  md:p-10 pb-32 text-foreground bg-background">
       <main className="w-full max-w-3xl space-y-8">
         <div className="flex items-center justify-between pb-5">
           <h1 className="text-2xl font-bold tracking-tight capitalize text-foreground truncate">
