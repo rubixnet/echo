@@ -3,7 +3,7 @@ import { query, mutation } from "./_generated/server";
 
 const ONLINE_THRESHOLD_MS = 60 * 1000;
 
-export const getFriends = query({
+export const getFriendsData = query({
     args: { userId: v.id("users") },
     handler: async (ctx, args) => {
         const friendships = await ctx.db

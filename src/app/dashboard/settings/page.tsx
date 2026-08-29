@@ -7,6 +7,8 @@ import { useMutation, useQuery, useConvex } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import {
 import { useTheme } from "next-themes";
 import {
   LogOut,
+  User,
   Music,
   Sun,
   Moon,
@@ -48,6 +51,8 @@ export default function SettingsPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { theme, setTheme } = useTheme();
+  const [showUsersPopover, setShowUsersPopover] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
 
   useEffect(() => {
     setMounted(true);
@@ -59,7 +64,7 @@ export default function SettingsPage() {
   );
 
   const friends = useQuery(
-    api.friends.getFriends,
+    api.friends.getFriendsData,
     user?._id ? { userId: user._id } : "skip"
   );
 
@@ -73,9 +78,8 @@ export default function SettingsPage() {
     api.neverShowAgain.removeFromNeverShowAgainTracks
   );
 
-  const handleAddFriend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const queryTerm = friendTagInput.trim();
+  const handleAddFriend = async (nameToAdd?: string) => {
+    const queryTerm = (nameToAdd || friendTagInput).trim();
     if (!user?._id || !queryTerm) return;
 
     try {
@@ -110,6 +114,7 @@ export default function SettingsPage() {
       });
 
       setFriendTagInput("");
+      setShowUsersPopover(false);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to add friend");
     } finally {
@@ -126,6 +131,29 @@ export default function SettingsPage() {
       });
     } catch (error) {
       console.error("Failed to remove friend", error);
+    }
+  };
+
+  const usersList = useQuery(api.users.searchUsers, { query: friendTagInput });
+
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    const listLength = usersList?.length || 0;
+    if (!showUsersPopover || listLength === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < listLength - 1 ? prev + 1 : prev));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > -1 ? prev - 1 : -1));
+    } else if (e.key === "Enter" && selectedIndex >= 0) {
+      e.preventDefault();
+      const selectedUser = usersList?.[selectedIndex];
+      if (selectedUser?.username) {
+        handleAddFriend(selectedUser.username);
+      }
+    } else if (e.key === "Escape") {
+      setShowUsersPopover(false);
     }
   };
 
@@ -226,29 +254,67 @@ export default function SettingsPage() {
               </span>
             </div>
 
-            <form onSubmit={handleAddFriend} className="flex items-center gap-2">
-              <LiquidContainer radius="14px" className="w-48 sm:w-56 h-9 shadow-none">
-                <input
-                  type="text"
-                  placeholder="Add by username..."
-                  value={friendTagInput}
-                  onChange={(e) => {
-                    setFriendTagInput(e.target.value);
-                    if (errorMsg) setErrorMsg(null);
-                  }}
-                  className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
-                />
-              </LiquidContainer>
-              <LiquidContainer radius="14px" className="h-9 shrink-0 shadow-none">
-                <button
-                  type="submit"
-                  disabled={!friendTagInput.trim() || loading}
-                  className="h-full select-none px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
-                >
-                  {loading ? "Adding..." : "Add Friend"}
-                </button>
-              </LiquidContainer>
-            </form>
+            <div className="relative">
+              <form onSubmit={(e) => { e.preventDefault(); handleAddFriend(); }} className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <LiquidContainer radius="14px" className="w-full h-9 shadow-none">
+                    <input
+                      type="text"
+                      placeholder="Add by username..."
+                      value={friendTagInput}
+                      onChange={(e) => {
+                        setFriendTagInput(e.target.value);
+                        setShowUsersPopover(true);
+                        setSelectedIndex(-1);
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      onFocus={() => setShowUsersPopover(true)}
+                      onKeyDown={handleInputKeyDown}
+                      className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none"
+                    />
+                  </LiquidContainer>
+                </div>
+
+                <LiquidContainer radius="14px" className="h-9 shrink-0 shadow-none">
+                  <button
+                    type="submit"
+                    disabled={!friendTagInput.trim() || loading}
+                    className="h-full select-none px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
+                  >
+                    {loading ? "Adding..." : "Add Friend"}
+                  </button>
+                </LiquidContainer>
+              </form>
+
+              {showUsersPopover && usersList && usersList.length > 0 && (
+                <div className="absolute top-full left-0 mt-2 slide-in-from-top-2 duration-200 z-50">
+                  <LiquidPanel radius="12px" className="w-[200px] sm:w-[224px]">
+                    <div className="space-y-0.5 max-h-48 overflow-y-auto liquid-scroll mr-1">
+                      {usersList.map((item, index) => (
+                        <button
+                          key={item._id}
+                          type="button"
+                          onClick={() => handleAddFriend(item.username)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-3 py-2.5 rounded-[16px] transition-colors text-left group",
+                            index === selectedIndex
+                              ? "bg-foreground/10"
+                              : "hover:bg-foreground/5",
+                          )}
+                        >
+                          <div className="flex items-center gap-3 text-foreground/50 group-hover:text-foreground transition-colors">
+                            <User size={16} className="text-primary" />
+                            <span className="text-xs font-medium text-foreground">
+                              {item.username}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </LiquidPanel>
+                </div>
+              )}
+            </div>
           </div>
 
           {errorMsg && (

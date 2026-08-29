@@ -8,58 +8,40 @@ design,
 
 # icons, playlist cover and text on top! 
 
-- on close test play, onboarding page.
+- on close test play mobile, onboarding page.
 
 - fix styling for track component
 - adding popups
-
-- showing other playlists on search page as well when the user is not searching, below there
-
-- creating users mix playlist as wlel
-- fixing current related as it's shit!
+- users popover in settings page
+- creating users mix playlist as well
 - remove from past queue as well if user adds to never show again! 
-
-- onboarding with redesigned home page
-- showing people list with that user name maybe or dropdown panel or popover for user
-
-- updating recommendations so that the current song doesn't show up in related data, nor the past songs!
-- setting up lyrics
-- play a song automatically / or load the past one the user was playing.
-
-- host lyrics and try hosting app if possible, run bun lint and fix all the errors.
-
-- mobile player controls on closed and testing songs playing when closed
-
-- bad looking focus ring color for global player / dark mode
-
-- slowly animating or opacity for the bentos!
-
-- adding cron job to update yt dlp
-- use users avatar
-
-- update related route to filter out previously played and other stuff!
-- increase surface area of buttons / menus or stuff on mobile like track component dot menu,
-
-- adding visit artist option on track!
-- let user visit artist where artist data is present
-
-
-- option to connect and check what song are my friends listening to.
-- create og image for that particular song with particular link for that use.
-
-- controls bento grid for the user, showing navbar options, track component grid
-- and audio player! maybe!
-- background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
+- update playing from source in desktop drawer and mobile drawer
 - later share playlists option with friends and more
-- ask for favorite geners during onboarding and then show them on the dashboard top and below other ones as explore!
-
-- browser or yt dlp script to get the playlist songs and info from browser itself!
-- landscape mode for mobile!
-- onboarding of user like drawn ui!
 - simple change or layout animation for expanded friends profile! 
 - option if to show playlists, rooms or info to friends or not!
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
-later! 
+- increase surface area of buttons / menus or stuff on mobile like track component dot menu,
+- create og image for that particular song with particular link for that use.
+- background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
+- play a song automatically / or load the past one the user was playing.
+- bad looking focus ring color for global player / dark mode
+- let user visit artist where artist data is present
+- landscape mode for mobile!
 
+- onboarding with redesigned home page
+- controls bento grid for the user, showing navbar options, track component grid
+- onboarding of user like drawn ui!
+- ask for favorite geners during onboarding and then show them on the dashboard top and below other ones as explore!
+- slowly animating or opacity for the bentos!
+
+- testing swipe and sliding down the player on mobile! 
+- setting up lyrics
+- host lyrics and try hosting app if possible, run bun lint and fix all the errors.
+- adding cron job to update yt dlp
+- browser or yt dlp script to get the playlist songs and info from browser itself!
+
+
+
+later! 
 - loop shuffle work 
