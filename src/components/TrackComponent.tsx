@@ -19,30 +19,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropodown-menu";
 import {
-  Play,
-  Check,
-  Pause,
-  Loader2,
-  PlaySquare,
-  ListEnd,
-  Trash2,
-  EllipsisVertical,
-  Bookmark,
-  Plus,
-  Pin,
-  Radio,
-  Share,
-  Star,
-  ThumbsDown,
-  Ban,
-} from "lucide-react";
+  TrackActionMenuContent,
+} from "@/components/GlobalPlayer/TrackActionsMenu";
+import { Play, Pause, Loader2, EllipsisVertical } from "lucide-react";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
-import { useUser } from "@/hooks/useUser";
 import { useUserExclusions } from "@/hooks/useUserExclusions";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { OfficialBadge } from "@/components/OfficialBadge";
 import { AddToPlaylistModal } from "@/components/AddToPlaylistModal";
@@ -51,28 +33,6 @@ import {
   type CanonicalTrack,
   type NormalizableTrack,
 } from "@/lib/trackUtils";
-
-const MOBILE_BREAKPOINT = 768;
-
-export function useIsMobile() {
-  const isMobile = React.useSyncExternalStore(
-    (onStoreChange) => {
-      const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-      mql.addEventListener("change", onStoreChange);
-      return () => mql.removeEventListener("change", onStoreChange);
-    },
-    () => window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`).matches,
-    () => false,
-  );
-
-  return isMobile;
-}
-
-type MenuItemComponent = React.ComponentType<{
-  onClick?: (e: React.MouseEvent) => void;
-  className?: string;
-  children?: React.ReactNode;
-}>;
 
 interface TrackProps {
   track: NormalizableTrack | null;
@@ -84,7 +44,6 @@ interface TrackProps {
   playlistId?: string;
   showDuration?: boolean;
   className?: string;
-  onOpenActionMenu?: () => void;
 }
 
 export function Track({
@@ -98,43 +57,17 @@ export function Track({
   showDuration = true,
   className,
 }: TrackProps) {
-  const { playTrack, playNextPriority, addToQueue } = useGlobalPlayback();
+  const { playTrack } = useGlobalPlayback();
   const { currentTrackUrl, isPlaying } = useAudioEngine();
-  const user = useUser();
-  const isMobile = useIsMobile();
-  const { isTrackExcluded } = useUserExclusions();
+  const { isHardBanned } = useUserExclusions();
 
-  const [isDismissed, setIsDismissed] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const removeTrackFromPlaylist = useMutation(api.playlists.removeFromPlaylist);
-  const toggleLikeMutation = useMutation(api.likes.toggleLike);
-  const toggleSaveLibraryItem = useMutation(api.library.toggleSaveItem);
-  const suggestLess = useMutation(api.suggestLess.addToUserSuggestLessTracks);
-  const neverShowAgain = useMutation(
-    api.neverShowAgain.addToNeverShowAgainTracks,
-  );
 
   const normalized = normalizeTrack(track);
 
-  const isLiked = useQuery(
-    api.likes.checkLiked,
-    user?._id && normalized?.id
-      ? { userId: user._id, trackId: normalized.id }
-      : "skip",
-  );
-
-  const isBookmarked = useQuery(
-    api.library.checkSaved,
-    user?._id && normalized?.id
-      ? { userId: user._id, itemType: "track", itemId: normalized.id }
-      : "skip",
-  );
-
-  if (!track || !normalized.id || isDismissed || isTrackExcluded(normalized.id)) {
+  if (!track || !normalized.id || isHardBanned(normalized.id)) {
     return null;
   }
 
@@ -150,271 +83,12 @@ export function Track({
     }
   };
 
-  const handlePlayNext = () => playNextPriority(normalized);
-  const handleAddToQueue = () => addToQueue(normalized);
-
-  const handleShare = () => {
-    const url = `${window.location.origin}/dashboard/track/${normalized.id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    });
-  };
-
-  const handleLike = async () => {
-    if (!user?._id || !normalized.id) return;
-    await toggleLikeMutation({
-      userId: user._id,
-      trackId: normalized.id,
-      title: normalized.title,
-      artist: normalized.artist,
-      coverUrl: normalized.coverUrl,
-      duration: normalized.duration,
-      audioUrl: normalized.audioUrl,
-      source: normalized.source,
-    });
-  };
-
-  const handleToggleLibrary = async () => {
-    if (!user?._id || !normalized.id) return;
-    await toggleSaveLibraryItem({
-      userId: user._id,
-      itemType: "track",
-      itemId: normalized.id,
-      title: normalized.title,
-      subtitle: normalized.artist,
-      coverUrl: normalized.coverUrl,
-      metadata: {
-        duration: normalized.duration,
-        audioUrl: normalized.audioUrl,
-        source: normalized.source,
-      },
-    });
-  };
-
-  const handleRemoveFromPlaylist = async () => {
-    if (!playlistId || !normalized.id) return;
-    await removeTrackFromPlaylist({
-      playlistId: playlistId as Id<"playlists">,
-      trackId: normalized.id,
-    });
-  };
-
-  const handleOpenPlaylist = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleModalOpen = (trackToOpen: CanonicalTrack) => {
     setIsDropdownOpen(false);
     setIsContextMenuOpen(false);
-    if (onOpenPlaylistModal) onOpenPlaylistModal(normalized);
+    if (onOpenPlaylistModal) onOpenPlaylistModal(trackToOpen);
     else setIsPlaylistModalOpen(true);
   };
-
-  const handleSuggestLess = async () => {
-    if (!user?._id || !normalized.id) return;
-    setIsDismissed(true);
-
-    try {
-      await suggestLess({
-        userId: user._id,
-        trackId: normalized.id,
-        title: normalized.title,
-        artist: normalized.artist,
-        coverUrl: normalized.coverUrl,
-        duration: normalized.duration,
-      });
-    } catch (error) {
-      console.error("Failed to suggest less:", error);
-      setIsDismissed(false);
-    }
-  };
-
-  const handleNeverShowAgain = async () => {
-    if (!user?._id || !normalized.id) return;
-    setIsDismissed(true);
-
-    try {
-      await neverShowAgain({
-        userId: user._id,
-        trackId: normalized.id,
-        title: normalized.title,
-        artist: normalized.artist,
-        coverUrl: normalized.coverUrl,
-        duration: normalized.duration,
-      });
-    } catch (error) {
-      console.error("Failed to never suggest again:", error);
-      setIsDismissed(false);
-    }
-  };
-
-  const itemClassName = cn(
-    "cursor-pointer font-medium focus:bg-background focus:text-primary text-primary/90 outline-none border-none",
-    isMobile
-      ? "gap-3 rounded-lg text-[15px] py-2.5 px-3"
-      : "gap-2.5 rounded-md text-[13px] py-1.5 px-2.5",
-  );
-  const iconSize = isMobile ? 18 : 16;
-  const menuContainerClass = cn(
-    "border backdrop-blur-lg border-primary/10 p-0 z-[9999] overflow-hidden",
-    isMobile ? "w-[260px] rounded-[24px]" : "w-[220px] rounded-2xl",
-  );
-
-  const renderMenuItems = (Item: MenuItemComponent, Separator: MenuItemComponent) => (
-    <div className="flex flex-col w-full text-primary">
-      <div
-        className={cn(
-          "flex items-center justify-around border-b border-primary/10",
-          isMobile ? "px-6 py-4" : "px-4 py-3",
-        )}
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLike();
-          }}
-          className={cn(
-            "hover:scale-110 active:scale-95 transition-all outline-none",
-            isLiked ? "text-emerald-500" : "text-primary",
-          )}
-          title={isLiked ? "Remove from Favorite" : "Add to Favorite"}
-        >
-          <Star
-            size={isMobile ? 22 : 18}
-            className={cn(
-              "transition-colors",
-              isLiked ? "fill-emerald-500 text-emerald-500" : "text-primary/80",
-            )}
-          />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggleLibrary();
-          }}
-          className={cn(
-            "hover:scale-110 active:scale-95 transition-all outline-none",
-            isBookmarked ? "text-primary" : "text-primary",
-          )}
-          title={isBookmarked ? "Remove from Library" : "Save to Library"}
-        >
-          <Bookmark
-            size={isMobile ? 22 : 18}
-            className={cn(
-              "transition-colors",
-              isBookmarked ? "fill-primary text-primary" : "text-primary/80",
-            )}
-          />
-        </button>
-        <button
-          onClick={handleOpenPlaylist}
-          className="hover:scale-110 active:scale-95 transition-all text-primary outline-none"
-          title="Add to Playlist"
-        >
-          <Plus size={isMobile ? 24 : 20} className="text-primary/80" />
-        </button>
-      </div>
-      <div
-        className={cn(
-          "flex flex-col",
-          isMobile ? "p-2 gap-0.5" : "p-1.5 gap-0.5",
-        )}
-      >
-        <Item
-          onClick={(e) => {
-            e.stopPropagation();
-            handlePlayNext();
-          }}
-          className={itemClassName}
-        >
-          <PlaySquare size={iconSize} className="text-primary/70" /> Play Next
-        </Item>
-        <Item
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddToQueue();
-          }}
-          className={itemClassName}
-        >
-          <ListEnd size={iconSize} className="text-primary/70" /> Add to Queue
-        </Item>
-        <Separator
-          className={cn("bg-primary/10 mx-2", isMobile ? "my-1.5" : "my-1")}
-        />
-        <Item className={itemClassName}>
-          <Pin size={iconSize} className="text-primary/70" /> Pin Song
-        </Item>
-        <Item className={itemClassName}>
-          <Radio size={iconSize} className="text-primary/70" /> Create Station
-        </Item>
-        <Separator
-          className={cn("bg-primary/10 mx-2", isMobile ? "my-1.5" : "my-1")}
-        />
-        <Item
-          className={itemClassName}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSuggestLess();
-          }}
-        >
-          <ThumbsDown size={iconSize} className="text-primary/70" /> Suggest
-          Less
-        </Item>
-        <Item
-          className={itemClassName}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleNeverShowAgain();
-          }}
-        >
-          <Ban size={iconSize} className="text-primary/70" /> Never Show Me This
-          Again!
-        </Item>
-        <Item
-          onClick={(e) => {
-            e.stopPropagation();
-            handleShare();
-          }}
-          className={itemClassName}
-        >
-          {copied ? (
-            <>
-              <Check
-                size={iconSize}
-                className="text-primary/70 transition-all duration-300 ease-out blur-[0.3px]"
-              />
-              <span className="transition-all duration-300 ease-out blur-[0.4px]">
-                Link copied
-              </span>
-            </>
-          ) : (
-            <>
-              <Share size={iconSize} className="text-primary/70" />
-              <span>Share</span>
-            </>
-          )}
-        </Item>
-
-        {playlistId && normalized.id && (
-          <>
-            <Separator
-              className={cn("bg-primary/10 mx-2", isMobile ? "my-1.5" : "my-1")}
-            />
-            <Item
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveFromPlaylist();
-              }}
-              className={cn(
-                itemClassName,
-                "text-rose-500 focus:bg-rose-500/15 focus:text-rose-500",
-              )}
-            >
-              <Trash2 size={iconSize} /> Remove from Playlist
-            </Item>
-          </>
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -446,7 +120,7 @@ export function Track({
                     "absolute inset-0 flex items-center justify-center transition-all duration-300",
                     isCurrent
                       ? "bg-black/40 opacity-100"
-                      : "bg-black/0 opacity-0 group-hover:bg-black/20 group-hover:opacity-100",
+                      : "bg-black/0 opacity-0 group-hover:bg-black/20 group-hover:opacity-100"
                   )}
                 >
                   <div
@@ -454,15 +128,15 @@ export function Track({
                       "w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500 text-primary shadow-xl transform transition-transform duration-300",
                       isCurrent || isLoading
                         ? "scale-100"
-                        : "scale-75 translate-y-4 group-hover:scale-100 group-hover:translate-y-0",
+                        : "scale-75 translate-y-4 group-hover:scale-100 group-hover:translate-y-0"
                     )}
                   >
                     {isLoading ? (
-                      <Loader2 size={24} className="animate-spin" />
+                      <Loader2 size={24} className="animate-spin text-white" />
                     ) : isCurrent ? (
-                      <Pause size={24} className="fill-primary" />
+                      <Pause size={24} className="fill-white text-white" />
                     ) : (
-                      <Play size={24} className="fill-primary ml-1" />
+                      <Play size={24} className="fill-white text-white ml-1" />
                     )}
                   </div>
                 </div>
@@ -472,7 +146,7 @@ export function Track({
                   <h3
                     className={cn(
                       "font-bold text-base truncate tracking-tight flex-1",
-                      isCurrent ? "text-emerald-600" : "text-neutral-900",
+                      isCurrent ? "text-emerald-600" : "text-neutral-900 dark:text-neutral-100"
                     )}
                   >
                     {normalized.title}
@@ -484,16 +158,24 @@ export function Track({
                     <DropdownMenuTrigger asChild>
                       <button
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1 -mr-1 text-primary/70 hover:text-primary cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md"
+                        className="p-1 -mr-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md"
                       >
                         <EllipsisVertical size={16} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
-                      className={menuContainerClass}
+                      className="w-[215px] z-[9999]"
                     >
-                      {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
+                      <TrackActionMenuContent
+                        track={normalized}
+                        size="md"
+                        playlistId={playlistId}
+                        onOpenPlaylistModal={handleModalOpen}
+                        onClose={() => setIsDropdownOpen(false)}
+                        ItemComponent={DropdownMenuItem}
+                        SeparatorComponent={DropdownMenuSeparator}
+                      />
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -501,7 +183,7 @@ export function Track({
                   <Link
                     href={`/dashboard/artist/${encodeURIComponent(normalized.artist)}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:underline hover:text-neutral-900 transition-colors"
+                    className="hover:underline hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
                   >
                     {normalized.artist}
                   </Link>
@@ -516,23 +198,23 @@ export function Track({
               onClick={handlePlay}
               onKeyDown={handleKeyDown}
               className={cn(
-                `flex items-center justify-between py-2.5 group cursor-pointer hover:bg-card px-2 -mx-2 rounded-xl border-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-card`,
-                className,
+                `flex items-center justify-between py-2.5 group cursor-pointer hover:bg-neutral-100/60 dark:hover:bg-white/5 px-2 -mx-2 rounded-xl border-none transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`,
+                className
               )}
             >
               <div className="flex items-center gap-3.5 min-w-0 flex-1">
                 {index > 0 && (
-                  <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-300 group-hover:text-neutral-400 shrink-0 text-center">
+                  <span className="w-4 text-xs font-mono hidden md:block font-bold text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-200 shrink-0 text-center">
                     {index.toString().padStart(2, "0")}
                   </span>
                 )}
-                <div className="relative w-11 h-11 overflow-hidden shrink-0 border rounded-sm border-neutral-200 shadow-sm bg-black/50 p-0.5">
+                <div className="relative w-11 h-11 overflow-hidden shrink-0 rounded-lg border border-neutral-200/60 dark:border-white/10 shadow-sm bg-black/5 p-0.5">
                   <Image
                     width={500}
                     height={500}
                     unoptimized
                     src={normalized.coverUrl}
-                    className="w-full h-full object-cover select-none rounded-sm"
+                    className="w-full h-full object-cover select-none rounded-md"
                     alt={normalized.title}
                     onError={(e) => {
                       e.currentTarget.src =
@@ -541,24 +223,18 @@ export function Track({
                   />
                   <div
                     className={cn(
-                      "absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-xl",
+                      "absolute inset-0 flex items-center justify-center transition-all duration-200 rounded-md",
                       isCurrent
                         ? "bg-black/30 opacity-100"
-                        : "bg-neutral-950/20 opacity-0 group-hover:opacity-100",
+                        : "bg-neutral-950/20 opacity-0 group-hover:opacity-100"
                     )}
                   >
                     {isLoading ? (
-                      <Loader2
-                        size={14}
-                        className="text-primary animate-spin"
-                      />
+                      <Loader2 size={14} className="text-white animate-spin" />
                     ) : isCurrent ? (
-                      <Pause size={14} className="text-primary fill-primary" />
+                      <Pause size={14} className="text-white fill-white" />
                     ) : (
-                      <Play
-                        size={14}
-                        className="text-primary fill-primary ml-0.5"
-                      />
+                      <Play size={14} className="text-white fill-white ml-0.5" />
                     )}
                   </div>
                 </div>
@@ -566,7 +242,7 @@ export function Track({
                   <p
                     className={cn(
                       "text-sm font-bold truncate tracking-tight leading-snug",
-                      isCurrent ? "text-highlight" : "text-primary",
+                      isCurrent ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-900 dark:text-neutral-100"
                     )}
                   >
                     {normalized.title}
@@ -575,7 +251,7 @@ export function Track({
                     <Link
                       href={`/dashboard/artist/${encodeURIComponent(normalized.artist)}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="hover:underline hover:text-primary transition-colors z-10 relative"
+                      className="hover:underline hover:text-neutral-800 dark:hover:text-neutral-200 transition-colors z-10 relative"
                     >
                       {normalized.artist}
                     </Link>
@@ -585,7 +261,7 @@ export function Track({
 
               <div className="flex items-center gap-2">
                 {showDuration && (
-                  <div className="text-xs font-mono font-bold text-neutral-400 shrink-0 pr-1 group-hover:text-primary transition-colors">
+                  <div className="text-xs font-mono font-medium text-neutral-400 shrink-0 pr-1 group-hover:text-neutral-700 dark:group-hover:text-neutral-200 transition-colors">
                     {normalized.duration}
                   </div>
                 )}
@@ -597,16 +273,24 @@ export function Track({
                   <DropdownMenuTrigger asChild>
                     <button
                       onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-1.5 text-primary/70 hover:text-primary cursor-pointer transition-colors p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                      className="flex items-center gap-1.5 text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 cursor-pointer transition-colors p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md"
                     >
                       <EllipsisVertical size={14} />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className={menuContainerClass}
+                    className="w-[215px] z-[9999]"
                   >
-                    {renderMenuItems(DropdownMenuItem, DropdownMenuSeparator)}
+                    <TrackActionMenuContent
+                      track={normalized}
+                      size="md"
+                      playlistId={playlistId}
+                      onOpenPlaylistModal={handleModalOpen}
+                      onClose={() => setIsDropdownOpen(false)}
+                      ItemComponent={DropdownMenuItem}
+                      SeparatorComponent={DropdownMenuSeparator}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -614,8 +298,17 @@ export function Track({
           )}
         </ContextMenuTrigger>
 
-        <ContextMenuContent className={menuContainerClass}>
-          {renderMenuItems(ContextMenuItem, ContextMenuSeparator)}
+        <ContextMenuContent className="w-[215px] z-[9999]">
+          
+          <TrackActionMenuContent
+            track={normalized}
+            size="md"
+            playlistId={playlistId}
+            onOpenPlaylistModal={handleModalOpen}
+            onClose={() => setIsContextMenuOpen(false)}
+            ItemComponent={ContextMenuItem}
+            SeparatorComponent={ContextMenuSeparator}
+          />
         </ContextMenuContent>
       </ContextMenu>
 

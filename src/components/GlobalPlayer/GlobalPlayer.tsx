@@ -17,6 +17,7 @@ export default function GlobalPlayer() {
   const user = useUser();
   const userId = user?._id;
 
+
   const { activeMetadata, isPlaying, setOnTrackEnd, pause } = useAudioEngine();
   const { playNext, playPrevious } = useGlobalPlayback();
   const { isGuest, hostTogglePlay, hostSeekTo } = useRoomPlaybackSync();

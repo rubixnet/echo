@@ -3,29 +3,66 @@
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 
 export function useUserExclusions() {
   const user = useUser();
+  const userId = user?._id;
 
-  const exclusions = useQuery(
-    api.tracks.getCombinedUserExclusions,
-    user?._id ? { userId: user._id } : "skip"
+  const hatedTracks = useQuery(
+    api.neverShowAgain.getUserHatedTracks,
+    userId ? { userId } : "skip"
   );
 
-  const exclusionSet = useMemo(() => {
-    return new Set<string>(exclusions || []);
-  }, [exclusions]);
+  const suggestLessTracks = useQuery(
+    api.suggestLess.getUserSuggestLessTracks,
+    userId ? { userId } : "skip"
+  );
 
+  const neverShowSet = useMemo(() => {
+    if (!hatedTracks) return new Set<string>();
+    return new Set<string>(
+      hatedTracks.map((t: any) => t.trackId || t.id).filter(Boolean)
+    );
+  }, [hatedTracks]);
 
-  const isTrackExcluded = (trackId?: string) => {
-    if (!trackId) return false;
-    return exclusionSet.has(trackId);
-  };
+  const suggestLessSet = useMemo(() => {
+    if (!suggestLessTracks) return new Set<string>();
+    return new Set<string>(
+      suggestLessTracks
+        .map((t: any) => (typeof t === "string" ? t : t.trackId || t.id))
+        .filter(Boolean)
+    );
+  }, [suggestLessTracks]);
+
+  const recommendationExclusionSet = useMemo(() => {
+    const combined = new Set<string>(neverShowSet);
+    suggestLessSet.forEach((id) => combined.add(id));
+    return combined;
+  }, [neverShowSet, suggestLessSet]);
+
+  const isHardBanned = useCallback(
+    (trackId?: string) => {
+      if (!trackId) return false;
+      return neverShowSet.has(trackId);
+    },
+    [neverShowSet]
+  );
+
+  const isSuggestLess = useCallback(
+    (trackId?: string) => {
+      if (!trackId) return false;
+      return suggestLessSet.has(trackId);
+    },
+    [suggestLessSet]
+  );
 
   return {
-    exclusionSet,
-    isTrackExcluded,
-    isLoading: exclusions === undefined,
+    neverShowSet,
+    suggestLessSet,
+    recommendationExclusionSet,
+    isHardBanned,
+    isSuggestLess,
+    isLoading: hatedTracks === undefined || suggestLessTracks === undefined,
   };
 }

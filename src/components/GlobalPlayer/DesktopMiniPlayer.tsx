@@ -21,6 +21,7 @@ import {
   Shuffle,
   Radio,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface DesktopMiniPlayerProps {
   isDrawerOpen: boolean;
@@ -44,8 +45,14 @@ export function DesktopMiniPlayer({
     queueIndex,
   } = useAudioEngine();
 
+  const router = useRouter()
   const { playNext, playPrevious } = useGlobalPlayback();
   const { isGuest, controlTogglePlay, openLockdown } = useRoomState();
+
+  const navigateToArtist = (artist?: string) => {
+    if (!artist) return;
+    router.push(`/dashboard/artist/${encodeURIComponent(artist)}`);
+  };
 
   return (
     <>
@@ -92,7 +99,7 @@ export function DesktopMiniPlayer({
                       >
                         {activeMetadata.title}
                       </h4>
-                      <span className="text-[10px] font-medium text-foreground/50 ml-2 truncate shrink-0">
+                      <span onClick={() => navigateToArtist(activeMetadata.artist)} className="text-[10px] cursor-pointer font-medium text-foreground/50 ml-2 truncate shrink-0">
                         • {activeMetadata.artist}
                       </span>
                     </div>

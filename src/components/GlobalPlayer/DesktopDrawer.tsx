@@ -15,6 +15,7 @@ import {
   PlaybackStatus,
 } from "./Shared";
 import { Track } from "../TrackComponent";
+import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   Maximize2,
@@ -46,13 +47,14 @@ export function DesktopDrawer({
   setIsPlaylistModalOpen: (v: boolean) => void;
 }) {
   const { activeMetadata, currentTimeSec, seekToTime } = useAudioEngine();
-
+  const router = useRouter();
   const { upNextTracks, isFetching } = useNextInQueue(5);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabView>("cover");
   const [drawerWidth, setDrawerWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
+
 
   useEffect(() => {
     if (!isResizing) return;
@@ -70,6 +72,14 @@ export function DesktopDrawer({
     };
   }, [isResizing]);
 
+  const navigateToArtist = (artist?: string) => {
+    if (!artist) return;
+    router.push(`/dashboard/artist/${encodeURIComponent(artist)}`);
+
+    setIsOpen(false)
+  };
+
+
   return (
     <div
       style={{ width: isFullscreen ? "100vw" : `${drawerWidth}px` }}
@@ -77,7 +87,7 @@ export function DesktopDrawer({
         "fixed top-0 right-0 h-full bg-background z-[1000] flex flex-col overflow-hidden shadow-2xl border-l border-foreground/5",
         isOpen ? "translate-x-0" : "translate-x-full",
         !isResizing &&
-          "transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
       )}
     >
       <VibrantBackground imageUrl={activeMetadata?.coverUrl} opacity={0.15} />
@@ -219,7 +229,7 @@ export function DesktopDrawer({
           )}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="flex flex-col min-w-0 pr-4">
+            <div onClick={() => navigateToArtist(activeMetadata.artist)} className="flex cursor-pointer flex-col min-w-0 pr-4">
               <h2 className="text-sm font-bold text-foreground truncate tracking-tight mb-0.5">
                 {activeMetadata.title}
               </h2>

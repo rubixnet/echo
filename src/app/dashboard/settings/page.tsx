@@ -421,6 +421,8 @@ export default function SettingsPage() {
           ) : (
             <p className="text-xs text-foreground/40">No favorite genres selected.</p>
           )}
+
+          
         </div>
 
         <div className="space-y-3">

@@ -5,6 +5,7 @@ import { useState, useRef } from "react";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useRoomState } from "@/hooks/useRoomContext";
+import { useRouter } from "next/navigation";
 import {
   Play,
   Pause,
@@ -52,6 +53,7 @@ export function MobilePlayer({
     queueIndex,
   } = useAudioEngine();
 
+  const router = useRouter();
   const { playNext, playPrevious } = useGlobalPlayback();
   const { isGuest, controlTogglePlay, controlSeekTo } = useRoomState();
 
@@ -92,6 +94,13 @@ export function MobilePlayer({
       x: e.targetTouches[0].clientX,
       y: e.targetTouches[0].clientY,
     };
+  };
+
+  const navigateToArtist = (artist?: string) => {
+    if (!artist) return;
+    router.push(`/dashboard/artist/${encodeURIComponent(artist)}`);
+
+    setIsExpanded(false);
   };
 
   const handleTouchEndCollapsed = () => {
@@ -306,7 +315,7 @@ export function MobilePlayer({
       </div>
 
       <div className="px-6 pb-12 pt-6 relative z-10 shrink-0 flex flex-col">
-        <div className="flex flex-col items-center justify-center mb-6 w-full px-4 text-center">
+        <div onClick={() => navigateToArtist(activeMetadata?.artist)} className="flex cursor-pointer flex-col items-center justify-center mb-6 w-full px-4 text-center">
           <h2 className="text-xl font-bold text-foreground truncate w-full tracking-tight mb-0.5">
             {activeMetadata?.title}
           </h2>

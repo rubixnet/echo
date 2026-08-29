@@ -42,7 +42,7 @@ export function useGlobalPlayback() {
     activeMetadata,
   } = useAudioEngine();
 
-  const { exclusionSet } = useUserExclusions();
+  const { isHardBanned, recommendationExclusionSet } = useUserExclusions();
   const {
     isInRoom,
     isHost,
@@ -68,8 +68,7 @@ export function useGlobalPlayback() {
           trackId,
           userId,
         });
-      } catch {
-      }
+      } catch { }
     },
     [isInRoom, isGuest, roomId, userId, updateRoomTrack],
   );
@@ -95,12 +94,27 @@ export function useGlobalPlayback() {
       return;
     }
 
+    if (isHardBanned(videoId)) {
+      console.warn(`[playTrack] Blocked hard-banned track: ${videoId}`);
+      if (setLoadingId) setLoadingId(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     if (setLoadingId) setLoadingId(videoId);
 
     if (queueList && newQueueIndex !== undefined) {
-      setQueue(queueList);
-      setQueueIndex(newQueueIndex);
+      
+      const sanitizedQueue = queueList.filter(
+        (t, idx) => idx === newQueueIndex || !isHardBanned(normalizeTrack(t).id),
+      );
+      const adjustedIndex = sanitizedQueue.findIndex(
+        (t) => normalizeTrack(t).id === videoId,
+      );
+
+      setQueue(sanitizedQueue);
+      setQueueIndex(adjustedIndex >= 0 ? adjustedIndex : 0);
     } else if (!queueList) {
       setQueue([{ ...normalized, queueType: "user" as QueueType }]);
       setQueueIndex(0);
@@ -165,7 +179,6 @@ export function useGlobalPlayback() {
       });
 
       setActiveMetadata(trackId ? { ...metadata, id: trackId } : metadata);
-
       await broadcastTrackChange(trackId ?? undefined);
 
       failureCountRef.current = 0;
@@ -185,9 +198,7 @@ export function useGlobalPlayback() {
       setIsLoading(false);
       return;
     }
-    console.warn(
-      `Skipping failed track (Attempt ${failureCountRef.current})...`,
-    );
+    console.warn(`Skipping failed track (Attempt ${failureCountRef.current})...`);
     playNext(true);
   };
 
@@ -209,10 +220,22 @@ export function useGlobalPlayback() {
       return;
     }
 
-    if (queue && queueIndex < queue.length - 1) {
-      const nextIndex = queueIndex + 1;
-      playTrack(queue[nextIndex], undefined, queue, nextIndex);
-      return;
+    if (queue && queue.length > 0) {
+      let nextValidIndex = -1;
+
+      for (let i = queueIndex + 1; i < queue.length; i++) {
+        const candidate = queue[i];
+        const candidateId = candidate ? normalizeTrack(candidate).id : null;
+        if (candidateId && !isHardBanned(candidateId)) {
+          nextValidIndex = i;
+          break;
+        }
+      }
+
+      if (nextValidIndex !== -1) {
+        playTrack(queue[nextValidIndex], undefined, queue, nextValidIndex);
+        return;
+      }
     }
 
     if (activeMetadata) {
@@ -229,21 +252,25 @@ export function useGlobalPlayback() {
       setIsLoading(true);
 
       try {
+        const cleanExistingQueue = (queue || []).filter(
+          (t) => !isHardBanned(normalizeTrack(t).id),
+        );
+
         const recommendations = await fetchRelatedTracks(currentId, {
-          existingQueue: queue,
-          userExclusions: exclusionSet,
+          existingQueue: cleanExistingQueue,
+          userExclusions: recommendationExclusionSet,
         });
 
-        if (recommendations.length > 0) {
-          const nextSong = recommendations[0];
-          const currentQueue = queue || [activeMetadata];
-          const nextIndex = currentQueue.length;
-          playTrack(
-            nextSong,
-            undefined,
-            [...currentQueue, ...recommendations],
-            nextIndex,
-          );
+        const validRecommendations = recommendations.filter(
+          (t) => !isHardBanned(normalizeTrack(t).id),
+        );
+
+        if (validRecommendations.length > 0) {
+          const nextSong = validRecommendations[0];
+          const newQueue = [...cleanExistingQueue, ...validRecommendations];
+          const nextIndex = cleanExistingQueue.length;
+
+          playTrack(nextSong, undefined, newQueue, nextIndex);
         } else {
           setIsLoading(false);
         }
@@ -259,11 +286,68 @@ export function useGlobalPlayback() {
       openLockdown();
       return;
     }
+
     if (currentTimeSec > 3) {
       seekToTime(0);
-    } else if (queue && queueIndex > 0) {
-      const prevIndex = queueIndex - 1;
-      playTrack(queue[prevIndex], undefined, queue, prevIndex);
+      return;
+    }
+
+    if (queue && queueIndex > 0) {
+      let prevValidIndex = -1;
+
+      for (let i = queueIndex - 1; i >= 0; i--) {
+        const candidate = queue[i];
+        const candidateId = candidate ? normalizeTrack(candidate).id : null;
+        if (candidateId && !isHardBanned(candidateId)) {
+          prevValidIndex = i;
+          break;
+        }
+      }
+
+      if (prevValidIndex !== -1) {
+        playTrack(queue[prevValidIndex], undefined, queue, prevValidIndex);
+      }
+    }
+  };
+
+  const dismissTrack = (targetTrackId: string) => {
+    if (!targetTrackId) return;
+
+    const currentId =
+      activeMetadata?.trackId ||
+      activeMetadata?.id ||
+      activeMetadata?.audioUrl?.split("id=")[1];
+
+    const isCurrentlyPlaying = currentId === targetTrackId;
+
+    const currentQueue = queue || [];
+    let itemsRemovedBeforeOrAtCurrent = 0;
+    const sanitizedQueue: QueueItem[] = [];
+
+    for (let i = 0; i < currentQueue.length; i++) {
+      const item = currentQueue[i];
+      const itemId = normalizeTrack(item).id;
+
+      if (itemId === targetTrackId) {
+        if (i <= queueIndex) {
+          itemsRemovedBeforeOrAtCurrent += 1;
+        }
+      } else {
+        sanitizedQueue.push(item);
+      }
+    }
+
+    const nextIndex = Math.max(0, queueIndex - itemsRemovedBeforeOrAtCurrent);
+
+    setQueue(sanitizedQueue);
+    setQueueIndex(nextIndex);
+
+    if (isCurrentlyPlaying) {
+      if (sanitizedQueue.length > 0 && nextIndex < sanitizedQueue.length) {
+        playTrack(sanitizedQueue[nextIndex], undefined, sanitizedQueue, nextIndex);
+      } else {
+        playNext(false);
+      }
     }
   };
 
@@ -272,10 +356,14 @@ export function useGlobalPlayback() {
       openLockdown();
       return;
     }
+
     const normalized = {
       ...normalizeTrack(track),
       queueType: "user" as QueueType,
     };
+
+    if (!normalized.id || isHardBanned(normalized.id)) return;
+
     if (!queue || queue.length === 0) {
       playTrack(normalized);
       return;
@@ -291,10 +379,14 @@ export function useGlobalPlayback() {
       openLockdown();
       return;
     }
+
     const normalized = {
       ...normalizeTrack(track),
       queueType: "user" as QueueType,
     };
+
+    if (!normalized.id || isHardBanned(normalized.id)) return;
+
     if (!queue || queue.length === 0) {
       playTrack(normalized);
       return;
@@ -320,6 +412,7 @@ export function useGlobalPlayback() {
     playNext,
     playNextPriority,
     addToQueue,
+    dismissTrack,
     handleTrackFailure,
     isHost,
     isGuest,

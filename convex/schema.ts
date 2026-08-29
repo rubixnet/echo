@@ -53,9 +53,13 @@ export default defineSchema({
       }),
     ),
     playedAt: v.number(),
+    playCount: v.optional(v.number()),
+    skipCount: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_track", ["userId", "trackId"]),
+    .index("by_user_and_track", ["userId", "trackId"])
+    .index("by_user_and_playedAt", ["userId", "playedAt"])
+    .index("by_user_and_playCount", ["userId", "playCount"]),
 
   friends: defineTable({
     userId: v.id("users"),
