@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "../../../convex/_generated/api";
 import ClientLayout from "./ClientLayout";
+
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export default async function DashboardLayout({
@@ -17,6 +18,10 @@ export default async function DashboardLayout({
   if (!token) {
     redirect("/login");
   }
+
+  const sidebarCookie = cookieStore.get("sidebar-open")?.value;
+  const initialSidebarOpen = sidebarCookie !== "false";
+
   let profile = null;
 
   try {
@@ -29,5 +34,9 @@ export default async function DashboardLayout({
     redirect("/api/auth/logout?reason=session_invalid");
   }
 
-  return <ClientLayout user={profile}>{children}</ClientLayout>;
+  return (
+    <ClientLayout user={profile} initialSidebarOpen={initialSidebarOpen}>
+      {children}
+    </ClientLayout>
+  );
 }

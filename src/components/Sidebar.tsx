@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -37,28 +37,39 @@ function subscribeToSidebarState(onChange: () => void) {
 }
 
 function getSidebarSnapshot() {
+  if (typeof window === "undefined") return "true";
   return localStorage.getItem("sidebar-open") ?? "true";
 }
 
-export function useSidebar() {
+export function useSidebar(initialOpen?: boolean) {
   const isOpen =
     useSyncExternalStore(
       subscribeToSidebarState,
       getSidebarSnapshot,
-      () => "true",
+      () => (initialOpen !== undefined ? String(initialOpen) : "true"),
     ) === "true";
 
   const toggleSidebar = (state: boolean) => {
     localStorage.setItem("sidebar-open", String(state));
+    document.cookie = `sidebar-open=${state}; path=/; max-age=31536000; SameSite=Lax`;
     window.dispatchEvent(new Event("sidebar-toggle"));
   };
 
   return { isOpen, toggleSidebar };
 }
 
-export default function Sidebar() {
-  const { isOpen, toggleSidebar } = useSidebar();
+interface SidebarProps {
+  initialOpen?: boolean;
+}
+
+export default function Sidebar({ initialOpen }: SidebarProps) {
+  const { isOpen, toggleSidebar } = useSidebar(initialOpen);
   const [isPinsOpen, setIsPinsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const user = useUser();
   const playlists = useQuery(
@@ -72,129 +83,136 @@ export default function Sidebar() {
     setIsPinsOpen(!isPinsOpen);
   }
 
-  if (!isOpen) {
-    return (
+  return (
+    <>
       <Button
         onClick={() => toggleSidebar(true)}
-        className="fixed top-3 hidden md:flex left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/85 hover:text-primary shadow-sm transition-colors p-0"
+        className={cn(
+          "fixed top-3 left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/85 hover:text-primary shadow-sm p-0",
+          !mounted && "transition-none",
+          isOpen ? "hidden" : "hidden md:flex",
+        )}
       >
         <ListMusic size={16} />
       </Button>
-    );
-  }
 
-  return (
-    <div className="fixed lg:static hidden md:block top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto">
-      <LiquidDrop
-        radius="16px"
-        className="w-full h-full lg:rounded-tr-[25px] lg:rounded-tl-none overflow-hidden lg:-mt-0.5 lg:-ml-0.5 flex flex-col"
+      <aside
+        className={cn(
+          "fixed lg:static top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto",
+          !mounted && "transition-none",
+          isOpen ? "hidden md:block" : "hidden",
+        )}
       >
-        <div className="flex items-center justify-between shrink-0">
-          <span className="text-xs font-bold tracking-tight text-foreground"></span>
-          <button
-            onClick={() => toggleSidebar(false)}
-            className="text-foreground/40 px-4 py-3 lg:pb-1 lg:mt-1.5 hover:text-primary transition-colors"
-          >
-            <X size={18} strokeWidth={2.5} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-hidden px-2 py-2 flex flex-col gap-6">
-          <div className="shrink-0 flex flex-col gap-0.5">
-            <NavItem href="/dashboard" icon={Home} label="Home" />
-            <NavItem href="/dashboard/search" icon={Search} label="Search" />
-            <NavItem href="/dashboard/rooms" icon={Radio} label="Live Rooms" />
-            <NavItem href="/dashboard/settings" icon={User} label="Profile" />
+        <LiquidDrop
+          radius="16px"
+          className="w-full h-full lg:rounded-tr-[25px] lg:rounded-tl-none overflow-hidden lg:-mt-0.5 lg:-ml-0.5 flex flex-col"
+        >
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-xs font-bold tracking-tight text-foreground"></span>
+            <button
+              onClick={() => toggleSidebar(false)}
+              className="text-foreground/40 px-4 py-3 lg:pb-1 lg:mt-1.5 hover:text-primary transition-colors cursor-pointer"
+            >
+              <X size={18} strokeWidth={2.5} />
+            </button>
           </div>
 
-          <div className="shrink-0 flex flex-col gap-0.5">
-            <div className="flex items-center justify-between px-3 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
-                Library
-              </span>
+          <div className="flex-1 overflow-hidden px-2 py-2 flex flex-col gap-6">
+            <div className="shrink-0 flex flex-col gap-0.5">
+              <NavItem href="/dashboard" icon={Home} label="Home" />
+              <NavItem href="/dashboard/search" icon={Search} label="Search" />
+              <NavItem href="/dashboard/rooms" icon={Radio} label="Live Rooms" />
+              <NavItem href="/dashboard/settings" icon={User} label="Profile" />
             </div>
 
-            <div className="flex items-center text-foreground/85 group rounded-md hover:bg-foreground/5 hover:text-primary">
-              <Link
-                href="/dashboard/library#pins"
-                className={cn(
-                  "flex items-center w-full gap-3 px-3 py-1.5 transition-colors text-xs font-medium"
-                )}
-              >
-                <Pin size={18} strokeWidth={2} />
-                <span className="truncate">Pins</span>
-              </Link>
-              <button onClick={handleChevronClick} className="text-foreground/50 w-12 h-7 flex justify-center rounded-r-lg items-center hover:text-foreground group-hover:bg-foreground/5 cursor-pointer" >
-                {
-                  isPinsOpen ? (
+            <div className="shrink-0 flex flex-col gap-0.5">
+              <div className="flex items-center justify-between px-3 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
+                  Library
+                </span>
+              </div>
+
+              <div className="flex items-center text-foreground/85 group rounded-md hover:bg-foreground/5 hover:text-primary">
+                <Link
+                  href="/dashboard/library#pins"
+                  className="flex items-center w-full gap-3 px-3 py-1.5 transition-colors text-xs font-medium"
+                >
+                  <Pin size={18} strokeWidth={2} />
+                  <span className="truncate">Pins</span>
+                </Link>
+                <button
+                  onClick={handleChevronClick}
+                  className="text-foreground/50 w-12 h-7 flex justify-center rounded-r-lg items-center hover:text-foreground group-hover:bg-foreground/5 cursor-pointer"
+                >
+                  {isPinsOpen ? (
                     <ChevronUp size={20} strokeWidth={2.5} />
                   ) : (
                     <ChevronDown size={20} strokeWidth={2.5} />
-                  )
-                }
-              </button>
-            </div>
-            {isPinsOpen && (
-              <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 ml-2 mr-2 pb-1">
-                <div className="flex-1 flex flex-col gap-0.5 min-h-0">
-                  {pinnedPlaylists?.map((p) => (
-                    <SidebarPlaylistItem key={p._id} playlist={p} />
-                  ))}
-                </div>
+                  )}
+                </button>
               </div>
-            )}
-
-            <NavItem
-              href="/dashboard/library/history"
-              label="Recently Played"
-              icon={History}
-            />
-            <NavItem
-              icon={Music}
-              href="/dashboard/library#songs"
-              label="Songs"
-            />
-            <NavItem
-              icon={MicVocal}
-              href="/dashboard/library#artists"
-              label="Artists"
-            />
-          </div>
-
-          <div className="flex-1 flex flex-col gap-0.5 min-h-0">
-            <div className="shrink-0 flex items-center justify-between px-3 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
-                Playlists
-              </span>
-            </div>
-
-            <div className="shrink-0">
-              <NavItem
-                href="/dashboard/library"
-                icon={ListMusic}
-                label="All Playlists"
-              />
-
-              <NavItem
-                href="/dashboard/library/liked"
-                label="Favorite Songs"
-                visual={
-                  <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
-                    <Star size={12} className="fill-white text-white" />
+              {isPinsOpen && (
+                <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 ml-2 mr-2 pb-1">
+                  <div className="flex-1 flex flex-col gap-0.5 min-h-0">
+                    {pinnedPlaylists?.map((p) => (
+                      <SidebarPlaylistItem key={p._id} playlist={p} />
+                    ))}
                   </div>
-                }
+                </div>
+              )}
+
+              <NavItem
+                href="/dashboard/library/history"
+                label="Recently Played"
+                icon={History}
+              />
+              <NavItem
+                icon={Music}
+                href="/dashboard/library#songs"
+                label="Songs"
+              />
+              <NavItem
+                icon={MicVocal}
+                href="/dashboard/library#artists"
+                label="Artists"
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
-              {playlists?.map((p) => (
-                <SidebarPlaylistItem key={p._id} playlist={p} />
-              ))}
+            <div className="flex-1 flex flex-col gap-0.5 min-h-0">
+              <div className="shrink-0 flex items-center justify-between px-3 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">
+                  Playlists
+                </span>
+              </div>
+
+              <div className="shrink-0">
+                <NavItem
+                  href="/dashboard/library"
+                  icon={ListMusic}
+                  label="All Playlists"
+                />
+
+                <NavItem
+                  href="/dashboard/library/liked"
+                  label="Favorite Songs"
+                  visual={
+                    <div className="w-5 h-5 shrink-0 rounded-[4px] bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
+                      <Star size={12} className="fill-white text-white" />
+                    </div>
+                  }
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto liquid-scroll flex flex-col gap-0.5 pr-1 pb-4">
+                {playlists?.map((p) => (
+                  <SidebarPlaylistItem key={p._id} playlist={p} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </LiquidDrop>
-    </div>
+        </LiquidDrop>
+      </aside>
+    </>
   );
 }
 
@@ -218,7 +236,10 @@ function SidebarPlaylistItem({ playlist }: { playlist: PlaylistSummary }) {
     >
       <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
         {coverUrl ? (
-          <Image width={500} height={500} unoptimized
+          <Image
+            width={500}
+            height={500}
+            unoptimized
             src={coverUrl}
             className="w-full h-full object-cover"
             alt={playlist.name}
