@@ -19,9 +19,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropodown-menu";
+} from "@/components/ui/dropdown-menu";
 import { Track } from "@/components/TrackComponent";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
+import {
+  ExpandableSearchBar,
+  FilterOption,
+} from "@/components/ExpandableSearchBar";
 import { useDominantColor } from "@/components/GlobalPlayer/Shared";
 import { useSearchFilter } from "@/hooks/useSearchFilter";
 import { cn } from "@/lib/utils";
@@ -66,6 +70,13 @@ type PlaylistLayoutProps = {
   onDelete?: () => void;
 };
 
+const SORT_OPTIONS: FilterOption<SortColumn>[] = [
+  { key: "date", label: "Date Added" },
+  { key: "title", label: "Title" },
+  { key: "artist", label: "Artist" },
+  { key: "duration", label: "Duration" },
+];
+
 export function PlaylistLayout({
   coverNode,
   coverUrl,
@@ -90,7 +101,7 @@ export function PlaylistLayout({
   const [sortColumn, setSortColumn] = useState<SortColumn>("date");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [searchTerm, setSearchTerm] = useState("");
-  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const toggleSort = () =>
@@ -113,7 +124,9 @@ export function PlaylistLayout({
   const filtered = useSearchFilter(tracks, searchTerm, ["title", "artist"]);
 
   const sortedTracks = useMemo(() => {
-    if (sortColumn === "date") return filtered;
+    if (sortColumn === "date") {
+      return sortOrder === "desc" ? [...filtered].reverse() : filtered;
+    }
 
     return [...filtered].sort((a, b) => {
       let cmp = 0;
@@ -187,71 +200,32 @@ export function PlaylistLayout({
       <div className="relative z-10 w-full">
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 mb-8">
           <div className="flex flex-row justify-between">
-            <div className="w-40 h-40 md:w-48 md:h-48 shrink-0 bg-card border border-foreground/10 overflow-hidden rounded-md ">
+            <div className="w-40 h-40 md:w-48 md:h-48 shrink-0 bg-card border border-foreground/10 overflow-hidden rounded-md">
               {coverNode}
             </div>
-            <div className="fixed inset-x-0 top-4 z-50 px-6 md:hidden">
-              <div className="flex justify-end">
-                <ButtonGroup separator={false}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-10 px-0 text-foreground/70"
-                    onClick={() => setShowMobileSearch(!showMobileSearch)}
-                  >
-                    <SearchIcon
-                      size={16}
-                      className={showMobileSearch ? "text-primary" : ""}
-                    />
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-10 px-0 text-foreground/70"
-                      >
-                        <ListFilter size={14} />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-40 shadow-none"
-                    >
-                      {filters.map((filter) => {
-                        const isSelected = sortColumn === filter;
-                        return (
-                          <DropdownMenuItem
-                            key={filter}
-                            onClick={() => setSortColumn(filter)}
-                            className="cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="flex w-4 items-center justify-center">
-                                {isSelected && <Check className="h-4 w-4" />}
-                              </span>
-                              <span className="capitalize">{filter}</span>
-                            </div>
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-10 px-0 text-foreground/70"
-                    onClick={toggleSort}
-                  >
-                    {sortOrder === "desc" ? (
-                      <ArrowDownUp size={16} />
-                    ) : (
-                      <ArrowUpDown size={16} />
-                    )}
-                  </Button>
-                </ButtonGroup>
+
+            <header className="block md:hidden fixed top-0 left-0 right-0 z-50 pointer-events-none">
+              <div
+                className={cn(
+                  "absolute top-0 left-0 right-0 h-16 backdrop-blur-md backdrop-saturate-200 bg-background/80 [-webkit-mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)] [mask-image:linear-gradient(to_bottom,black_75%,transparent_100%)] pointer-events-none transition-opacity duration-300 ease-in-out",
+                  isSearchExpanded ? "opacity-100" : "opacity-0",
+                )}
+              />
+              <div className="relative w-full pointer-events-auto pt-2.5 px-4 flex justify-end">
+                <ExpandableSearchBar
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Search playlist..."
+                  activeFilter={sortColumn}
+                  filterOptions={SORT_OPTIONS}
+                  onFilterChange={setSortColumn}
+                  sortOrder={sortOrder}
+                  onToggleSort={toggleSort}
+                  onExpandChange={setIsSearchExpanded}
+                  expandedWidthClassName="w-[calc(100vw-2rem)]"
+                />
               </div>
-            </div>
+            </header>
           </div>
 
           <div className="flex flex-col gap-2 pb-2 flex-1 min-w-0 justify-end">
@@ -274,7 +248,7 @@ export function PlaylistLayout({
           </div>
         </div>
 
-        <div className="flex md:hidden items-center justify-between -mx-6 px-6 py-3 mb-6 ">
+        <div className="flex md:hidden items-center justify-between -mx-6 px-6 py-3 mb-6">
           <Button
             size="default"
             className="w-11 px-0 text-foreground/70"
@@ -320,23 +294,6 @@ export function PlaylistLayout({
           >
             <Play size={16} fill="currentColor" />
           </Button>
-        </div>
-
-        <div
-          className={cn(
-            "md:hidden overflow-hidden transition-all duration-300",
-            showMobileSearch ? "h-12 opacity-100 mb-4" : "h-0 opacity-0 mb-0",
-          )}
-        >
-          <LiquidContainer radius="50px" className="h-10 w-full shadow-none">
-            <input
-              type="text"
-              placeholder="Search Playlist"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-full bg-transparent pl-4 pr-2 text-sm text-foreground focus:outline-none placeholder:text-foreground/50"
-            />
-          </LiquidContainer>
         </div>
 
         <div className="hidden md:flex items-center justify-between mb-8">

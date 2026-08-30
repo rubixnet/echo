@@ -61,11 +61,11 @@ export default function LibraryHubPage() {
   };
 
   const {
-    playlists,
-    likedSongs,
-    historySongs,
-    libraryTracks,
-    libraryArtists,
+    playlists = [],
+    likedSongs = [],
+    historySongs = [],
+    libraryTracks = [],
+    libraryArtists = [],
     isLoading,
   } = useLibraryData(user?._id);
 
@@ -107,11 +107,6 @@ export default function LibraryHubPage() {
     () => filteredPlaylists.filter((p) => p.isPinned),
     [filteredPlaylists],
   );
-
-  if (isLoading) {
-    return <LibrarySkeleton />;
-  }
-  
 
   const isSearching = Boolean(searchTerm.trim());
 
@@ -169,18 +164,20 @@ export default function LibraryHubPage() {
         onToggleSort={toggleSort}
       />
 
-      {!hasAnyResults && (isSearching || activeFilter !== "all") ? (
+      {isLoading ? (
+        <LibraryContentSkeleton />
+      ) : !hasAnyResults && (isSearching || activeFilter !== "all") ? (
         <div className="py-24 text-center">
           <p className="text-base font-semibold text-foreground/80">
             No {activeFilter !== "all" ? activeFilter : "library"} results found{" "}
             {searchTerm && `for "${searchTerm}"`}
           </p>
           <p className="text-xs text-foreground/50 mt-1">
-            Check your spelling or try changing your active filters.
+            Check your spelling or try changing your active filter.
           </p>
         </div>
       ) : (
-        <>
+        <div className="space-y-12">
           {showPins && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
@@ -346,7 +343,7 @@ export default function LibraryHubPage() {
               </div>
             </section>
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -435,9 +432,9 @@ function LibraryPlaylistItem({ playlist }: { playlist: LibraryPlaylist }) {
   );
 }
 
-function LibrarySkeleton() {
+function LibraryContentSkeleton() {
   return (
-    <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
+    <div className="space-y-12">
       <section className="space-y-4">
         <div className="h-7 w-20 bg-foreground/10 rounded-md animate-pulse" />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
