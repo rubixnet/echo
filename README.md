@@ -20,6 +20,7 @@ design,
 - option if to show playlists, rooms or info to friends or not!
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
+- fix for light mode ui blur on top of the navbar
 - onboarding with redesigned home page
 - controls bento grid for the user, showing navbar options, track component grid ui idea figma
 - onboarding of user like drawn ui!

@@ -14,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropodown-menu";
+} from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
 import {
   LogOut,
@@ -421,8 +421,6 @@ export default function SettingsPage() {
           ) : (
             <p className="text-xs text-foreground/40">No favorite genres selected.</p>
           )}
-
-          
         </div>
 
         <div className="space-y-3">

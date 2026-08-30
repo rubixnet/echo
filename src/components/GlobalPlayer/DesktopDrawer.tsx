@@ -54,8 +54,7 @@ export function DesktopDrawer({
   const [activeTab, setActiveTab] = useState<TabView>("cover");
   const [drawerWidth, setDrawerWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
-
-
+  
   useEffect(() => {
     if (!isResizing) return;
     const handleMouseMove = (e: MouseEvent) => {
@@ -78,7 +77,6 @@ export function DesktopDrawer({
 
     setIsOpen(false)
   };
-
 
   return (
     <div

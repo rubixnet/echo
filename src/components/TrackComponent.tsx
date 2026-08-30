@@ -17,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropodown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   TrackActionMenuContent,
 } from "@/components/GlobalPlayer/TrackActionsMenu";
