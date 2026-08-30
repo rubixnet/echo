@@ -5,6 +5,7 @@ interface LiquidContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   radius?: string;
+  backdropBlur?: string;
 }
 
 export function LiquidContainer({
@@ -42,6 +43,7 @@ export function LiquidContainer({
         <div
           className="absolute inset-0 z-10 rounded-(--liquid-radius) pointer-events-none"
           style={{
+            backdropFilter: "blur(10px) saturate(120%)",
             WebkitBackdropFilter: "blur(18px) saturate(120%)",
             background:
               "linear-gradient(0deg, rgba(255,255,255,0.15) 0%, transparent 8%)",
