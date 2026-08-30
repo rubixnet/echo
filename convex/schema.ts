@@ -7,6 +7,8 @@ const trackSchema = v.object({
   coverUrl: v.string(),
   artist: v.string(),
   duration: v.optional(v.string()),
+  updatedAt: v.optional(v.number()),
+  isPlaying: v.optional(v.boolean()),
 });
 
 export default defineSchema({

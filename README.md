@@ -20,7 +20,6 @@ design,
 - option if to show playlists, rooms or info to friends or not!
 - updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
-- fix for light mode ui blur on top of the navbar
 - onboarding with redesigned home page
 - controls bento grid for the user, showing navbar options, track component grid ui idea figma
 - onboarding of user like drawn ui!
@@ -28,7 +27,6 @@ design,
 - slowly animating or opacity for the bentos!
 - background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
 
-- play a song automatically / or load the past one the user was playing.
 - setting up lyrics
 - host lyrics and try hosting app if possible, run bun lint and fix all the errors.
 

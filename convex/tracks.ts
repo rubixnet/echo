@@ -117,6 +117,8 @@ const trackArgs = {
   coverUrl: v.string(),
   trackId: v.string(),
   duration: v.string(),
+  isPlaying: v.optional(v.boolean()),
+  updatedAt: v.optional(v.number()),
 };
 
 export const updateCurrentTrack = mutation({

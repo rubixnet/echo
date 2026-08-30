@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
-import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
+import { useGlobalPlayback, type QueueType } from "@/hooks/useGlobalPlayback";
 import { useRoomPlaybackSync } from "@/hooks/useRoomContext";
 import { useUser } from "@/hooks/useUser";
 import { useMutation } from "convex/react";
@@ -12,19 +12,44 @@ import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
 import { AddToPlaylistModal } from "../AddToPlaylistModal";
 import { GuestModal } from "./GuestModal";
+import { normalizeTrack } from "@/lib/trackUtils";
+
+const STORAGE_KEY = "app_last_played_track";
+const TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1000;
+
+function formatDurationSec(seconds: number): string | null {
+  if (!seconds || isNaN(seconds) || seconds <= 0) return null;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${mins}:${secs}`;
+}
 
 export default function GlobalPlayer() {
   const user = useUser();
   const userId = user?._id;
 
-  const { activeMetadata, isPlaying, setOnTrackEnd, pause } = useAudioEngine();
-  const { playNext, playPrevious } = useGlobalPlayback();
+  const {
+    activeMetadata,
+    isPlaying,
+    durationSec,
+    setOnTrackEnd,
+    pause,
+    loadTrack,
+    setActiveMetadata,
+    setQueue,
+    setQueueIndex,
+  } = useAudioEngine();
+
+  const { playTrack, playNext, playPrevious } = useGlobalPlayback();
   const { isGuest, hostTogglePlay, hostSeekTo } = useRoomPlaybackSync();
 
   const updateCurrentTrack = useMutation(api.tracks.updateCurrentTrack);
 
   const playNextRef = useRef(playNext);
   const guestRef = useRef(isGuest);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     playNextRef.current = playNext;
@@ -35,47 +60,130 @@ export default function GlobalPlayer() {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!userId) return;
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
 
-    let timer: NodeJS.Timeout | null = null;
+    let trackToRestore: {
+      trackId: string;
+      title: string;
+      artist: string;
+      coverUrl?: string;
+      duration?: string;
+      isPlaying?: boolean;
+      updatedAt?: number;
+    } | null = null;
 
-    if (
-      isPlaying &&
-      activeMetadata?.id &&
-      activeMetadata.title &&
-      activeMetadata.artist
-    ) {
+    try {
+      const localData = localStorage.getItem(STORAGE_KEY);
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        const isFresh = Date.now() - (parsed.updatedAt ?? 0) <= TWO_DAYS_MS;
+        if (isFresh && parsed.trackId) {
+          trackToRestore = parsed;
+        } else {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    } catch { }
 
-      const trackPayload = {
-        trackId: activeMetadata.id,
-        title: activeMetadata.title,
-        artist: activeMetadata.artist,
-        coverUrl: activeMetadata.coverUrl || "",
-        duration: String(activeMetadata.duration ?? "0:00"),
+    if (!trackToRestore && user?.currentTrack?.trackId) {
+      const isFresh = Date.now() - (user.currentTrack.updatedAt ?? 0) <= TWO_DAYS_MS;
+      if (isFresh) {
+        trackToRestore = user.currentTrack;
+      }
+    }
+
+    if (trackToRestore && !activeMetadata) {
+      const pipeUrl = `/api/youtube/stream?id=${trackToRestore.trackId}`;
+      const payload = {
+        id: trackToRestore.trackId,
+        trackId: trackToRestore.trackId,
+        title: trackToRestore.title,
+        artist: trackToRestore.artist,
+        coverUrl: trackToRestore.coverUrl || "",
+        audioUrl: pipeUrl,
+        duration: trackToRestore.duration || "0:00",
       };
 
-      timer = setTimeout(() => {
-        updateCurrentTrack({
-          userId,
-          track: trackPayload,
-        }).catch(() => { });
-      }, 8000);
+      loadTrack(pipeUrl, payload);
+      setActiveMetadata(payload);
+      setQueue([{ ...payload, queueType: "user" as QueueType }]);
+      setQueueIndex(0);
+      pause();
     }
-    else if (!isPlaying) {
+  }, [
+    user,
+    activeMetadata,
+    pause,
+    loadTrack,
+    setActiveMetadata,
+    setQueue,
+    setQueueIndex,
+  ]);
+
+  useEffect(() => {
+    if (!activeMetadata?.id || !activeMetadata?.title || !activeMetadata?.artist) {
+      return;
+    }
+
+    const resolvedDuration =
+      formatDurationSec(durationSec) ||
+      (activeMetadata.duration && activeMetadata.duration !== "0:00"
+        ? activeMetadata.duration
+        : "0:00");
+
+    const trackPayload = {
+      trackId: activeMetadata.trackId || activeMetadata.id,
+      title: activeMetadata.title,
+      artist: activeMetadata.artist,
+      coverUrl: activeMetadata.coverUrl || "",
+      duration: String(resolvedDuration),
+      isPlaying,
+      updatedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trackPayload));
+    } catch { }
+
+    if (!userId) return;
+
+    const timer = setTimeout(() => {
       updateCurrentTrack({
         userId,
-        track: undefined,
+        track: trackPayload,
       }).catch(() => { });
-    }
+    }, 1500);
 
-    return () => {
-      if (timer) clearTimeout(timer);
+    return () => clearTimeout(timer);
+  }, [userId, isPlaying, durationSec, activeMetadata, updateCurrentTrack]);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
     };
-  }, [userId, isPlaying, activeMetadata, updateCurrentTrack]);
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isPlaying]);
 
   const handleGlobalTogglePlay = useCallback(() => {
+    if (!isPlaying && activeMetadata) {
+      const normalized = normalizeTrack({
+        id: activeMetadata.trackId || activeMetadata.id,
+        title: activeMetadata.title,
+        artist: activeMetadata.artist,
+        coverUrl: activeMetadata.coverUrl,
+        duration: activeMetadata.duration,
+      });
+      playTrack(normalized);
+      return;
+    }
     hostTogglePlay();
-  }, [hostTogglePlay]);
+  }, [isPlaying, activeMetadata, playTrack, hostTogglePlay]);
 
   const handleGlobalSeek = useCallback(
     (targetTime: number) => {

@@ -103,7 +103,6 @@ export function DesktopMiniPlayer({
                         • {activeMetadata.artist}
                       </span>
                     </div>
-
                     <ProgressBar
                       heightClass="h-1"
                       hoverHeightClass="group-hover/timeline:h-1.5"

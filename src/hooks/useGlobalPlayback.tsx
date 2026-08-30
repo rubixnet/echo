@@ -16,6 +16,8 @@ import { useRef, useCallback } from "react";
 
 export type { QueueType };
 
+const STORAGE_KEY = "app_last_played_track";
+
 type PlayableTrack = NormalizableTrack & {
   thumbnails?: string | { url?: string }[];
   image?: string;
@@ -40,6 +42,7 @@ export function useGlobalPlayback() {
     seekToTime,
     isOnLoop,
     activeMetadata,
+    pause,
   } = useAudioEngine();
 
   const { isHardBanned, recommendationExclusionSet } = useUserExclusions();
@@ -55,13 +58,12 @@ export function useGlobalPlayback() {
 
   const ensureYoutubeTrack = useMutation(api.tracks.ensureYoutubeTrack);
   const updateRoomTrack = useMutation(api.rooms.updateRoomTrack);
+  const updateCurrentTrack = useMutation(api.tracks.updateCurrentTrack);
   const failureCountRef = useRef(0);
 
   const broadcastTrackChange = useCallback(
     async (trackId: string | undefined) => {
-      if (!isInRoom) return;
-      if (isGuest) return;
-      if (!roomId) return;
+      if (!isInRoom || isGuest || !roomId) return;
       try {
         await updateRoomTrack({
           roomId,
@@ -105,7 +107,6 @@ export function useGlobalPlayback() {
     if (setLoadingId) setLoadingId(videoId);
 
     if (queueList && newQueueIndex !== undefined) {
-      
       const sanitizedQueue = queueList.filter(
         (t, idx) => idx === newQueueIndex || !isHardBanned(normalizeTrack(t).id),
       );
@@ -150,16 +151,6 @@ export function useGlobalPlayback() {
         return;
       }
 
-      const metadata = {
-        title: ytTrack.title || "Unknown Title",
-        artist: ytTrack.uploaderName || ytTrack.artist || "Unknown Artist",
-        coverUrl,
-        audioUrl: pipeUrl,
-        trackId: videoId,
-      };
-
-      loadTrack(pipeUrl, metadata);
-
       const durationStr =
         typeof ytTrack.duration === "number"
           ? `${Math.floor(ytTrack.duration / 60)}:${Math.floor(
@@ -168,6 +159,33 @@ export function useGlobalPlayback() {
             .toString()
             .padStart(2, "0")}`
           : ytTrack.duration || "0:00";
+
+      const metadata = {
+        id: videoId,
+        trackId: videoId,
+        title: ytTrack.title || "Unknown Title",
+        artist: ytTrack.uploaderName || ytTrack.artist || "Unknown Artist",
+        coverUrl,
+        audioUrl: pipeUrl,
+        duration: durationStr,
+      };
+
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            trackId: videoId,
+            title: metadata.title,
+            artist: metadata.artist,
+            coverUrl: metadata.coverUrl,
+            duration: durationStr,
+            isPlaying: true,
+            updatedAt: Date.now(),
+          }),
+        );
+      } catch { }
+
+      loadTrack(pipeUrl, metadata);
 
       const trackId = await ensureYoutubeTrack({
         trackId: videoId,
@@ -178,7 +196,8 @@ export function useGlobalPlayback() {
         duration: durationStr,
       });
 
-      setActiveMetadata(trackId ? { ...metadata, id: trackId } : metadata);
+      const finalMetadata = trackId ? { ...metadata, id: trackId } : metadata;
+      setActiveMetadata(finalMetadata);
       await broadcastTrackChange(trackId ?? undefined);
 
       failureCountRef.current = 0;
@@ -341,6 +360,18 @@ export function useGlobalPlayback() {
 
     setQueue(sanitizedQueue);
     setQueueIndex(nextIndex);
+
+    if (sanitizedQueue.length === 0) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch { }
+      if (userId) {
+        updateCurrentTrack({ userId, track: undefined }).catch(() => { });
+      }
+      pause();
+      setActiveMetadata(null);
+      return;
+    }
 
     if (isCurrentlyPlaying) {
       if (sanitizedQueue.length > 0 && nextIndex < sanitizedQueue.length) {
