@@ -386,7 +386,7 @@ export function MobilePlayer({
         <div className="flex items-center justify-between px-3 w-full">
           <button
             disabled={!activeMetadata}
-            className="text-foreground/40 hover:text-foreground active:scale-95 transition-all disabled:opacity-40"
+            className="text-foreground/40 hover:text-foreground active:scale-98 transition-all disabled:opacity-40"
           >
             <Shuffle size={22} strokeWidth={2} />
           </button>
@@ -394,7 +394,7 @@ export function MobilePlayer({
           <button
             onClick={playPrevious}
             disabled={!queue || (queueIndex <= 0 && currentTimeSec <= 3)}
-            className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"
+            className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
           >
             <SkipBack size={32} strokeWidth={1.5} />
           </button>
@@ -425,7 +425,7 @@ export function MobilePlayer({
           <button
             onClick={() => playNext(false)}
             disabled={!activeMetadata}
-            className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"
+            className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
           >
             <SkipForward size={32} strokeWidth={1.5} />
           </button>
@@ -434,7 +434,7 @@ export function MobilePlayer({
             onClick={() => setIsOnLoop(!isOnLoop)}
             disabled={!activeMetadata}
             className={cn(
-              "transition-colors disabled:opacity-40 active:scale-95",
+              "transition-colors disabled:opacity-40 active:scale-98",
               isOnLoop
                 ? "text-emerald-500"
                 : "text-foreground/40 hover:text-foreground",

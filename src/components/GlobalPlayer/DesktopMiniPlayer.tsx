@@ -143,14 +143,14 @@ export function DesktopMiniPlayer({
                     disabled={
                       !queue || (queueIndex <= 0 && currentTimeSec <= 3)
                     }
-                    className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"
+                    className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
                   >
                     <SkipBack size={24} strokeWidth={1} />
                   </button>
                   <button
                     onClick={controlTogglePlay}
                     disabled={!activeMetadata}
-                    className="text-foreground hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                    className="text-foreground hover:scale-105 active:scale-98 transition-all disabled:opacity-50"
                   >
                     {isLoading ? (
                       <Loader2
@@ -167,7 +167,7 @@ export function DesktopMiniPlayer({
                   <button
                     onClick={() => playNext(false)}
                     disabled={!activeMetadata}
-                    className="text-foreground/70 hover:text-foreground active:scale-95 transition-all disabled:opacity-30"
+                    className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
                   >
                     <SkipForward size={24} strokeWidth={1} />
                   </button>

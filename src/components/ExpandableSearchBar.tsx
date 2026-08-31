@@ -175,7 +175,7 @@ export function ExpandableSearchBar<T extends string = string>({
             "absolute inset-0 flex items-center pl-3 pr-2 transition-all duration-200 ease-out",
             isExpanded
               ? "opacity-100 blur-0 scale-100 pointer-events-auto delay-75"
-              : "opacity-0 blur-sm scale-95 pointer-events-none"
+              : "opacity-0 blur-sm scale-98 pointer-events-none"
           )}
         >
           <div className="text-foreground/50 shrink-0 mr-2 pointer-events-none">

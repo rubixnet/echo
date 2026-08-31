@@ -219,7 +219,7 @@ export function TrackActionMenuContent({
         <button
           onClick={handleAction(handleLike)}
           className={cn(
-            "p-1.5 rounded-md hover:scale-110 active:scale-95 transition-all outline-none",
+            "p-1.5 rounded-md hover:scale-110 active:scale-98 transition-all outline-none",
             isLiked ? "text-emerald-500" : "text-neutral-500 dark:text-neutral-400"
           )}
           title={isLiked ? "Remove Favorite" : "Favorite"}
@@ -234,7 +234,7 @@ export function TrackActionMenuContent({
         <button
           onClick={handleAction(handleToggleLibrary)}
           className={cn(
-            "p-1.5 rounded-md hover:scale-110 active:scale-95 transition-all outline-none",
+            "p-1.5 rounded-md hover:scale-110 active:scale-98 transition-all outline-none",
             isBookmarked ? "text-emerald-500" : "text-neutral-500 dark:text-neutral-400"
           )}
           title={isBookmarked ? "Saved in Library" : "Save to Library"}
@@ -247,7 +247,7 @@ export function TrackActionMenuContent({
 
         <button
           onClick={handleOpenPlaylist}
-          className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:scale-110 active:scale-95 transition-all outline-none"
+          className="p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:scale-110 active:scale-98 transition-all outline-none"
           title="Add to Playlist"
         >
           <ListPlus size={sizeStyles.icon + 2} />

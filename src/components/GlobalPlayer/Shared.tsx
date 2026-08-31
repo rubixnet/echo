@@ -151,7 +151,7 @@ export function PlaybackControls({
       <button
         onClick={playPrevious}
         disabled={!queue || (queueIndex <= 0 && currentTimeSec <= 3)}
-        className="text-foreground/80 hover:text-foreground active:scale-95 transition-transform disabled:opacity-30"
+        className="text-foreground/80 hover:text-foreground active:scale-98 transition-transform disabled:opacity-30"
       >
         <SkipBack size={iconSize} fill="currentColor" strokeWidth={1} />
       </button>
@@ -179,7 +179,7 @@ export function PlaybackControls({
       <button
         onClick={() => playNext(false)}
         disabled={!activeMetadata}
-        className="text-foreground/80 hover:text-foreground active:scale-95 transition-transform disabled:opacity-30"
+        className="text-foreground/80 hover:text-foreground active:scale-98 transition-transform disabled:opacity-30"
       >
         <SkipForward size={iconSize} fill="currentColor" strokeWidth={1} />
       </button>

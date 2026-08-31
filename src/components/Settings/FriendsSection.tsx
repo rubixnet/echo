@@ -126,7 +126,7 @@ export default function FriendsSection() {
                             <button
                                 type="submit"
                                 disabled={!friendTagInput.trim() || loading}
-                                className="h-full select-none px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-95 transition-transform whitespace-nowrap cursor-pointer"
+                                className="h-full select-none px-3 text-primary text-xs font-semibold disabled:opacity-40 active:scale-98 transition-transform whitespace-nowrap cursor-pointer"
                             >
                                 {loading ? "Adding..." : "Add Friend"}
                             </button>
