@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Check,
   Loader2,
+  AtSign,
   X,
 } from "lucide-react";
 
@@ -20,18 +21,81 @@ const ENABLE_OUTRO_TRANSITION = true;
 const MAX_GENRES = 5;
 
 const GENRES = [
-  { id: "electronic", label: "Electronic", color: "rgba(139, 92, 246, 0.28)" },
-  { id: "ambient", label: "Ambient", color: "rgba(56, 189, 248, 0.28)" },
-  { id: "hip-hop", label: "Hip Hop", color: "rgba(249, 115, 22, 0.28)" },
-  { id: "indie-rock", label: "Indie Rock", color: "rgba(244, 63, 94, 0.28)" },
-  { id: "synthwave", label: "Synthwave", color: "rgba(217, 70, 239, 0.28)" },
-  { id: "jazz-soul", label: "Jazz & Soul", color: "rgba(234, 179, 8, 0.28)" },
-  { id: "classical", label: "Classical", color: "rgba(34, 197, 94, 0.28)" },
-  { id: "lo-fi", label: "Lo-Fi Beats", color: "rgba(20, 184, 166, 0.28)" },
-  { id: "techno", label: "Techno / Club", color: "rgba(99, 102, 241, 0.28)" },
-  { id: "post-punk", label: "Post-Punk", color: "rgba(148, 163, 184, 0.28)" },
-  { id: "r-and-b", label: "R&B", color: "rgba(251, 146, 60, 0.28)" },
-  { id: "folk", label: "Folk & Acoustic", color: "rgba(163, 230, 53, 0.28)" },
+  {
+    id: "electronic",
+    label: "Electronic",
+    color: "rgba(139, 92, 246, 0.28)",
+  },
+  {
+    id: "ambient",
+    label: "Ambient",
+    color: "rgba(56, 189, 248, 0.28)",
+  },
+  {
+    id: "hip-hop",
+    label: "Hip Hop",
+    color: "rgba(249, 115, 22, 0.28)",
+  },
+  {
+    id: "indie-rock",
+    label: "Indie Rock",
+    color: "rgba(244, 63, 94, 0.28)",
+  },
+  {
+    id: "synthwave",
+    label: "Synthwave",
+    color: "rgba(217, 70, 239, 0.28)",
+  },
+  {
+    id: "jazz-soul",
+    label: "Jazz & Soul",
+    color: "rgba(234, 179, 8, 0.28)",
+  },
+  {
+    id: "classical",
+    label: "Classical",
+    color: "rgba(34, 197, 94, 0.28)",
+  },
+  {
+    id: "lo-fi",
+    label: "Lo-Fi Beats",
+    color: "rgba(20, 184, 166, 0.28)",
+  },
+  {
+    id: "techno",
+    label: "Techno / Club",
+    color: "rgba(99, 102, 241, 0.28)",
+  },
+  {
+    id: "post-punk",
+    label: "Post-Punk",
+    color: "rgba(148, 163, 184, 0.28)",
+  },
+  {
+    id: "r-and-b",
+    label: "R&B",
+    color: "rgba(251, 146, 60, 0.28)",
+  },
+  {
+    id: "folk",
+    label: "Folk & Acoustic",
+    color: "rgba(163, 230, 53, 0.28)",
+  },
+  {
+    id: "pop",
+    label: "Pop",
+    color: "rgba(236, 72, 153, 0.28)",
+  },
+  {
+    id: "metal",
+    label: "Metal",
+    color: "rgba(71, 85, 105, 0.28)",
+  },
+  {
+    id: "reggae",
+    label: "Reggae",
+    color: "rgba(16, 185, 129, 0.28)",
+  }
 ];
 
 export default function OnboardingPage() {
@@ -51,6 +115,7 @@ export default function OnboardingPage() {
     "idle" | "valid" | "taken" | "invalid"
   >("idle");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [previewSlider, setPreviewSlider] = useState(65);
@@ -60,13 +125,16 @@ export default function OnboardingPage() {
   const [transitionPhase, setTransitionPhase] = useState<"sync" | "ready">("sync");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const isUserReady = Boolean(user && "_id" in user && user._id);
+
+  useEffect(() => {
+    if (step === 1 && isUserReady) {
+      nameInputRef.current?.focus();
+    }
+  }, [step, isUserReady]);
+
   useEffect(() => {
     if (user) {
-      if (user.name && !name) setName(user.name);
-      if (user.username && !username) {
-        const cleanHandle = user.username.toLowerCase().replace(/[^a-zA-Z0-9_]/g, "");
-        setUsername(cleanHandle);
-      }
       if (user.favoriteGenres && user.favoriteGenres.length > 0 && selectedGenres.length === 0) {
         setSelectedGenres(user.favoriteGenres);
       }
@@ -205,8 +273,6 @@ export default function OnboardingPage() {
     return gradients.join(", ");
   }, [selectedGenres, textInputTint, step]);
 
-  const isUserReady = Boolean(user && "_id" in user && user._id);
-
   const handleStep2Submit = async () => {
     if (!user?._id) {
       setErrorMsg("User session is still initializing. Please wait a second.");
@@ -232,15 +298,6 @@ export default function OnboardingPage() {
     }
   };
 
-  if (!isUserReady) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground gap-3">
-        <Loader2 size={24} className="animate-spin text-foreground/40" />
-        <p className="text-xs font-mono text-foreground/40">Initializing session...</p>
-      </div>
-    );
-
-  }
   const handleFinalSubmit = () => {
     playCompletionChime();
 
@@ -253,11 +310,11 @@ export default function OnboardingPage() {
     }
   };
 
-  if (user === undefined) {
+  if (!isUserReady || user === undefined) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground gap-3">
         <Loader2 size={24} className="animate-spin text-foreground/40" />
-        <p className="text-xs font-mono text-foreground/40">Loading profile...</p>
+        <p className="text-xs font-mono text-foreground/40">Initializing session...</p>
       </div>
     );
   }
@@ -324,72 +381,67 @@ export default function OnboardingPage() {
 
         {step === 1 && (
           <div className="flex-1 flex flex-col justify-between animate-in fade-in duration-300">
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground">
+                <h1 className="text-xl font-medium tracking-tight text-foreground">
                   Set up your identity
                 </h1>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-medium text-foreground/60 tracking-wide uppercase">
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-medium text-foreground/60 tracking-wide uppercase px-3">
                     Display Name
                   </label>
-                  <LiquidContainer radius="12px" className="w-full h-10 shadow-none">
-                    <input
-                      type="text"
-                      placeholder="e.g. Alex Rivera"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full h-full bg-transparent px-3 text-xs text-foreground placeholder:text-foreground/30 focus:outline-none"
-                      autoFocus
-                    />
+                  <LiquidContainer radius="16px" className="w-full h-[42px] shadow-none">
+                    <div className="w-full h-full rounded-[50px] bg-black/5 dark:bg-black/30 flex items-center px-5 focus-within:bg-black/10 dark:focus-within:bg-black/50 transition-colors">
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        placeholder="e.g. Alex Rivera"
+                        value={name}
+                        autoComplete="off"
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full bg-transparent text-sm font-medium text-foreground placeholder:text-foreground/40 focus:outline-none"
+                      />
+                    </div>
                   </LiquidContainer>
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between px-3">
                     <label className="text-[11px] font-medium text-foreground/60 tracking-wide uppercase">
                       Unique Handle
                     </label>
                     <div className="flex items-center gap-1 text-[11px] font-mono">
                       {isCheckingUsername ? (
-                        <span className="text-foreground/40 flex items-center gap-1">
-                          <Loader2 size={10} className="animate-spin" /> checking
-                        </span>
+                        <span className="text-foreground/40 flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> checking</span>
                       ) : usernameStatus === "valid" ? (
-                        <span className="text-emerald-500 flex items-center gap-1">
-                          <Check size={11} /> available
-                        </span>
+                        <span className="text-emerald-500 flex items-center gap-1"><Check size={11} /> available</span>
                       ) : usernameStatus === "taken" ? (
-                        <span className="text-red-400 flex items-center gap-1">
-                          <X size={11} /> handle taken
-                        </span>
+                        <span className="text-red-400 flex items-center gap-1"><X size={11} /> handle taken</span>
                       ) : usernameStatus === "invalid" && username.trim().length > 0 ? (
                         <span className="text-amber-500/80">3+ chars (letters, nums, _)</span>
                       ) : null}
                     </div>
                   </div>
 
-                  <LiquidContainer
-                    radius="12px"
-                    className={cn(
-                      "w-full h-10 shadow-none transition-colors",
-                      usernameStatus === "valid" && "border-emerald-500/30",
-                      usernameStatus === "taken" && "border-red-500/30"
-                    )}
-                  >
-                    <div className="flex items-center h-full px-3 text-xs text-foreground">
-                      <span className="text-foreground/40 mr-1 select-none font-mono">@</span>
+                  <LiquidContainer radius="16px" className="w-full h-[42px] shadow-none">
+                    <div className="w-full h-full rounded-[50px] bg-black/5 dark:bg-black/30 flex items-center px-5 focus-within:bg-black/10 dark:focus-within:bg-black/50 transition-colors gap-1.5">
+                      <span className="text-foreground/40 text-sm font-mono pt-[1px]"><AtSign size={11} /></span>
                       <input
                         type="text"
                         placeholder="handle"
                         value={username}
-                        onChange={(e) =>
-                          setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))
-                        }
-                        className="w-full h-full bg-transparent text-xs text-foreground placeholder:text-foreground/30 focus:outline-none font-mono"
+                        autoComplete="off"
+                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && isStep1Valid) {
+                            e.preventDefault();
+                            setStep(2);
+                          }
+                        }}
+                        className="w-full bg-transparent text-sm font-mono text-foreground placeholder:text-foreground/40 focus:outline-none"
                       />
                     </div>
                   </LiquidContainer>
@@ -415,7 +467,7 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h1 className="text-xl font-bold tracking-tight text-foreground">
+                  <h1 className="text-xl font- tracking-tight text-foreground">
                     Select your genres
                   </h1>
                 </div>
@@ -428,7 +480,6 @@ export default function OnboardingPage() {
                 {GENRES.map((genre) => {
                   const isSelected = selectedGenres.includes(genre.id);
                   const isMaxReached = selectedGenres.length >= MAX_GENRES && !isSelected;
-
                   return (
                     <button
                       key={genre.id}
@@ -436,7 +487,7 @@ export default function OnboardingPage() {
                       disabled={isMaxReached}
                       onClick={() => toggleGenre(genre.id)}
                       className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 select-none",
+                        "h-20 w-24 rounded-lg text-xs font-medium border transition-all duration-150 select-none",
                         isSelected
                           ? "border-foreground/30 bg-foreground/10 text-foreground font-semibold active:scale-98 cursor-pointer"
                           : isMaxReached
@@ -492,7 +543,7 @@ export default function OnboardingPage() {
           <div className="flex-1 flex flex-col justify-between animate-in fade-in duration-300">
             <div className="space-y-4">
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground">
+                <h1 className="text-xl font- tracking-tight text-foreground">
                   Features Layout
                 </h1>
               </div>
@@ -525,7 +576,7 @@ export default function OnboardingPage() {
           <div className="flex-1 flex flex-col justify-between animate-in fade-in duration-300">
             <div className="space-y-4">
               <div className="space-y-1">
-                <h1 className="text-xl font-bold tracking-tight text-foreground">
+                <h1 className="text-xl font- tracking-tight text-foreground">
                   Friends Layout
                 </h1>
               </div>
