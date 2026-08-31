@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
-import { jwtVerify } from "jose";
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY!);
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
@@ -24,11 +23,11 @@ export async function GET(req: Request) {
     });
 
     const workosUser = response.user;
-
     const workosUserWithName = workosUser as typeof workosUser & {
       firstName?: string | null;
       lastName?: string | null;
     };
+
     const fallbackName = workosUser.email.split("@")[0];
     const displayName =
       [workosUserWithName.firstName, workosUserWithName.lastName]
@@ -37,9 +36,8 @@ export async function GET(req: Request) {
         .trim() || fallbackName;
 
     let profile = await fetchQuery(api.users.getProfile, {
-      workosID: workosUser.id,
+      workosId: workosUser.id,
     });
-    let isNewUser = false;
 
     if (!profile) {
       profile = await fetchMutation(api.users.createProfile, {
@@ -47,21 +45,19 @@ export async function GET(req: Request) {
         email: workosUser.email,
         name: displayName || undefined,
       });
-      isNewUser = true;
     }
+
+    const isOnboarded = Boolean(profile?.onboarded);
 
     const token = await new SignJWT({
       userId: workosUser.id,
       email: workosUser.email,
-      onboarded: profile.onboarded,
+      onboarded: isOnboarded,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime("60d")
       .sign(JWT_SECRET);
-
-    const debugPayload = await jwtVerify(token, JWT_SECRET).then(r => r.payload);
-    console.log("JWT payload after signing:", debugPayload);
 
     const cookieStore = await cookies();
     cookieStore.set("session", token, {
@@ -72,10 +68,8 @@ export async function GET(req: Request) {
       maxAge: 60 * 60 * 24 * 60,
     });
 
-    const onboardingUrl = new URL("/onboarding", req.url);
-
-    if (isNewUser) {
-      return NextResponse.redirect(onboardingUrl);
+    if (!isOnboarded) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
     }
 
     return NextResponse.redirect(new URL("/dashboard", req.url));

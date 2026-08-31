@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
     const profile = await fetchQuery(api.users.getProfile, {
-      workosID: payload.userId as string,
+      workosId: payload.userId as string,
     });
     if (!profile) return new Response(null, { status: 401 });
 
@@ -31,7 +31,6 @@ export async function POST(req: Request) {
     } | null;
     if (!body?.roomId) return new Response(null, { status: 400 });
 
-    // closeRoom is non-throwing and verifies host ownership server-side.
     await fetchMutation(api.rooms.closeRoom, {
       roomId: body.roomId as Id<"rooms">,
       userId: profile._id,

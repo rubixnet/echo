@@ -5,11 +5,11 @@ import type { Doc } from "../../convex/_generated/dataModel";
 
 export type AppUser = (Doc<"users"> & { username?: string }) | null;
 
-const UserContext = createContext<AppUser>(null);
+const UserContext = createContext<AppUser | undefined>(undefined);
 
 interface UserProviderProp {
   children: React.ReactNode;
-  user: AppUser;
+  user: AppUser | undefined;
 }
 
 export function UserProvider({ children, user }: UserProviderProp) {
@@ -18,8 +18,5 @@ export function UserProvider({ children, user }: UserProviderProp) {
 
 export function useUser() {
   const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error("useUser must be used within a UserProvider");
-  }
   return context;
 }

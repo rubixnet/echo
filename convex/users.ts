@@ -2,11 +2,16 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const getProfile = query({
-  args: { workosID: v.string() },
+  args: {
+    workosId: v.string()
+  },
   handler: async (ctx, args) => {
+    const id = args.workosId
+    if (!id) return null;
+
     return await ctx.db
       .query("users")
-      .withIndex("workosId", (q) => q.eq("workosId", args.workosID))
+      .withIndex("workosId", (q) => q.eq("workosId", id))
       .unique();
   },
 });
@@ -25,6 +30,7 @@ export const updatePrivacySettings = mutation({
     await ctx.db.patch(userId, privacyFields);
   },
 });
+
 
 export const searchUsers = query({
   args: { query: v.string() },
@@ -70,19 +76,25 @@ export const getUserProfile = query({
   },
 });
 
-export const completedOnboarding = mutation({
+export const updateUserData = mutation({
   args: {
     userId: v.id("users"),
-    name: v.string(),
-    username: v.string(),
-    genres: v.array(v.string()),
+    name: v.optional(v.string()),
+    username: v.optional(v.string()),
+    favoriteGenres: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, {
-      favoriteGenres: args.genres,
-      onboarded: true,
-    });
-    return { status: "success" };
+    const { userId, ...fields } = args;
+
+    const user = await ctx.db.get(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const patchFields = { ...fields, onboarded: true };
+
+    await ctx.db.patch(userId, patchFields);
+    return await ctx.db.get(userId);
   },
 });
 
@@ -115,7 +127,7 @@ export const createProfile = mutation({
       throw new Error("Failed to fetch newly created user");
     }
 
-    return newUser; 
+    return newUser;
   },
 });
 

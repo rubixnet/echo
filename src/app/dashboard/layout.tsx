@@ -27,11 +27,15 @@ export default async function DashboardLayout({
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     profile = await fetchQuery(api.users.getProfile, {
-      workosID: payload.userId as string,
+      workosId: payload.userId as string,
     });
-  } catch {
-    console.error("Invalid session token");
+  } catch (err) {
+    console.error("Invalid session token:", err);
     redirect("/api/auth/logout?reason=session_invalid");
+  }
+
+  if (!profile || !profile.onboarded) {
+    redirect("/onboarding");
   }
 
   return (

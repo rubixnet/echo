@@ -36,16 +36,6 @@ export async function middleware(request: NextRequest) {
   if (isLoggedIn && isPublicAuthPage && !isAuthRecovery) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
-  
-  if (isLoggedIn && verifiedToken) {
-    if (pathname.startsWith("/onboarding") && verifiedToken.onboarded) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-
-    if (pathname.startsWith("/dashboard") && !verifiedToken.onboarded) {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
-    }
-  }
 
   return NextResponse.next();
 }
