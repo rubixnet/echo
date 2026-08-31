@@ -4,7 +4,12 @@ import { useUser } from "@/hooks/useUser";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Music, Trash } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
+import {
+  Trash,
+} from "lucide-react";
 import Image from "next/image"
 
 type HatedTrack =

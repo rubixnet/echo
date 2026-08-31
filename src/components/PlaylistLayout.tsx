@@ -7,10 +7,12 @@ import {
   ListFilter,
   ArrowUpDown,
   ArrowDownUp,
-  SearchIcon,
-  Check,
+  Search,
   PenLine,
   Pin,
+} from "@/components/icons";
+import {
+  Check,
   Trash,
 } from "lucide-react";
 import { Button, ButtonGroup } from "@/components/ui/button";
@@ -415,7 +417,7 @@ export function PlaylistLayout({
                   type="button"
                   className="p-1.5 text-foreground/60 hover:text-foreground transition-colors cursor-default pointer-events-none"
                 >
-                  <SearchIcon size={20} />
+                  <Search size={20} />
                 </button>
               </div>
             </LiquidContainer>

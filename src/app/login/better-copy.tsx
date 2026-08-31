@@ -1,6 +1,11 @@
 "use client";
 
-import { Music, ArrowRight } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
+import {
+  ArrowRight,
+} from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

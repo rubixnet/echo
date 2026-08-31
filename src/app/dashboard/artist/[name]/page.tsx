@@ -4,7 +4,15 @@ import Image from "next/image";
 import { use, useEffect, useState } from "react";
 import { Track } from "@/components/TrackComponent";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
-import { Play, Shuffle, SearchIcon, Music2, Bookmark } from "lucide-react";
+import {
+  Play,
+  Shuffle,
+  Search,
+  Bookmark,
+} from "@/components/icons";
+import {
+  Music2,
+} from "lucide-react";
 import { Button, ButtonGroup } from "@/components/ui/button";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
@@ -211,7 +219,7 @@ export default function ArtistPage({
                   type="button"
                   className="p-1.5 text-foreground/60 hover:text-foreground transition-colors cursor-default pointer-events-none"
                 >
-                  <SearchIcon size={20} />
+                  <Search size={20} />
                 </button>
               </div>
             </LiquidContainer>

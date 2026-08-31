@@ -4,7 +4,12 @@ import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { Button } from "@/components/ui/button";
-import { Play, Loader2 } from "lucide-react";
+import {
+  Play,
+} from "@/components/icons";
+import {
+  Loader2,
+} from "lucide-react";
 
 interface PlayableTrack {
   id: string;

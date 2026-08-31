@@ -1,4 +1,6 @@
-import { Music } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 export function OfficialBadge({

@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import React from "react";
-import { Star, ListMusic, History, Pin } from "lucide-react";
+import {
+  Star,
+  ListMusic,
+  History,
+  Pin,
+} from "@/components/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";

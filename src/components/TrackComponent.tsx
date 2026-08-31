@@ -21,7 +21,14 @@ import {
 import {
   TrackActionMenuContent,
 } from "@/components/GlobalPlayer/TrackActionsMenu";
-import { Play, Pause, Loader2, EllipsisVertical } from "lucide-react";
+import {
+  Play,
+  EllipsisVertical,
+} from "@/components/icons";
+import {
+  Pause,
+  Loader2,
+} from "lucide-react";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUserExclusions } from "@/hooks/useUserExclusions";

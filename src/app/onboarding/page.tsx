@@ -9,12 +9,14 @@ import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
+  X,
+} from "@/components/icons";
+import {
   ArrowRight,
   ArrowLeft,
   Check,
   Loader2,
   AtSign,
-  X,
 } from "lucide-react";
 
 const ENABLE_OUTRO_TRANSITION = true;

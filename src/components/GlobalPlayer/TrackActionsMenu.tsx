@@ -21,16 +21,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   Bookmark,
-  ListPlus,
   Radio,
   Share,
+  EllipsisVertical,
+  Star,
+} from "@/components/icons";
+import {
+  ListPlus,
   ThumbsDown,
   Ban,
-  EllipsisVertical,
   PlaySquare,
   ListEnd,
   Trash2,
-  Star,
   Check,
 } from "lucide-react";
 import type { Id } from "../../../convex/_generated/dataModel";

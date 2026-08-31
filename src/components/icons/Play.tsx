@@ -1,0 +1,24 @@
+import { forwardRef } from "react";
+
+interface PlayProps {
+  size?: number;
+  className?: string;
+}
+
+export const Play = forwardRef<SVGSVGElement, PlayProps>(
+  ({ size = 24, className, ...props }, ref) => (
+    <svg
+      ref={ref}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 11 12"
+      width={size}
+      height={size}
+      className={className}
+      fill="currentColor"
+      {...props}
+    >
+      <path d="M-0.00146484 10.7959V1.04199C-0.00146484 0.691081 0.0880534 0.429688 0.26709 0.257812C0.449707 0.0859375 0.666341 0 0.916992 0C1.13184 0 1.34847 0.0608724 1.56689 0.182617L9.73096 4.97363C9.99951 5.13118 10.1929 5.27979 10.311 5.41943C10.4292 5.5555 10.4883 5.72201 10.4883 5.91895C10.4883 6.1123 10.4292 6.27881 10.311 6.41846C10.1929 6.55811 9.99951 6.70492 9.73096 6.85889L1.56689 11.6499C1.34847 11.7752 1.13184 11.8379 0.916992 11.8379C0.666341 11.8379 0.449707 11.752 0.26709 11.5801C0.0880534 11.4082 -0.00146484 11.1468 -0.00146484 10.7959Z" fill="currentColor" fillOpacity="0.8" />
+    </svg>
+  )
+);
+Play.displayName = "Play";

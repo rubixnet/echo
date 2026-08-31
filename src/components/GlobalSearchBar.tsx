@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Search as SearchIcon, History } from "lucide-react";
+import {
+  Search,
+  History,
+} from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
@@ -197,7 +200,7 @@ export function GlobalSearchBar() {
               type="submit"
               className="p-1.5 text-foreground/40 hover:text-foreground transition-colors cursor-pointer"
             >
-              <SearchIcon size={20} />
+              <Search size={20} />
             </button>
           </div>
         </LiquidContainer>
@@ -224,7 +227,7 @@ export function GlobalSearchBar() {
                       {item.type === "history" ? (
                         <History size={16} className="text-primary" />
                       ) : (
-                        <SearchIcon size={16} className="text-foreground/40" />
+                        <Search size={16} className="text-foreground/40" />
                       )}
                       <span className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">
                         {item.text}

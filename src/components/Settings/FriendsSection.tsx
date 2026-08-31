@@ -7,7 +7,9 @@ import { api } from "../../../convex/_generated/api";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";
-import { User } from "lucide-react";
+import {
+  User,
+} from "@/components/icons";
 import FriendCard from "./FriendCard";
 import { Id } from "../../../convex/_generated/dataModel";
 

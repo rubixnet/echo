@@ -6,7 +6,9 @@ import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "../../../../../../../convex/_generated/api";
 import { Id } from "../../../../../../../convex/_generated/dataModel";
-import { Music } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
 import { useUser } from "@/hooks/useUser";
 import { Track } from "@/components/TrackComponent";
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";

@@ -14,7 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
-import { LogOut, Moon, Sun, Laptop, ChevronDown } from "lucide-react";
+import {
+  ChevronDown,
+} from "@/components/icons";
+import {
+  LogOut,
+  Moon,
+  Sun,
+  Laptop,
+} from "lucide-react";
 
 export default function SettingsHeader() {
   const user = useUser();

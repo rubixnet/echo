@@ -11,15 +11,17 @@ import { TrackDropdownMenu } from "./TrackActionsMenu";
 import { StarButton } from "./Shared";
 import {
   Play,
-  Pause,
   SkipForward,
   SkipBack,
   Repeat,
-  Loader2,
   Music,
   EllipsisVertical,
   Shuffle,
   Radio,
+} from "@/components/icons";
+import {
+  Pause,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 

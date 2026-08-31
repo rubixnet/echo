@@ -1,13 +1,28 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, Zap, Globe2, Radio, Lock, Disc3 } from "lucide-react";
+import {
+  Radio,
+} from "@/components/icons";
+import {
+  ArrowRight,
+  Zap,
+  Globe2,
+  Lock,
+  Disc3,
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useState } from "react";
-import { Play, Pause, AudioLines } from "lucide-react";
+import {
+  Play,
+} from "@/components/icons";
+import {
+  Pause,
+  AudioLines,
+} from "lucide-react";
 
 export default function Homepage() {
   const logoVariant = {

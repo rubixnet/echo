@@ -19,6 +19,7 @@ design,
 - browser or yt dlp script to get the playlist songs and info from browser itself!
 
 later! 
+- fix algo more! 
 - create og image for that particular song with particular link for that use. 
 - make buttons consistent
 - adding popups

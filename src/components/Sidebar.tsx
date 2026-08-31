@@ -17,7 +17,7 @@ import {
   Music,
   ChevronUp,
   ChevronDown,
-} from "lucide-react";
+} from "@/components/icons";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";

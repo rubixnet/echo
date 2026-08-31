@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { normalizeTrack } from "@/lib/trackUtils";
 import {
   Play,
-  Pause,
   SkipForward,
   SkipBack,
   Radio,
@@ -20,6 +19,9 @@ import {
   Shuffle,
   Repeat,
   Star,
+} from "@/components/icons";
+import {
+  Pause,
   Loader2,
 } from "lucide-react";
 import { fetchRelatedTracks } from "@/lib/fetchRelatedTracks";

@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Loader2, Music } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
+import {
+  Loader2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";

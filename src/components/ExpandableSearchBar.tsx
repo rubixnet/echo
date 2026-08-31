@@ -2,13 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
-  SearchIcon,
+  Search,
   X,
   ListFilter,
   ArrowUpDown,
   ArrowDownUp,
-  Check,
-} from "lucide-react";
+} from "@/components/icons";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 export interface FilterOption<T extends string = string> {
   key: T;
@@ -118,7 +118,7 @@ export function ExpandableSearchBar<T extends string = string>({
             onClick={handleOpen}
             title="Search"
           >
-            <SearchIcon size={16} />
+            <Search size={16} />
           </Button>
 
           {hasFilters && (
@@ -179,7 +179,7 @@ export function ExpandableSearchBar<T extends string = string>({
           )}
         >
           <div className="text-foreground/50 shrink-0 mr-2 pointer-events-none">
-            <SearchIcon size={16} />
+            <Search size={16} />
           </div>
 
           <input

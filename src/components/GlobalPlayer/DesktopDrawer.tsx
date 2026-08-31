@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { cn } from "@/lib/utils";
@@ -22,12 +21,15 @@ import {
   Minimize2,
   Music,
   EllipsisVertical,
-  Loader2,
-  Image as ImageIcon,
-  Mic2,
   ListMusic,
+} from "@/components/icons";
+import {
+  Loader2,
+  ImageIcon,
+  Mic2,
 } from "lucide-react";
 import { TrackDropdownMenu } from "./TrackActionsMenu";
+import Image from "next/image";
 
 type TabView = "cover" | "lyrics" | "queue";
 

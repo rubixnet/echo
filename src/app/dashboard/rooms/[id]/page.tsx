@@ -9,13 +9,15 @@ import { useRouter } from "next/navigation";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import {
   Play,
-  Pause,
   Radio,
+  Music,
+} from "@/components/icons";
+import {
+  Pause,
   Users,
   Crown,
   Loader2,
   AudioLines,
-  Music,
   LogOut,
   XCircle,
 } from "lucide-react";

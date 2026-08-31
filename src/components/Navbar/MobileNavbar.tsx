@@ -2,7 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Search, Library, Radio, Settings } from "lucide-react";
+import {
+  Home,
+  Search,
+  Library,
+  Radio,
+} from "@/components/icons";
+import {
+  Settings,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";

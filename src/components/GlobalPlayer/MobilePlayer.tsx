@@ -8,19 +8,21 @@ import { useRoomState } from "@/hooks/useRoomContext";
 import { useRouter } from "next/navigation";
 import {
   Play,
-  Pause,
   SkipForward,
   SkipBack,
   Repeat,
   Shuffle,
   ChevronDown,
-  Loader2,
   Music,
   ListMusic,
   EllipsisVertical,
+  Radio,
+} from "@/components/icons";
+import {
+  Pause,
+  Loader2,
   Mic2,
   ListPlus,
-  Radio,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";

@@ -7,11 +7,13 @@ import {
   Search,
   Library,
   Radio,
+} from "@/components/icons";
+import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  LucideIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { Button } from "@/components/ui/button";
 import { GlobalSearchBar } from "../GlobalSearchBar";

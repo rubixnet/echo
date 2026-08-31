@@ -2,7 +2,12 @@
 
 import { useRoomState } from "@/hooks/useRoomContext";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
-import { Radio, LogOut } from "lucide-react";
+import {
+  Radio,
+} from "@/components/icons";
+import {
+  LogOut,
+} from "lucide-react";
 import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { Button } from "@/components/ui/button";
 

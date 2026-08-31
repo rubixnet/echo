@@ -3,7 +3,9 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../../../convex/_generated/api";
-import { History } from "lucide-react";
+import {
+  History,
+} from "@/components/icons";
 import { useUser } from "@/hooks/useUser";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { Track } from "@/components/TrackComponent";

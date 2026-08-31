@@ -1,7 +1,12 @@
 "use client";
 
 import { use, useMemo, useState } from "react";
-import { Music, TrendingUp } from "lucide-react";
+import {
+  Music,
+} from "@/components/icons";
+import {
+  TrendingUp,
+} from "lucide-react";
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 import { Track } from "@/components/TrackComponent";
 import { useQuery } from "convex/react";

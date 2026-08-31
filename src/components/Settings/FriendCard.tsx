@@ -7,15 +7,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-    ChevronDown,
-    ListMusic,
-    X,
-    Disc3,
-    Radio,
-    Music,
-    Heart,
-    Share2,
-    Check,
+  ChevronDown,
+  ListMusic,
+  X,
+  Radio,
+  Music,
+} from "@/components/icons";
+import {
+  Disc3,
+  Heart,
+  Share2,
+  Check,
 } from "lucide-react";
 
 type FriendCardProps = {
@@ -45,20 +47,19 @@ export default function FriendCard({
             layout
             transition={{ type: "spring", stiffness: 350, damping: 30 }}
             className={cn(
-                "rounded-2xl border transition-colors overflow-hidden",
+                "rounded-lg transition-colors overflow-hidden",
                 isExpanded
-                    ? "bg-foreground/[0.03] border-foreground/15 shadow-sm"
-                    : "bg-transparent border-foreground/10 hover:bg-foreground/[0.02]"
+                    ? "shadow-sm"
+                    : "bg-transparent hover:bg-foreground/[0.02]"
             )}
         >
-            {/* Header Row */}
             <div
                 onClick={onToggleExpand}
                 className="flex items-center justify-between p-3 cursor-pointer select-none"
             >
                 <div className="flex items-center gap-3 min-w-0 pr-2">
                     <div className="relative shrink-0">
-                        <div className="w-9 h-9 rounded-xl bg-foreground/10 border border-foreground/5 flex items-center justify-center font-bold text-xs text-foreground/80 uppercase overflow-hidden">
+                        <div className="w-9 h-9 rounded-xl bg-foreground/10  flex items-center justify-center font-bold text-xs text-foreground/80 uppercase overflow-hidden">
                             {friend.currentTrack?.coverUrl ? (
                                 <Image
                                     width={36}

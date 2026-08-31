@@ -4,7 +4,15 @@ import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useUser } from "@/hooks/useUser";
-import { Pin, Trash2, Edit3, Loader2, X } from "lucide-react";
+import {
+  Pin,
+  PenLine,
+  X,
+} from "@/components/icons";
+import {
+  Trash2,
+  Loader2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -142,7 +150,7 @@ export function usePlaylistActions(
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center text-foreground/70 bg-foreground/5">
-                      <Edit3 size={16} strokeWidth={2} />
+                      <PenLine size={16} strokeWidth={2} />
                     </div>
                     <h3 className="font-semibold text-lg text-foreground tracking-tight">
                       Edit Playlist
@@ -273,7 +281,7 @@ export function PlaylistContextMenu({
                 : "gap-2 rounded-md text-[13px] py-1.5 px-2",
             )}
           >
-            <Edit3 size={isMobile ? 18 : 14} />
+            <PenLine size={isMobile ? 18 : 14} />
             <span>Edit Name</span>
           </DropdownMenuItem>
 
