@@ -1,68 +1,102 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
-const ONLINE_THRESHOLD_MS = 60 * 1000;
-
-export const getFriendsData = query({
-    args: { userId: v.id("users") },
-    handler: async (ctx, args) => {
-        const friendships = await ctx.db
-            .query("friends")
-            .withIndex("by_user", (q) => q.eq("userId", args.userId))
-            .collect();
-
-        const now = Date.now();
-
-        const friends = await Promise.all(
-            friendships.map(async (f) => {
-                const friend = await ctx.db.get(f.friendId);
-                if (!friend) return null;
-
-
-                const userPlaylists = await ctx.db
-                    .query("playlists")
-                    .withIndex("by_user", (q) => q.eq("userId", friend._id))
-                    .collect();
-
-                const isOnline = Boolean(
-                    friend.lastSeen && now - friend.lastSeen < ONLINE_THRESHOLD_MS
-                );
-
-                return {
-                    _id: friend._id,
-                    username: friend.username || friend.name || "User",
-                    isOnline,
-                    currentTrack: friend.currentTrack ?? null,
-                    playlistCount: userPlaylists.length,
-                };
-            })
-        );
-
-        return friends.filter((item): item is NonNullable<typeof item> => item !== null);
-    },
-});
-
 export const toggleFriend = mutation({
-    args: {
-        userId: v.id("users"),
-        friendId: v.id("users")
-    },
+    args: { userId: v.id("users"), friendId: v.id("users") },
     handler: async (ctx, args) => {
-        const friend = await ctx.db
+        const existing = await ctx.db
             .query("friends")
             .withIndex("by_user_and_friend", (q) =>
                 q.eq("userId", args.userId).eq("friendId", args.friendId)
             )
             .first();
-        if (friend) {
-            await ctx.db.delete(friend._id);
-        } else {
-            await ctx.db.insert("friends", {
-                userId: args.userId,
 
-                friendId: args.friendId,
-                createdAt: Date.now(),
-            });
+        if (existing) {
+            await ctx.db.delete(existing._id);
+            return { status: "removed" };
         }
-    }
-})
+
+        await ctx.db.insert("friends", {
+            userId: args.userId,
+            friendId: args.friendId,
+            createdAt: Date.now(),
+        });
+        return { status: "added" };
+    },
+});
+
+export const getFriendsData = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const friendRelations = await ctx.db
+            .query("friends")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .collect();
+
+        const results = await Promise.all(
+            friendRelations.map(async (rel) => {
+                const friend = await ctx.db.get(rel.friendId);
+                if (!friend) return null;
+
+                const isOnline =
+                    friend.showOnlineStatus !== false &&
+                    friend.lastSeen &&
+                    Date.now() - friend.lastSeen < 1000 * 60 * 3;
+
+                const activeRoom =
+                    friend.showActiveRoom !== false && friend.activeRoomId
+                        ? await ctx.db.get(friend.activeRoomId)
+                        : null;
+
+                let playlists: any[] = [];
+                if (friend.showPlaylists !== false) {
+                    const rawPlaylists = await ctx.db
+                        .query("playlists")
+                        .withIndex("by_user", (q) => q.eq("userId", friend._id))
+                        .filter((q) => q.neq(q.field("isPublic"), false))
+                        .collect();
+
+                    playlists = await Promise.all(
+                        rawPlaylists.map(async (p) => {
+                            const tracks = await ctx.db
+                                .query("playlistTracks")
+                                .withIndex("by_playlist", (q) => q.eq("playlistId", p._id))
+                                .collect();
+                            return {
+                                _id: p._id,
+                                name: p.name,
+                                trackCount: tracks.length,
+                                coverUrl: tracks[0]?.coverUrl || null,
+                            };
+                        })
+                    );
+                }
+
+                let likedSongsCount: number | null = null;
+                if (friend.showLikedSongs === true) {
+                    const likedTracks = await ctx.db
+                        .query("likedSongs")
+                        .withIndex("by_user", (q) => q.eq("userId", friend._id))
+                        .collect();
+                    likedSongsCount = likedTracks.length;
+                }
+
+                return {
+                    _id: friend._id,
+                    username: friend.username || friend.name || "User",
+                    name: friend.name,
+                    isOnline: !!isOnline,
+                    currentTrack:
+                        friend.showCurrentTrack !== false ? friend.currentTrack : undefined,
+                    activeRoomId: activeRoom ? activeRoom._id : null,
+                    activeRoomName: activeRoom?.name || null,
+                    playlists,
+                    playlistCount: playlists.length,
+                    likedSongsCount,
+                };
+            })
+        );
+
+        return results.filter(Boolean);
+    },
+});

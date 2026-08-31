@@ -22,6 +22,11 @@ export default defineSchema({
     lastSeen: v.optional((v.number())),
     favoriteGenres: v.optional(v.array(v.string())),
     currentTrack: v.optional(trackSchema),
+    showOnlineStatus: v.optional(v.boolean()),
+    showCurrentTrack: v.optional(v.boolean()),
+    showPlaylists: v.optional(v.boolean()),
+    showLikedSongs: v.optional(v.boolean()),
+    showActiveRoom: v.optional(v.boolean()),
   })
     .index("workosId", ["workosId"])
     .searchIndex("search_username", {
@@ -164,6 +169,7 @@ export default defineSchema({
     name: v.string(),
     userId: v.id("users"),
     createdAt: v.number(),
+    isPublic: v.optional(v.boolean()),
     isPinned: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 

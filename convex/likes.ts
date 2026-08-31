@@ -72,3 +72,25 @@ export const getMyLikes = query({
       .collect();
   },
 });
+
+export const getLikedSongs = query({
+  args: {
+    userId: v.id("users"),
+    viewerId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    const isOwner = !!(args.viewerId && args.viewerId === args.userId);
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) return [];
+
+    if (!isOwner && !targetUser.showLikedSongs) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("likedSongs")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
+  },
+});

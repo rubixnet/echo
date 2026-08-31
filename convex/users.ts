@@ -11,6 +11,21 @@ export const getProfile = query({
   },
 });
 
+export const updatePrivacySettings = mutation({
+  args: {
+    userId: v.id("users"),
+    showOnlineStatus: v.optional(v.boolean()),
+    showCurrentTrack: v.optional(v.boolean()),
+    showPlaylists: v.optional(v.boolean()),
+    showLikedSongs: v.optional(v.boolean()),
+    showActiveRoom: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { userId, ...privacyFields } = args;
+    await ctx.db.patch(userId, privacyFields);
+  },
+});
+
 export const searchUsers = query({
   args: { query: v.string() },
   handler: async (ctx, args) => {
@@ -41,10 +56,7 @@ export const updateGenrePreferences = mutation({
 export const getUserData = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("users")
-      .withIndex("by_id", (q) => q.eq("_id", args.userId))
-      .unique();
+    return await ctx.db.get(args.userId);
   },
 });
 
