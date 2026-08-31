@@ -8,6 +8,8 @@ design,
 
 # icons, playlist cover and text on top! 
 
+- playlists covers, mix playlist, text on top of playlist covers etc 
+- personalized home page ?
 - on close test play mobile, onboarding page.
 
 - creating users mix playlist as well
@@ -15,17 +17,15 @@ design,
 
 - update playing from source in desktop drawer and mobile drawer
 
+
+
 - later share playlists option with friends and more
 - simple change or layout animation for expanded friends profile! 
-- option if to show playlists, rooms or info to friends or not!
-- updating playlists page logic and not showing playlist if they are not public if user makes a request or hit url
 
 - onboarding with redesigned home page
 - controls bento grid for the user, showing navbar options, track component grid ui idea figma
 - onboarding of user like drawn ui!
-- ask for favorite geners during onboarding and then show them on the dashboard top and below other ones as explore!
 - slowly animating or opacity for the bentos!
-- background is mix of colors for second onboarding step, new color get added to it each time user selects a genre!
 
 - setting up lyrics
 - host lyrics and try hosting app if possible, run bun lint and fix all the errors.

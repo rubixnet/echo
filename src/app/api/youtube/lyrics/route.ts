@@ -1,120 +1,91 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
-  const title = searchParams.get("title") || "";
-  const artist = searchParams.get("artist") || "";
+export const runtime = "edge";
 
-  if (!id)
-    return NextResponse.json(
-      { error: "No video ID provided" },
-      { status: 400 },
-    );
+const HF_SPACE_URL = "https://rubixnet-fastapi.hf.space";
+const HF_TOKEN = process.env.HF_TOKEN; 
 
-  const getYoutubeCaptions = async () => {
-    const response = await fetch(`https://www.youtube.com/watch?v=${id}`, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    const html = await response.text();
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const artist = searchParams.get("artist")?.trim();
+  const title = searchParams.get("title")?.trim();
+  const duration = searchParams.get("duration");
 
-    const captionRegex = /"captionTracks":\s*(\[.*?\])/;
-    const match = captionRegex.exec(html);
-    if (!match) throw new Error("No YouTube Captions");
+  if (!artist || !title) {
+    return NextResponse.json({ error: "Missing artist or title" }, { status: 400 });
+  }
 
-    const tracks = JSON.parse(match[1]) as {
-      vssId?: string;
-      languageCode?: string;
-      baseUrl?: string;
-    }[];
-    let track = tracks.find(
-      (t) =>
-        t.vssId === ".en" || t.languageCode === "en" || t.vssId === "a.en",
-    );
-    if (!track) track = tracks[0];
-
-    const transcriptRes = await fetch(track?.baseUrl || "");
-    const transcriptXml = await transcriptRes.text();
-
-    const textRegex = /<text start="([\d.]+)"[^>]*>([^<]+)<\/text>/g;
-    const lyrics = [];
-    let xmlMatch;
-
-    while ((xmlMatch = textRegex.exec(transcriptXml)) !== null) {
-      const time = parseFloat(xmlMatch[1]);
-      const text = xmlMatch[2]
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/\n/g, " ")
-        .replace(/♪/g, "")
-        .trim();
-
-      if (text && text !== "[Music]") {
-        lyrics.push({ time, text });
-      }
-    }
-
-    if (lyrics.length === 0) throw new Error("Captions were empty");
-    return lyrics;
-  };
-
-  const getLrcLib = async () => {
-    if (!title) throw new Error("No title provided");
-
-    const cleanTitle = title.replace(/\([^)]*\)|\[[^\]]*\]/g, "").trim();
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const res = await fetch(
-      `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(artist)}`,
-      {
-        signal: controller.signal,
-      },
-    );
-
-    clearTimeout(timeoutId);
-
-    if (!res.ok) throw new Error("LRCLIB Not found");
-
-    const data = await res.json();
-    if (!data.syncedLyrics) throw new Error("No synced lyrics found");
-
-    const lines = data.syncedLyrics.split("\n");
-    const parsed = [];
-    const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/;
-
-    for (const line of lines) {
-      const match = timeRegex.exec(line);
-      if (match) {
-        const minutes = parseInt(match[1], 10);
-        const seconds = parseInt(match[2], 10);
-        const milliseconds =
-          match[3].length === 2
-            ? parseInt(match[3], 10) * 10
-            : parseInt(match[3], 10);
-        const time = minutes * 60 + seconds + milliseconds / 1000;
-        const text = line.replace(timeRegex, "").trim();
-
-        if (text) parsed.push({ time, text });
-      }
-    }
-
-    if (parsed.length === 0) throw new Error("Parsed LRC was empty");
-    return parsed;
-  };
+  const queryParams = new URLSearchParams({ artist, title });
+  if (duration) queryParams.set("duration", duration);
 
   try {
-    const lyrics = await Promise.any([getLrcLib(), getYoutubeCaptions()]);
+    const hfController = new AbortController();
+    const hfTimeout = setTimeout(() => hfController.abort(), 3000); 
 
-    return NextResponse.json({ lyrics });
+    const hfHeaders: HeadersInit = {};
+    if (HF_TOKEN) {
+      hfHeaders["Authorization"] = `Bearer ${HF_TOKEN}`;
+    }
+
+    const hfRes = await fetch(`${HF_SPACE_URL}/api/get?${queryParams}`, {
+      headers: hfHeaders,
+      signal: hfController.signal,
+    });
+    clearTimeout(hfTimeout);
+
+    if (hfRes.ok) {
+      const data = await hfRes.json();
+      return NextResponse.json(data, {
+        status: 200,
+        headers: { "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400" },
+      });
+    }
   } catch {
-    return NextResponse.json(
-      { error: "No lyrics found anywhere" },
-      { status: 404 },
-    );
   }
+
+  try {
+    const liveController = new AbortController();
+    const liveTimeout = setTimeout(() => liveController.abort(), 5000);
+
+    const liveParams = new URLSearchParams({
+      track_name: title,
+      artist_name: artist,
+    });
+    if (duration) liveParams.set("duration", Math.round(Number(duration)).toString());
+
+    const liveRes = await fetch(`https://lrclib.net/api/get?${liveParams}`, {
+      headers: {
+        "User-Agent": "MyMusicApp/1.0 (https://github.com/my-music-app)",
+      },
+      signal: liveController.signal,
+    });
+    clearTimeout(liveTimeout);
+
+    if (liveRes.ok) {
+      const data = await liveRes.json();
+      const formatted = {
+        track_name: data.track_name,
+        artist_name: data.artist_name,
+        album_name: data.album_name,
+        duration: data.duration,
+        instrumental: data.instrumental,
+        plain_lyrics: data.plain_lyrics,
+        synced_lyrics: data.synced_lyrics,
+      };
+
+      return NextResponse.json(formatted, {
+        status: 200,
+        headers: { "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400" },
+      });
+    }
+  } catch {
+  }
+
+  return NextResponse.json(
+    { error: "Lyrics not found" },
+    {
+      status: 404,
+      headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600" },
+    }
+  );
 }
