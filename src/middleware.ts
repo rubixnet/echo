@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyAuth } from "@/lib/auth";
+import { verifyAuth, type AppJWT } from "@/lib/auth";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("session")?.value;
@@ -15,17 +15,36 @@ export async function middleware(request: NextRequest) {
 
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/tour") ||
-    pathname.startsWith("/home");
+    pathname.startsWith("/onboarding");
 
-  const verifiedToken = token ? await verifyAuth(token) : null;
+  let verifiedToken: AppJWT | null = null;
 
-  if (!verifiedToken && isProtectedRoute) {
+  if (token) {
+    try {
+      verifiedToken = await verifyAuth(token);
+    } catch {
+      verifiedToken = null;
+    }
+  }
+
+  const isLoggedIn = !!verifiedToken;
+
+  if (!isLoggedIn && isProtectedRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (verifiedToken && isPublicAuthPage && !isAuthRecovery) {
+  if (isLoggedIn && isPublicAuthPage && !isAuthRecovery) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+  
+  if (isLoggedIn && verifiedToken) {
+    if (pathname.startsWith("/onboarding") && verifiedToken.onboarded) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
+    if (pathname.startsWith("/dashboard") && !verifiedToken.onboarded) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
   }
 
   return NextResponse.next();

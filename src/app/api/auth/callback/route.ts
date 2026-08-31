@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
+import { jwtVerify } from "jose";
 
 const workos = new WorkOS(process.env.WORKOS_API_KEY!);
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
@@ -52,11 +53,15 @@ export async function GET(req: Request) {
     const token = await new SignJWT({
       userId: workosUser.id,
       email: workosUser.email,
+      onboarded: profile.onboarded,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime("60d")
       .sign(JWT_SECRET);
+
+    const debugPayload = await jwtVerify(token, JWT_SECRET).then(r => r.payload);
+    console.log("JWT payload after signing:", debugPayload);
 
     const cookieStore = await cookies();
     cookieStore.set("session", token, {
@@ -67,8 +72,10 @@ export async function GET(req: Request) {
       maxAge: 60 * 60 * 24 * 60,
     });
 
+    const onboardingUrl = new URL("/onboarding", req.url);
+
     if (isNewUser) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(onboardingUrl);
     }
 
     return NextResponse.redirect(new URL("/dashboard", req.url));

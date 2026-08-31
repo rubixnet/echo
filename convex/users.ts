@@ -98,18 +98,26 @@ export const createProfile = mutation({
       .withIndex("workosId", (q) => q.eq("workosId", args.workosId))
       .unique();
 
-    if (existingUser) return existingUser;
+    if (existingUser) {
+      return existingUser;
+    }
 
-    return await ctx.db.insert("users", {
+    const userId = await ctx.db.insert("users", {
       workosId: args.workosId,
-      username: args.name || "",
+      username: args.name || undefined,
       email: args.email,
       name: args.name || "",
       onboarded: false,
     });
+
+    const newUser = await ctx.db.get(userId);
+    if (!newUser) {
+      throw new Error("Failed to fetch newly created user");
+    }
+
+    return newUser; 
   },
 });
-
 
 export const finalizeUser = mutation({
   args: {
