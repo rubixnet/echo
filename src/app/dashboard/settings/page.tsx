@@ -3,7 +3,6 @@
 import SettingsHeader from "@/components/Settings/SettingsHeader"
 import PrivacySection from "@/components/Settings/PrivacySection";
 import FriendsSection from "@/components/Settings/FriendsSection";
-import FavoriteGenresSection from "@/components/Settings/FavoriteGenreSection";
 import HiddenTracksSection from "@/components/Settings/HiddenTracksSection";
 import { useUser } from "@/hooks/useUser";
 

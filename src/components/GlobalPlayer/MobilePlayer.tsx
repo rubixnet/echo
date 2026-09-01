@@ -60,7 +60,6 @@ export function MobilePlayer({
   const { isGuest, controlTogglePlay, controlSeekTo } = useRoomState();
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isLandScapeMode, setIsLandScapeMode] = useState(false);
   const [mobileTab, setMobileTab] = useState<"cover" | "lyrics" | "queue">(
     "cover",
   );

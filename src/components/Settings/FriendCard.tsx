@@ -20,12 +20,32 @@ import {
   Check,
 } from "lucide-react";
 
+type FriendPlaylist = {
+    _id: string;
+    name: string;
+    coverUrl?: string | null;
+    isLikedSongs?: boolean;
+    trackCount: number;
+};
+
 type FriendCardProps = {
-    friend: any;
+    friend: {
+        _id: string;
+        username: string;
+        name?: string;
+        isOnline: boolean;
+        currentTrack?: { coverUrl: string; title: string; artist: string };
+        activeRoomId?: string | null;
+        activeRoomName?: string | null;
+        playlistCount: number;
+        playlists?: FriendPlaylist[];
+    };
     isExpanded: boolean;
     onToggleExpand: () => void;
     onRemoveFriend: () => void;
 };
+
+export type FriendCardFriend = FriendCardProps["friend"];
 
 export default function FriendCard({
     friend,
@@ -193,7 +213,7 @@ export default function FriendCard({
                             </p>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {friend.playlists.map((playlist: any) => (
+                                {friend.playlists.map((playlist) => (
                                     <div
                                         key={playlist._id}
                                         className={cn(

@@ -1,50 +1,14 @@
 "use client";
 
-import Image from "next/image";
-import {
-  Radio,
-} from "@/components/icons";
-import {
-  ArrowRight,
-  Zap,
-  Globe2,
-  Lock,
-  Disc3,
-} from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { useState } from "react";
-import {
-  Play,
-} from "@/components/icons";
-import {
-  Pause,
-  AudioLines,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Homepage() {
   const logoVariant = {
     hidden: { opacity: 0, scale: 0.5, rotate: 10 },
     visible: { opacity: 1, scale: 1, rotate: 0 },
   };
-
-  const fadeUpVariant = {
-    hidden: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-  };
-
-  const [progress, setProgress] = useState(45);
-  const [isPlaying, setIsPlaying] = useState(true);
-
-  const trackInfo = {
-    title: "WE FELL IN LOVE IN OCTOBER",
-    artist: "GIRL IN RED",
-    session: "ECHO SYNC ROOM #04",
-  };
-
-  const grooveText = `${trackInfo.title} • ${trackInfo.artist} • ${trackInfo.session} • `;
 
   return (
     <div className="bg-background min-h-screen flex flex-col font-sans overflow-x-hidden">

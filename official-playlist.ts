@@ -1,4 +1,4 @@
-const genre_official_playlists = [
+export const genre_official_playlists = [
     { id: "pop-hits", name: "Pop Hits", playlistId: "RDCLAK5uy_nmS3YoxSwVVQk9lEQJ0UX4ZCjXsW_psU8", type: "genre", syncFrequency: "weekly" },
     { id: "pop", name: "Pop", playlistId: "RDCLAK5uy_nSq67AJ2d75MFNJ3j_4ClEtSgC-opBM84", type: "genre", syncFrequency: "weekly" },
     { id: "feel-good-hiphop", name: "Feel Good Hip-Hop", playlistId: "RDCLAK5uy_mkEwQuegHYB8_aAzBO8Q__6gGoaFblISw", type: "genre", syncFrequency: "weekly" },

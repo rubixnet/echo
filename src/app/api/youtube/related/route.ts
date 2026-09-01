@@ -16,6 +16,25 @@ interface StoredCache {
   expiresAt: number;
 }
 
+type YTRun = {
+  text?: string;
+  navigationEndpoint?: { browseEndpoint?: { browseId?: string } };
+};
+
+type YTNode = {
+  videoId?: string;
+  title?: { runs?: YTRun[]; simpleText?: string };
+  longBylineText?: { runs?: YTRun[] };
+  shortBylineText?: { runs?: YTRun[] };
+  ownerText?: { runs?: YTRun[] };
+  lengthText?: { runs?: YTRun[]; simpleText?: string };
+  thumbnail?: { thumbnails?: { url?: string }[] };
+  playlistPanelVideoRenderer?: YTNode;
+  compactVideoRenderer?: YTNode;
+  videoRenderer?: YTNode;
+  [key: string]: unknown;
+};
+
 const PUBLIC_INNERTUBE_KEY = "AIzaSyAO_FJ2SlqAE4An4EkweVGNO583fbxD41E";
 const musicGraph = new Map<string, StoredCache>();
 const GRAPH_CACHE_TTL = 30 * 24 * 60 * 60 * 1000;
@@ -30,16 +49,17 @@ function parseDuration(durationStr?: string): number {
 }
 
 function collectTracksFromPayload(
-  obj: any,
+  obj: unknown,
   collectedTracks: TrackItem[] = [],
   trackedIds: Set<string> = new Set()
 ): TrackItem[] {
   if (!obj || typeof obj !== "object") return collectedTracks;
 
+  const node = obj as YTNode;
   const rawTrack =
-    obj.playlistPanelVideoRenderer ||
-    obj.compactVideoRenderer ||
-    obj.videoRenderer;
+    node.playlistPanelVideoRenderer ||
+    node.compactVideoRenderer ||
+    node.videoRenderer;
 
   if (rawTrack && rawTrack.videoId) {
     const id = rawTrack.videoId;
@@ -48,7 +68,7 @@ function collectTracksFromPayload(
       trackedIds.add(id);
 
       const title =
-        rawTrack.title?.runs?.map((r: any) => r.text).join("") ||
+        rawTrack.title?.runs?.map((r) => r.text).join("") ||
         rawTrack.title?.simpleText ||
         "Unknown Title";
 
@@ -96,7 +116,11 @@ function collectTracksFromPayload(
   }
 
   for (const key of Object.keys(obj)) {
-    collectTracksFromPayload(obj[key], collectedTracks, trackedIds);
+    collectTracksFromPayload(
+      (obj as Record<string, unknown>)[key],
+      collectedTracks,
+      trackedIds
+    );
   }
 
   return collectedTracks;

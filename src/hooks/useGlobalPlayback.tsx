@@ -180,6 +180,7 @@ export function useGlobalPlayback() {
             coverUrl: metadata.coverUrl,
             duration: durationStr,
             isPlaying: true,
+            // eslint-disable-next-line react-hooks/purity
             updatedAt: Date.now(),
           }),
         );

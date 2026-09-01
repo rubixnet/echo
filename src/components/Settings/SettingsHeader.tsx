@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { useUser } from "@/hooks/useUser";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -27,16 +25,16 @@ import {
 export default function SettingsHeader() {
   const user = useUser();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const userData = useQuery(
     api.users.getUserData,
     user?._id ? { userId: user._id } : "skip"
   );
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const username = userData?.username || userData?.name || "username";
 
@@ -58,7 +56,7 @@ export default function SettingsHeader() {
               size="sm"
               className="h-9 px-3 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-foreground/10 border border-foreground/10 rounded-xl gap-2"
             >
-              {!mounted ? (
+              {!isClient ? (
                 <span className="h-3.5 w-3.5" />
               ) : theme === "dark" ? (
                 <Moon size={14} className="text-primary" />
@@ -68,7 +66,7 @@ export default function SettingsHeader() {
                 <Laptop size={14} className="text-primary" />
               )}
               <span className="capitalize">
-                {mounted ? theme || "system" : "system"}
+                {isClient ? theme || "system" : "system"}
               </span>
               <ChevronDown size={12} className="opacity-50" />
             </Button>

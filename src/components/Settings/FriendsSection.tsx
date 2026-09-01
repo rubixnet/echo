@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   User,
 } from "@/components/icons";
-import FriendCard from "./FriendCard";
+import FriendCard, { type FriendCardFriend } from "./FriendCard";
 import { Id } from "../../../convex/_generated/dataModel";
 
 export default function FriendsSection() {
@@ -24,11 +24,6 @@ export default function FriendsSection() {
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [expandedFriendId, setExpandedFriendId] = useState<Id<"users"> | null>(
         null
-    );
-
-    const userData = useQuery(
-        api.users.getUserData,
-        user?._id ? { userId: user._id } : "skip"
     );
 
     const friends = useQuery(
@@ -66,7 +61,7 @@ export default function FriendsSection() {
                 return;
             }
 
-            const isAlreadyFriend = friends?.some((f: any) => f._id === targetUser._id);
+            const isAlreadyFriend = friends?.some((f) => f._id === targetUser._id);
             if (isAlreadyFriend) {
                 setErrorMsg("Already in your friends list.");
                 return;
@@ -79,8 +74,8 @@ export default function FriendsSection() {
 
             setFriendTagInput("");
             setShowUsersPopover(false);
-        } catch (err: any) {
-            setErrorMsg(err.message || "Failed to add friend");
+        } catch (err) {
+            setErrorMsg(err instanceof Error ? err.message : "Failed to add friend");
         } finally {
             setLoading(false);
         }
@@ -182,11 +177,10 @@ export default function FriendsSection() {
                         </p>
                     </div>
                 ) : (
-                    friends.map((friend: any) => (
+                    friends.map((friend) => (
                         <FriendCard
                             key={friend._id}
-                            friend={friend}
-                            user={user}
+                            friend={friend as FriendCardFriend}
                             isExpanded={expandedFriendId === friend._id}
                             onToggleExpand={() =>
                                 setExpandedFriendId(

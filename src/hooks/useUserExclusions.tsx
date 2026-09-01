@@ -22,7 +22,9 @@ export function useUserExclusions() {
   const neverShowSet = useMemo(() => {
     if (!hatedTracks) return new Set<string>();
     return new Set<string>(
-      hatedTracks.map((t: any) => t.trackId || t.id).filter(Boolean)
+      hatedTracks
+        .map((t: { trackId?: string; id?: string }) => t.trackId || t.id)
+        .filter((x): x is string => typeof x === "string")
     );
   }, [hatedTracks]);
 
@@ -30,8 +32,10 @@ export function useUserExclusions() {
     if (!suggestLessTracks) return new Set<string>();
     return new Set<string>(
       suggestLessTracks
-        .map((t: any) => (typeof t === "string" ? t : t.trackId || t.id))
-        .filter(Boolean)
+        .map((t: { trackId?: string; id?: string } | string) =>
+          typeof t === "string" ? t : t.trackId || t.id
+        )
+        .filter((x): x is string => typeof x === "string")
     );
   }, [suggestLessTracks]);
 

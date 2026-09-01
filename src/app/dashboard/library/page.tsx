@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   History,
   Star,
@@ -78,31 +78,34 @@ export default function LibraryHubPage() {
   ]);
   const searchedArtists = useSearchFilter(libraryArtists, searchTerm, ["title"]);
 
-  const sortItems = <T extends { name?: string; title?: string }>(
-    items: T[],
-  ): T[] => {
-    return [...items].sort((a, b) => {
-      const nameA = (a.name || a.title || "").toLowerCase();
-      const nameB = (b.name || b.title || "").toLowerCase();
-      return sortOrder === "asc"
-        ? nameA.localeCompare(nameB)
-        : nameB.localeCompare(nameA);
-    });
-  };
+  const sortItems = useCallback(
+    <T extends { name?: string; title?: string }>(
+      items: T[],
+    ): T[] => {
+      return [...items].sort((a, b) => {
+        const nameA = (a.name || a.title || "").toLowerCase();
+        const nameB = (b.name || b.title || "").toLowerCase();
+        return sortOrder === "asc"
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      });
+    },
+    [sortOrder],
+  );
 
   const filteredPlaylists = useMemo(
     () => sortItems(searchedPlaylists),
-    [searchedPlaylists, sortOrder],
+    [searchedPlaylists, sortItems],
   );
 
   const filteredTracks = useMemo(
     () => sortItems(searchedTracks),
-    [searchedTracks, sortOrder],
+    [searchedTracks, sortItems],
   );
 
   const filteredArtists = useMemo(
     () => sortItems(searchedArtists),
-    [searchedArtists, sortOrder],
+    [searchedArtists, sortItems],
   );
 
   const pinnedPlaylists = useMemo(

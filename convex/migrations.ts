@@ -1,4 +1,5 @@
 import { mutation } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 
 export const migrateYoutubeIdToTrackId = mutation({
   args: {},
@@ -8,10 +9,11 @@ export const migrateYoutubeIdToTrackId = mutation({
 
     const categoryTracks = await ctx.db.query("category_tracks").collect();
     for (const doc of categoryTracks) {
-      const rawDoc = doc as any;
+      const rawDoc = doc as Doc<"category_tracks"> & { youtubeId?: string };
       if (rawDoc.youtubeId) {
         const targetTrackId = rawDoc.trackId || rawDoc.youtubeId;
-        const { youtubeId, ...cleanDoc } = rawDoc;
+        const cleanDoc = { ...rawDoc };
+        delete cleanDoc.youtubeId;
 
         await ctx.db.replace(doc._id, {
           ...cleanDoc,
@@ -23,10 +25,11 @@ export const migrateYoutubeIdToTrackId = mutation({
 
     const tracks = await ctx.db.query("tracks").collect();
     for (const doc of tracks) {
-      const rawDoc = doc as any;
+      const rawDoc = doc as Doc<"tracks"> & { youtubeId?: string };
       if (rawDoc.youtubeId) {
         const targetTrackId = rawDoc.trackId || rawDoc.youtubeId;
-        const { youtubeId, ...cleanDoc } = rawDoc;
+        const cleanDoc = { ...rawDoc };
+        delete cleanDoc.youtubeId;
 
         await ctx.db.replace(doc._id, {
           ...cleanDoc,

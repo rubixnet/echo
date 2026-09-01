@@ -120,7 +120,6 @@ export default function OnboardingPage() {
   const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [previewSlider, setPreviewSlider] = useState(65);
 
   const [isSavingStep2, setIsSavingStep2] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -138,15 +137,17 @@ export default function OnboardingPage() {
   useEffect(() => {
     if (user) {
       if (user.favoriteGenres && user.favoriteGenres.length > 0 && selectedGenres.length === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedGenres(user.favoriteGenres);
       }
     }
-  }, [user]);
+  }, [user, selectedGenres.length]);
 
   const playCompletionChime = () => {
     try {
       const audioCtx = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+        (window as unknown as Window & { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext)();
       const now = audioCtx.currentTime;
 
       [587.33, 880.0, 1174.66].forEach((freq, idx) => {
@@ -178,6 +179,7 @@ export default function OnboardingPage() {
     }
 
     if (!trimmed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUsernameStatus("idle");
       setIsCheckingUsername(false);
       return;
@@ -198,7 +200,7 @@ export default function OnboardingPage() {
         });
 
         const exactMatch = matches?.some(
-          (u: any) =>
+          (u) =>
             u.username?.toLowerCase() === trimmed && u._id !== user?._id
         );
 
@@ -293,8 +295,8 @@ export default function OnboardingPage() {
       });
 
       setStep(3);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to save profile.");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Failed to save profile.");
     } finally {
       setIsSavingStep2(false);
     }

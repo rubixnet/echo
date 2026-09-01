@@ -1,5 +1,13 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+
+interface FriendPlaylist {
+    _id: Id<"playlists">;
+    name: string;
+    trackCount: number;
+    coverUrl: string | null;
+}
 
 export const toggleFriend = mutation({
     args: { userId: v.id("users"), friendId: v.id("users") },
@@ -48,7 +56,7 @@ export const getFriendsData = query({
                         ? await ctx.db.get(friend.activeRoomId)
                         : null;
 
-                let playlists: any[] = [];
+                let playlists: FriendPlaylist[] = [];
                 if (friend.showPlaylists !== false) {
                     const rawPlaylists = await ctx.db
                         .query("playlists")
@@ -97,6 +105,8 @@ export const getFriendsData = query({
             })
         );
 
-        return results.filter(Boolean);
+        return results.filter(Boolean) as Array<
+            NonNullable<(typeof results)[number]>
+        >;
     },
 });

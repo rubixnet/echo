@@ -63,10 +63,10 @@ export function TrackActionMenuContent({
   const [copied, setCopied] = useState(false);
 
   const rawId =
-    (track as any)?.trackId ||
-    (track as any)?.id ||
-    (track as any)?.audioUrl?.split("id=")[1] ||
-    (track as any)?.url?.split("?v=")[1];
+    track?.trackId ||
+    track?.id ||
+    track?.audioUrl?.split("id=")[1] ||
+    track?.url?.split("?v=")[1];
 
   const normalized = normalizeTrack(
     track ? { ...track, id: rawId, trackId: rawId } : null

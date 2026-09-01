@@ -5,7 +5,7 @@ import { verifyAuth } from "@/lib/auth"
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-export async function POST(req: Request) {
+export async function POST() {
     const cookieStore = await cookies()
 
     const token = cookieStore.get("session")?.value;
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
         });
 
         return NextResponse.json({ success: true });
-    } catch (err) {
+    } catch {
         return NextResponse.json({ error: "Failed to update session" }, { status: 500 });
     }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useSyncExternalStore, useState } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -11,9 +11,8 @@ import {
   ListMusic,
   Star,
   X,
-  MicVocal,
   History,
-  User,
+  User as ArtistIcon,
   Music,
   ChevronUp,
   ChevronDown,
@@ -26,6 +25,7 @@ import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
+import { User } from "lucide-react";
 
 function subscribeToSidebarState(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -65,11 +65,11 @@ interface SidebarProps {
 export default function Sidebar({ initialOpen }: SidebarProps) {
   const { isOpen, toggleSidebar } = useSidebar(initialOpen);
   const [isPinsOpen, setIsPinsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const user = useUser();
   const playlists = useQuery(
@@ -89,7 +89,7 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
         onClick={() => toggleSidebar(true)}
         className={cn(
           "fixed top-3 left-4 z-900 w-11 h-11 rounded-full backdrop-blur-md border border-foreground/10 items-center justify-center text-foreground/85 hover:text-primary shadow-sm p-0",
-          !mounted && "transition-none",
+          !isClient && "transition-none",
           isOpen ? "hidden" : "hidden md:flex",
         )}
       >
@@ -99,7 +99,7 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
       <aside
         className={cn(
           "fixed lg:static top-3 left-4 bottom-20 w-56 z-900 pointer-events-auto",
-          !mounted && "transition-none",
+          !isClient && "transition-none",
           isOpen ? "hidden md:block" : "hidden",
         )}
       >
@@ -172,7 +172,7 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
                 label="Songs"
               />
               <NavItem
-                icon={MicVocal}
+                icon={ArtistIcon}
                 href="/dashboard/library#artists"
                 label="Artists"
               />
