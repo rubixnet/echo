@@ -10,6 +10,8 @@
 !.yarn/releases
 !.yarn/versions
 
+cookies.txt
+streamer.py
 # testing
 /coverage
 

@@ -1,28 +1,6 @@
 import { NextResponse } from "next/server";
-import { execFile } from "child_process";
-import { promisify } from "util";
 
-const execFileAsync = promisify(execFile);
-
-interface YtDlpEntry {
-  id?: string;
-  title?: string;
-  thumbnail?: string;
-  thumbnails?: { url?: string }[];
-  duration?: number;
-  artist?: string;
-  uploader?: string;
-  channel?: string;
-  uploader_id?: string;
-  view_count?: number;
-}
-
-function formatDuration(seconds?: number): string {
-  if (!seconds || isNaN(seconds)) return "0:00";
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${String(secs).padStart(2, "0")}`;
-}
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,81 +10,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing playlist ID" }, { status: 400 });
   }
 
-  const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+  const modalUrl = process.env.MODAL_STREAM_URL;
+  if (!modalUrl) {
+    return NextResponse.json({ error: "MODAL_STREAM_URL not set" }, { status: 500 });
+  }
 
   try {
-    const args = [
-      "--flat-playlist",
-      "--dump-single-json",
-      "--no-warnings",
-      "--extractor-args",
-      "youtube:player_client=android,web",
-      playlistUrl,
-    ];
-
-    const { stdout } = await execFileAsync("yt-dlp", args, {
-      maxBuffer: 20 * 1024 * 1024,
-    });
-
-    if (!stdout || stdout.trim() === "null") {
-      throw new Error("Empty output from yt-dlp");
-    }
-
-    const data = JSON.parse(stdout) as {
-      title?: string;
-      uploader?: string;
-      channel?: string;
-      entries?: YtDlpEntry[];
-    };
-
-    const tracks = (data.entries || []).slice(0, 50).map((entry) => {
-      const videoId = entry.id || "";
-
-      let thumbnail =
-        entry.thumbnails?.[entry.thumbnails.length - 1]?.url || entry.thumbnail;
-
-      if (!thumbnail || !thumbnail.startsWith("http")) {
-        thumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
-      }
-
-      const rawArtist =
-        entry.artist ||
-        entry.uploader ||
-        entry.channel ||
-        entry.uploader_id ||
-        "Unknown Artist";
-
-      const artist = rawArtist.replace(" - Topic", "").trim();
-
-      return {
-        _id: videoId,
-        id: videoId,
-        trackId: videoId,
-        title: entry.title || "Untitled Track",
-        artist,
-        thumbnail,
-        coverUrl: thumbnail,
-        duration: formatDuration(entry.duration),
-        views: entry.view_count || 0,
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        type: "stream",
-      };
-    });
-
-    return NextResponse.json({
-      title: data.title || "Playlist",
-      uploader: data.uploader || data.channel || "YouTube",
-      playlistId,
-      tracks,
-    });
+    const res = await fetch(`${modalUrl}/playlist?playlistId=${encodeURIComponent(playlistId)}`);
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error(
-      "yt-dlp extraction error:",
-      error instanceof Error ? error.message : error,
-    );
-    return NextResponse.json(
-      { error: "Failed to parse playlist" },
-      { status: 500 },
-    );
+    console.error("Playlist proxy error:", error);
+    return NextResponse.json({ error: "Failed to fetch playlist" }, { status: 500 });
   }
 }

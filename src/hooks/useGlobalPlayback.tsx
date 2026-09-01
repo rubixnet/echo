@@ -122,7 +122,7 @@ export function useGlobalPlayback() {
     }
 
     try {
-      const pipeUrl = `/api/youtube/stream?id=${videoId}`;
+      const pipeUrl = `https://rubixnet--music-streamer-web-app.modal.run/stream?id=${videoId}`;
       let coverUrl =
         "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256&auto=format&fit=crop";
 
