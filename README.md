@@ -23,7 +23,22 @@ you will also need pip installed in your system and using pip install
 pip install yt-dlp
 ```
 
+after this you will need the following env variables from workos and convex! 
 
+```
+WORKOS_API_KEY=
+WORKOS_CLIENT_ID=
+WORKOS_COOKIE_PASSWORD=
+JWT_SECRET=
+
+# Deployment used by `npx convex dev`
+you get this by signing up on convex or you can also choose to run convex locally without this variables! 
+CONVEX_DEPLOYMENT=dev: #followed by your project path 
+
+NEXT_PUBLIC_CONVEX_URL=CLOUD_URL_HERE
+
+NEXT_PUBLIC_CONVEX_SITE=SITE_URL_HERE
+```
 
 
 later! 
