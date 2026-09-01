@@ -19,6 +19,7 @@ design,
 - fix user leaving room!
 
 - og images for all this pages!
+- -update
 - update icons
 
 # icons, playlist cover and text on top! 
