@@ -1,6 +1,7 @@
 # Echo - experimental music player
 
-Echo is an experimental music streaming platform which i make to learn live and music streaming along with some stuff, this project is for educational purpose only. 
+## Note: this is for educational purposes only
+Echo is an experimental music streaming platform which i make to learn live and music streaming along with some stuff, this project is for educational purpose
 
 I got the idea for this project when i play badminton with friend together and play song outside, as sound is low i think if any app which i can use so both play same song together for louder output volume. so this is where the idea come for, the current and from start homepage idea come from tryklack.com/ site which i like and use it here, the login page is same as from the badminton project i have. 
 
