@@ -18,7 +18,7 @@ bun install
 ```
 this will install all the related files.
 
-you will also need pip installed in your system and using pip install
+you can also install yt dlp if you don't want to get the music files from my runner instance or if you get ratelimited! 
 ```
 pip install yt-dlp
 ```
@@ -39,6 +39,9 @@ NEXT_PUBLIC_CONVEX_URL=CLOUD_URL_HERE
 
 NEXT_PUBLIC_CONVEX_SITE=SITE_URL_HERE
 ```
+
+you will need to change the below files to how are they present at the link! 
+- adding this a bit after commiting please wait! 
 
 
 later! 
