@@ -1,24 +1,38 @@
-design,
+# Echo - experimental music player
 
-- logo, room page, seperate cover for each playlist! in figma!
-- fix user leaving room!
+Echo is an experimental music streaming platform which i make to learn live and music streaming along with some stuff, this project is for educational purpose only. 
 
-- og images for all this pages!
-- update icons
+I got the idea for this project when i play badminton with friend together and play song outside, as sound is low i think if any app which i can use so both play same song together for louder output volume. so this is where the idea come for, the current and from start homepage idea come from tryklack.com/ site which i like and use it here, the login page is same as from the badminton project i have. 
 
-# icons, playlist cover and text on top! 
+For ui of this project all the credit goes to this creator on youtube - https://www.youtube.com/@juxtopposed who redesigned apple music from this video https://www.youtube.com/watch?v=yT_aFozeDc8 and shared a figma link to file as well https://www.figma.com/community/file/1622299389536274468/apple-music-redesign. after this video i decid it better to make a whole music platform and better than apple music as Juxt design new better apple music, it has lot of stuff. 
 
-- playlists covers, mix playlist, text on top of playlist covers etc 
-- personalized home page ?
-- creating users mix playlist as well
+this application uses convex, workos, tailwind, yt dlp, nextjs, hugging face (for lyrics), modal (for backend deployment) and vercel (frontend deployment) 
 
-- setting up lyrics
-- host lyrics and try hosting app if possible, run bun lint and fix all the errors.
+to run this application locally clone the repo first 
+```
+git clone https://github.com/rubixnet/echo
+```
+then run 
+```
+bun install
+```
+this will install all the related files.
 
-- adding cron job to update yt dlp
-- browser or yt dlp script to get the playlist songs and info from browser itself!
+you will also need pip installed in your system and using pip install
+```
+pip install yt-dlp
+```
+
+
+
 
 later! 
+- personalized home page ?
+- creating users mix playlist as well
+- setting up lyrics
+- adding cron job to update yt dlp
+- playlists covers, mix playlist, text on top of playlist covers etc 
+- browser or yt dlp script to get the playlist songs and info from browser itself!
 - fix algo more! 
 - create og image for that particular song with particular link for that use. 
 - make buttons consistent
