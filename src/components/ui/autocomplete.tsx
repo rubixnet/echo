@@ -54,7 +54,7 @@ export function AutocompleteInput({
           className,
         )}
         data-slot="autocomplete-input"
-        render={<Input nativeInput size={sizeValue} />}
+        render={<Input />}
         {...props}
       />
       {showTrigger && (

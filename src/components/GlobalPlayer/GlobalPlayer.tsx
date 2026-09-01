@@ -7,7 +7,7 @@ import { useRoomPlaybackSync } from "@/hooks/useRoomContext";
 import { useUser } from "@/hooks/useUser";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { DesktopDrawer } from "./DesktopDrawer";
+import { DesktopDrawer, type TabView } from "./DesktopDrawer";
 import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
 import { AddToPlaylistModal } from "../AddToPlaylistModal";
@@ -57,6 +57,7 @@ export default function GlobalPlayer() {
   }, [playNext, isGuest]);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerTab, setDrawerTab] = useState<TabView>("cover");
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   useEffect(() => {
@@ -254,11 +255,17 @@ export default function GlobalPlayer() {
           isOpen={isDrawerOpen}
           setIsOpen={setIsDrawerOpen}
           setIsPlaylistModalOpen={setIsPlaylistModalOpen}
+          activeTab={drawerTab}
+          setActiveTab={setDrawerTab}
         />
         <DesktopMiniPlayer
           isDrawerOpen={isDrawerOpen}
           setIsDrawerOpen={setIsDrawerOpen}
           setIsPlaylistModalOpen={setIsPlaylistModalOpen}
+          onOpenTab={(tab) => {
+            setDrawerTab(tab);
+            setIsDrawerOpen(true);
+          }}
         />
       </div>
 

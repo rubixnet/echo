@@ -16,16 +16,16 @@ import {
   Music,
   ChevronUp,
   ChevronDown,
+  type IconProps,
 } from "@/components/icons";
-import type { LucideIcon } from "lucide-react";
+import { Globe, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import type { Doc } from "../../convex/_generated/dataModel";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
 
 function subscribeToSidebarState(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -191,6 +191,11 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
                   icon={ListMusic}
                   label="All Playlists"
                 />
+                <NavItem
+                  href="/dashboard/playlists"
+                  icon={Globe}
+                  label="Friends' Playlists"
+                />
 
                 <NavItem
                   href="/dashboard/library/liked"
@@ -219,37 +224,53 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
 type PlaylistSummary = Doc<"playlists"> & { coverUrl?: string | null };
 
 function SidebarPlaylistItem({ playlist }: { playlist: PlaylistSummary }) {
+  const user = useUser();
   const tracks = useQuery(api.playlists.getPlaylistTracks, {
     playlistId: playlist._id,
   });
+  const togglePrivacy = useMutation(api.playlists.togglePlaylistPrivacy);
+  const isPublic = playlist.isPublic !== false;
 
   const coverUrl =
     playlist.coverUrl ||
     (tracks && tracks.length > 0 ? tracks[0]?.coverUrl : null);
 
   return (
-    <Link
-      href={`/dashboard/library/playlist/${playlist._id}`}
-      className={cn(
-        "flex items-center gap-3 px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-foreground/70 hover:bg-foreground/5 hover:text-primary",
-      )}
-    >
-      <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
-        {coverUrl ? (
-          <Image
-            width={500}
-            height={500}
-            unoptimized
-            src={coverUrl}
-            className="w-full h-full object-cover"
-            alt={playlist.name}
-          />
-        ) : (
-          <ListMusic size={12} className="text-foreground/30" />
-        )}
-      </div>
-      <span className="truncate capitalize">{playlist.name}</span>
-    </Link>
+    <div className="group/playlist flex items-center rounded-md text-foreground/70 hover:bg-foreground/5 hover:text-primary">
+      <Link
+        href={`/dashboard/library/playlist/${playlist._id}`}
+        className="flex items-center gap-3 px-3 py-1.5 text-xs font-medium transition-colors min-w-0 flex-1"
+      >
+        <div className="w-5 h-5 shrink-0 rounded-[4px] bg-foreground/5 border border-foreground/10 flex items-center justify-center overflow-hidden shadow-sm">
+          {coverUrl ? (
+            <Image
+              width={500}
+              height={500}
+              unoptimized
+              src={coverUrl}
+              className="w-full h-full object-cover"
+              alt={playlist.name}
+            />
+          ) : (
+            <ListMusic size={12} className="text-foreground/30" />
+          )}
+        </div>
+        <span className="truncate capitalize">{playlist.name}</span>
+      </Link>
+      <button
+        type="button"
+        title={isPublic ? "Make private" : "Make public"}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!user?._id) return;
+          togglePrivacy({ playlistId: playlist._id, userId: user._id });
+        }}
+        className="w-7 h-7 mr-1 shrink-0 flex items-center justify-center rounded-md text-foreground/30 hover:text-foreground opacity-0 group-hover/playlist:opacity-100 transition-opacity"
+      >
+        {isPublic ? <Globe size={12} /> : <Lock size={12} />}
+      </button>
+    </div>
   );
 }
 
@@ -260,7 +281,7 @@ function NavItem({
   label,
 }: {
   href: string;
-  icon?: LucideIcon;
+  icon?: React.ComponentType<IconProps>;
   visual?: React.ReactNode;
   label: string;
 }) {

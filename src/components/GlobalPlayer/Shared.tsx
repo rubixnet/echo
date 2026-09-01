@@ -238,10 +238,13 @@ export function StarButton({ className }: { className?: string }) {
     <button
       onClick={handleLike}
       disabled={!activeMetadata?.id}
-      className={cn("p-2 transition-colors disabled:opacity-50", className)}
+      className={cn(
+        "w-8 h-8 flex items-center justify-center transition-colors disabled:opacity-50",
+        className,
+      )}
     >
       <Star
-        size={24}
+        size={18}
         strokeWidth={2}
         className={cn(
           "transition-colors",
@@ -286,7 +289,7 @@ export function useNextInQueue(limit: number = 4) {
       fetchedForIdRef.current = currentId;
       setIsFetching(true);
 
-      fetchRelatedTracks(currentId, queue || [])
+      fetchRelatedTracks(currentId, { existingQueue: queue || [] })
         .then((recommendations) => {
           if (recommendations && recommendations.length > 0) {
             const songsToAdd = recommendations.slice(0, 5);

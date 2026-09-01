@@ -29,14 +29,16 @@ export default function PlaylistPage({
 
   const { playTrack } = useGlobalPlayback();
 
-  const playlists = useQuery(
-    api.playlists.getUserPlaylists,
-    user?._id ? { userId: user._id } : "skip",
+  const playlist = useQuery(
+    api.playlists.getPlaylist,
+    user?._id ? { playlistId, viewerId: user._id } : { playlistId },
   );
-  const tracks = useQuery(api.playlists.getPlaylistTracks, { playlistId });
-  const playlist = playlists?.find((p) => p._id === playlistId);
+  const tracks = useQuery(
+    api.playlists.getPlaylistTracks,
+    user?._id ? { playlistId, viewerId: user._id } : { playlistId },
+  );
 
-  const isLoading = playlists === undefined || tracks === undefined;
+  const isLoading = playlist === undefined || tracks === undefined;
 
   const { handleTogglePin, openEdit, openDelete, modals, isPinned } =
     usePlaylistActions(playlist, {
@@ -79,7 +81,7 @@ export default function PlaylistPage({
 
   const hasTracks = !!tracks && tracks.length > 0;
   const showGrid = !!tracks && tracks.length >= 4;
-  const isOwner = !!user && !!playlist && playlist.userId === user._id;
+  const isOwner = !!playlist?.isOwner;
 
   const coverNode = !hasTracks ? (
     <div className="w-full h-full flex items-center justify-center bg-foreground/5">
@@ -112,7 +114,11 @@ export default function PlaylistPage({
         title={playlist?.name ?? "Playlist"}
         metaLine={
           <>
-            <span className="text-foreground">{user?.name || "You"}</span>
+            <span className="text-foreground">
+              {playlist?.isOwner
+                ? user?.name || "You"
+                : playlist?.ownerName || "Unknown"}
+            </span>
             <span className="text-foreground/40">•</span>
             <span>
               {tracks?.length ?? 0} songs, {totalDurationStr}

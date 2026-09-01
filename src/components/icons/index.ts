@@ -1,3 +1,4 @@
+export type { IconProps } from "./types";
 export { ArrowDownUp } from "./ArrowDownUp";
 export { ArrowUpDown } from "./ArrowUpDown";
 export { Astroid } from "./Astroid";

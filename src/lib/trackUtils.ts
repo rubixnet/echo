@@ -52,7 +52,6 @@ export interface CanonicalTrack {
 export interface NormalizableTrack {
   id?: string;
   trackId?: string;
-  trackId?: string;
   _id?: string;
   url?: string;
   audioUrl?: string;

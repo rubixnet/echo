@@ -18,6 +18,8 @@ import {
   EllipsisVertical,
   Shuffle,
   Radio,
+  MicVocal,
+  ListMusic,
 } from "@/components/icons";
 import {
   Pause,
@@ -29,12 +31,14 @@ interface DesktopMiniPlayerProps {
   isDrawerOpen: boolean;
   setIsDrawerOpen: (v: boolean) => void;
   setIsPlaylistModalOpen: (v: boolean) => void;
+  onOpenTab?: (tab: "lyrics" | "queue") => void;
 }
 
 export function DesktopMiniPlayer({
   isDrawerOpen,
   setIsDrawerOpen,
   setIsPlaylistModalOpen,
+  onOpenTab,
 }: DesktopMiniPlayerProps) {
   const {
     isPlaying,
@@ -189,20 +193,23 @@ export function DesktopMiniPlayer({
               )}
             </div>
 
-            <div className="flex-[1.5] basis-0 flex items-center justify-end gap-3 min-w-0 pl-8">
-              <StarButton />
-              {/* <button onClick={() => setIsDrawerOpen(true)} disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><Mic2 size={20} strokeWidth={2} /></button> */}
-              {/* <button disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><ListMusic size={20} strokeWidth={2} /></button> */}
-              {/* <button disabled={!activeMetadata} className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"><MonitorSpeaker size={20} strokeWidth={2} /></button> */}
-              {/* <div className="flex items-center gap-2 shrink-0 group/volume" onMouseEnter={() => setIsVolumeExpanded(true)} onMouseLeave={() => setIsVolumeExpanded(false)}>
-                                <button onClick={() => setVolume && setVolume(volume === 0 ? 0.8 : 0)} className="text-foreground/70 group-hover/volume:text-foreground transition-colors shrink-0">
-                                    {volume === 0 ? <VolumeX size={20} strokeWidth={2} /> : <Volume2 size={20} strokeWidth={2} />}
-                                </button>
-                                <div className={cn("transition-all duration-300 overflow-hidden flex items-center origin-left", isVolumeExpanded ? "w-20 opacity-100" : "w-0 opacity-0")}>
-                                    <input type="range" min="0" max="1" step="0.01" value={volume !== undefined ? volume : 0.8} onChange={(e) => setVolume && setVolume(parseFloat(e.target.value))} className="w-full h-1 bg-foreground/20 rounded-full appearance-none cursor-pointer accent-foreground" />
-                                </div>
-                            </div> */}
-              <div className="relative shrink-0">
+            <div className="flex-[1.5] basis-0 flex items-center justify-end gap-1 min-w-0 pl-8">
+              <StarButton className="p-0" />
+              <button
+                onClick={() => onOpenTab?.("lyrics")}
+                disabled={!activeMetadata}
+                className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
+              >
+                <MicVocal size={18} strokeWidth={2} />
+              </button>
+              <button
+                onClick={() => onOpenTab?.("queue")}
+                disabled={!activeMetadata}
+                className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
+              >
+                <ListMusic size={18} strokeWidth={2} />
+              </button>
+              <div className="relative shrink-0 w-8 h-8 flex items-center justify-center">
                 {activeMetadata ? (
                   <TrackDropdownMenu
                     track={activeMetadata}
@@ -213,14 +220,14 @@ export function DesktopMiniPlayer({
                     trigger={
                       <button
                         disabled={!activeMetadata}
-                        className="text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
+                        className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
                       >
-                        <EllipsisVertical size={20} strokeWidth={2} />
+                        <EllipsisVertical size={16} strokeWidth={2} />
                       </button>
                     }
                   />
                 ) : (
-                  <div className="w-5" />
+                  <div className="w-8 h-8" />
                 )}
               </div>
             </div>

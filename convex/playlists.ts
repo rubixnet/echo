@@ -228,3 +228,83 @@ export const togglePinned = mutation({
     });
   },
 });
+
+export const getPlaylist = query({
+  args: {
+    playlistId: v.id("playlists"),
+    viewerId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    const playlist = await ctx.db.get(args.playlistId);
+    if (!playlist) return null;
+
+    const isOwner = args.viewerId === playlist.userId;
+    if (!isOwner && playlist.isPublic === false) return null;
+
+    const owner = await ctx.db.get(playlist.userId);
+    const tracks = await ctx.db
+      .query("playlistTracks")
+      .withIndex("by_playlist", (q) => q.eq("playlistId", playlist._id))
+      .collect();
+
+    return {
+      ...playlist,
+      isOwner,
+      ownerName: owner?.name || "Unknown",
+      ownerUsername: owner?.username,
+      trackCount: tracks.length,
+      coverUrl: tracks[0]?.coverUrl || null,
+    };
+  },
+});
+
+export const getFriendsPlaylists = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const relations = await ctx.db
+      .query("friends")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const groups = await Promise.all(
+      relations.map(async (rel) => {
+        const friend = await ctx.db.get(rel.friendId);
+        if (!friend || friend.showPlaylists === false) return null;
+
+        const playlists = await ctx.db
+          .query("playlists")
+          .withIndex("by_user", (q) => q.eq("userId", friend._id))
+          .collect();
+
+        const publicPlaylists = playlists.filter((p) => p.isPublic !== false);
+
+        const mapped = await Promise.all(
+          publicPlaylists.map(async (playlist) => {
+            const tracks = await ctx.db
+              .query("playlistTracks")
+              .withIndex("by_playlist", (q) => q.eq("playlistId", playlist._id))
+              .collect();
+            return {
+              ...playlist,
+              trackCount: tracks.length,
+              coverUrl: tracks[0]?.coverUrl || null,
+            };
+          }),
+        );
+
+        if (mapped.length === 0) return null;
+
+        return {
+          friendId: friend._id,
+          name: friend.name,
+          username: friend.username || friend.name,
+          playlists: mapped,
+        };
+      }),
+    );
+
+    return groups.filter(
+      (group): group is NonNullable<typeof group> => group !== null,
+    );
+  },
+});

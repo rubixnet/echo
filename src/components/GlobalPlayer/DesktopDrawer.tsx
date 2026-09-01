@@ -22,20 +22,20 @@ import {
   Music,
   EllipsisVertical,
   ListMusic,
+  MicVocal,
 } from "@/components/icons";
 import {
   Loader2,
   ImageIcon,
-  Mic2,
 } from "lucide-react";
 import { TrackDropdownMenu } from "./TrackActionsMenu";
 import Image from "next/image";
 
-type TabView = "cover" | "lyrics" | "queue";
+export type TabView = "cover" | "lyrics" | "queue";
 
 const tabIcons = {
   cover: ImageIcon,
-  lyrics: Mic2,
+  lyrics: MicVocal,
   queue: ListMusic,
 };
 
@@ -43,17 +43,20 @@ export function DesktopDrawer({
   isOpen,
   setIsOpen,
   setIsPlaylistModalOpen,
+  activeTab,
+  setActiveTab,
 }: {
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   setIsPlaylistModalOpen: (v: boolean) => void;
+  activeTab: TabView;
+  setActiveTab: (tab: TabView) => void;
 }) {
   const { activeMetadata, currentTimeSec, seekToTime } = useAudioEngine();
   const router = useRouter();
   const { upNextTracks, isFetching } = useNextInQueue(5);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabView>("cover");
   const [drawerWidth, setDrawerWidth] = useState(360);
   const [isResizing, setIsResizing] = useState(false);
   

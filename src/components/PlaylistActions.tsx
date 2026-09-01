@@ -12,6 +12,8 @@ import {
 import {
   Trash2,
   Loader2,
+  Globe,
+  Lock,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -49,6 +51,7 @@ export function usePlaylistActions(
   const [editName, setEditName] = useState("");
 
   const togglePinned = useMutation(api.playlists.togglePinned);
+  const togglePrivacy = useMutation(api.playlists.togglePlaylistPrivacy);
   const deletePlaylist = useMutation(api.playlists.deletePlaylist);
   const updatePlaylistName = useMutation(api.playlists.updatePlaylistInfo);
 
@@ -59,6 +62,18 @@ export function usePlaylistActions(
       await togglePinned({ playlistId: playlist._id });
     } catch (error) {
       console.error("Failed to pin:", error);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  const handleTogglePrivacy = async () => {
+    if (!playlist || !user?._id) return;
+    try {
+      setIsPending(true);
+      await togglePrivacy({ playlistId: playlist._id, userId: user._id });
+    } catch (error) {
+      console.error("Failed to toggle privacy:", error);
     } finally {
       setIsPending(false);
     }
@@ -216,8 +231,10 @@ export function usePlaylistActions(
 
   return {
     isPinned: playlist?.isPinned,
+    isPublic: playlist?.isPublic !== false,
     isPending,
     handleTogglePin,
+    handleTogglePrivacy,
     openEdit,
     openDelete,
     modals,
@@ -234,8 +251,16 @@ export function PlaylistContextMenu({
   onOpenChange?: (open: boolean) => void;
 }) {
   const isMobile = useIsMobile();
-  const { handleTogglePin, openEdit, openDelete, modals, isPinned, isPending } =
-    usePlaylistActions(playlist);
+  const {
+    handleTogglePin,
+    handleTogglePrivacy,
+    openEdit,
+    openDelete,
+    modals,
+    isPinned,
+    isPublic,
+    isPending,
+  } = usePlaylistActions(playlist);
 
   return (
     <>
@@ -283,6 +308,27 @@ export function PlaylistContextMenu({
           >
             <PenLine size={isMobile ? 18 : 14} />
             <span>Edit Name</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTogglePrivacy();
+            }}
+            disabled={isPending}
+            className={cn(
+              "cursor-pointer focus:bg-foreground/10",
+              isMobile
+                ? "gap-3 rounded-lg text-[15px] py-2.5 px-3"
+                : "gap-2 rounded-md text-[13px] py-1.5 px-2",
+            )}
+          >
+            {isPublic ? (
+              <Lock size={isMobile ? 18 : 14} />
+            ) : (
+              <Globe size={isMobile ? 18 : 14} />
+            )}
+            <span>{isPublic ? "Make Private" : "Make Public"}</span>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator className={isMobile ? "my-1.5" : "my-1"} />

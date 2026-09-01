@@ -8,8 +8,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+// import { useMutation } from "convex/react";
+// import { api } from "../../convex/_generated/api";
 import type { TrackMetadata } from "@/lib/trackUtils";
 
 interface LyricLine {
@@ -32,7 +32,7 @@ export function SyncedLyrics({
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(false);
 
-  const saveLyricsToDB = useMutation(api.tracks.saveLyrics);
+  // const saveLyricsToDB = useMutation(api.tracks.saveLyrics);
 
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const activeLyricRef = useRef<HTMLParagraphElement>(null);
@@ -69,12 +69,12 @@ export function SyncedLyrics({
         if (data.lyrics && data.lyrics.length > 0) {
           setLyrics(data.lyrics);
 
-          if (activeMetadata.id) {
-            saveLyricsToDB({
-              trackId: activeMetadata.id,
-              syncedLyrics: JSON.stringify(data.lyrics),
-            }).catch(console.error);
-          }
+          // if (activeMetadata.id) {
+          //   saveLyricsToDB({
+          //     trackId: activeMetadata.id,
+          //     syncedLyrics: JSON.stringify(data.lyrics),
+          //   }).catch(console.error);
+          // }
         } else {
           setError(true);
         }
@@ -94,7 +94,7 @@ export function SyncedLyrics({
     activeMetadata?.id,
     activeMetadata?.title,
     activeMetadata?.artist,
-    saveLyricsToDB,
+    // saveLyricsToDB,
   ]);
 
   const activeLineIndex = lyrics.findLastIndex(

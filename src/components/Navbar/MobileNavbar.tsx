@@ -7,8 +7,6 @@ import {
   Search,
   Library,
   Radio,
-} from "@/components/icons";
-import {
   Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";

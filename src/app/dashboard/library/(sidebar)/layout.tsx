@@ -216,7 +216,7 @@ function SidebarPlaylistItem({
   );
 }
 
-export function SidebarLayoutSkeleton() {
+function SidebarLayoutSkeleton() {
   return (
     <div className="flex flex-col w-full px-3 pb-52 pt-0 space-y-1">
       {Array.from({ length: 6 }).map((_, index) => (
@@ -229,7 +229,7 @@ export function SidebarLayoutSkeleton() {
   );
 }
 
-export function SidebarItemSkeleton() {
+function SidebarItemSkeleton() {
   return (
     <div className="flex items-center gap-3 p-2 rounded-lg">
       <div className="w-12 h-12 shrink-0 rounded-md bg-foreground/10 animate-pulse" />

@@ -17,11 +17,11 @@ import {
   ListMusic,
   EllipsisVertical,
   Radio,
+  MicVocal,
 } from "@/components/icons";
 import {
   Pause,
   Loader2,
-  Mic2,
   ListPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -336,7 +336,7 @@ export function MobilePlayer({
               mobileTab === "lyrics" ? "text-primary" : "text-foreground/70 hover:text-foreground",
             )}
           >
-            <Mic2 size={32} strokeWidth={2} />
+            <MicVocal size={28} strokeWidth={2} />
           </Button>
 
           <LiquidContainer radius="999px">

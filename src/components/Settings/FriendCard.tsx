@@ -56,7 +56,7 @@ export default function FriendCard({
     const [copiedId, setCopiedId] = useState<string | null>(null);
 
     const handleCopyPlaylistLink = (playlistId: string) => {
-        const url = `${window.location.origin}/playlist/${playlistId}`;
+        const url = `${window.location.origin}/dashboard/library/playlist/${playlistId}`;
         navigator.clipboard.writeText(url);
         setCopiedId(playlistId);
         setTimeout(() => setCopiedId(null), 2000);
@@ -224,7 +224,7 @@ export default function FriendCard({
                                         )}
                                     >
                                         <Link
-                                            href={`/playlist/${playlist._id}`}
+                                            href={`/dashboard/library/playlist/${playlist._id}`}
                                             className="flex items-center gap-2.5 min-w-0 flex-1"
                                         >
                                             <div className="w-8 h-8 rounded-lg bg-foreground/10 overflow-hidden flex items-center justify-center shrink-0">
