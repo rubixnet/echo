@@ -1,5 +1,7 @@
 # Echo - experimental music player
 
+also i am hosting this on vercel and fixing issues!
+
 ### Note: this is for educational purposes only
 Echo is an experimental music streaming platform which i make to learn live and music streaming along with some stuff, this project is for educational purpose
 
