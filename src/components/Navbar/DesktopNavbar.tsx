@@ -91,7 +91,7 @@ export default function DesktopNavbar() {
                           : "text-foreground/60 hover:text-foreground hover:bg-foreground/5",
                       )}
                     >
-                      <Icon size={18} strokeWidth={0.5} className="shrink-0" />
+                      <Icon size={18} className="shrink-0" />
                     </Link>
                   );
                 })}
