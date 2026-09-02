@@ -191,11 +191,11 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
                   icon={ListMusic}
                   label="All Playlists"
                 />
-                <NavItem
+                {/* <NavItem
                   href="/dashboard/playlists"
                   icon={Globe}
                   label="Friends' Playlists"
-                />
+                /> */}
 
                 <NavItem
                   href="/dashboard/library/liked"

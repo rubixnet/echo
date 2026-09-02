@@ -274,10 +274,10 @@ export function TrackActionMenuContent({
 
       <SeparatorComponent className="bg-neutral-200/50 dark:bg-white/10 mx-1.5 my-1" />
 
-      <ItemComponent onClick={handleAction(() => { })} className={itemClassName}>
+      {/* <ItemComponent onClick={handleAction(() => { })} className={itemClassName}>
         <Radio size={sizeStyles.icon} className="text-neutral-500 dark:text-neutral-400" />
         Create Station
-      </ItemComponent>
+      </ItemComponent> */}
 
       <ItemComponent onClick={handleAction(handleSuggestLess)} className={itemClassName}>
         <ThumbsDown size={sizeStyles.icon} className="text-neutral-500 dark:text-neutral-400" />
