@@ -245,11 +245,12 @@ export function StarButton({ className }: { className?: string }) {
     >
       <Star
         size={18}
-        strokeWidth={2}
+        strokeWidth={1}
+        solid={isLiked}
         className={cn(
           "transition-colors",
           isLiked
-            ? "text-emerald-500 fill-emerald-500"
+            ? "text-emerald-500"
             : "text-foreground/70 hover:text-foreground",
         )}
       />

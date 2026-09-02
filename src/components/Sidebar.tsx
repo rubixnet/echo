@@ -14,10 +14,12 @@ import {
   History,
   User as ArtistIcon,
   Music,
-  ChevronUp,
-  ChevronDown,
   type IconProps,
 } from "@/components/icons";
+import { 
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react"
 import { Globe, Lock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LiquidDrop } from "@/components/LiquidUI/LiquidDrop";
@@ -113,7 +115,7 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
               onClick={() => toggleSidebar(false)}
               className="text-foreground/40 px-4 py-3 lg:pb-1 lg:mt-1.5 hover:text-primary transition-colors cursor-pointer"
             >
-              <X size={18} strokeWidth={2.5} />
+              <X size={15} strokeWidth={1} />
             </button>
           </div>
 
@@ -122,7 +124,7 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
               <NavItem href="/dashboard" icon={Home} label="Home" />
               <NavItem href="/dashboard/search" icon={Search} label="Search" />
               <NavItem href="/dashboard/rooms" icon={Radio} label="Live Rooms" />
-              <NavItem href="/dashboard/settings" icon={User} label="Profile" />
+              <NavItem href="/dashboard/settings" icon={User} label="Profile" visual={<User size={18} strokeWidth={2} />} />
             </div>
 
             <div className="shrink-0 flex flex-col gap-0.5">
@@ -145,9 +147,9 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
                   className="text-foreground/50 w-12 h-7 flex justify-center rounded-r-lg items-center hover:text-foreground group-hover:bg-foreground/5 cursor-pointer"
                 >
                   {isPinsOpen ? (
-                    <ChevronUp size={20} strokeWidth={2.5} />
+                    <ChevronUp size={20} strokeWidth={1} />
                   ) : (
-                    <ChevronDown size={20} strokeWidth={2.5} />
+                    <ChevronDown size={20} strokeWidth={1} />
                   )}
                 </button>
               </div>
@@ -191,12 +193,6 @@ export default function Sidebar({ initialOpen }: SidebarProps) {
                   icon={ListMusic}
                   label="All Playlists"
                 />
-                {/* <NavItem
-                  href="/dashboard/playlists"
-                  icon={Globe}
-                  label="Friends' Playlists"
-                /> */}
-
                 <NavItem
                   href="/dashboard/library/liked"
                   label="Favorite Songs"

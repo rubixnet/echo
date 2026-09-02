@@ -2,6 +2,5 @@ import type { SVGProps } from "react";
 
 export type IconProps = Omit<SVGProps<SVGSVGElement>, "width" | "height"> & {
   size?: number | string;
-  strokeWidth?: number;
-  fill?: string;
+  solid?: boolean;
 };

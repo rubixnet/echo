@@ -20,9 +20,6 @@ export default function FriendsPlaylistsPage() {
     <div className="px-6 lg:px-12 py-8 pb-32 space-y-12 bg-background text-foreground max-w-7xl mx-auto">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Friends&apos; Playlists</h1>
-        <p className="text-sm text-foreground/50">
-          Public playlists shared by people you follow.
-        </p>
       </div>
 
       {isLoading ? (
@@ -65,7 +62,7 @@ export default function FriendsPlaylistsPage() {
                         height={500}
                         unoptimized
                         src={playlist.coverUrl}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                         alt={playlist.name}
                       />
                     ) : (

@@ -2,20 +2,25 @@ import { forwardRef } from "react";
 import type { IconProps } from "./types";
 
 export const SkipForward = forwardRef<SVGSVGElement, IconProps>(
-  ({ size = 24, className, strokeWidth, fill = "currentColor", color, ...props }, ref) => (
+  ({ size = 24, className, fill, fillOpacity, stroke, strokeWidth = 2, color, solid, ...props }, ref) => (
     <svg
       ref={ref}
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 11"
+      viewBox="0 0 24 24"
       width={size}
       height={size}
       className={className}
-      fill={fill}
+      fill={fill ?? (solid ? "currentColor" : "none")}
+      fillOpacity={fillOpacity ?? (solid ? 1 : undefined)}
       color={color}
+      stroke={stroke ?? "currentColor"}
       strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...props}
     >
-      <path d="M-0.00146484 9.78613V0.999023C-0.00146484 0.662435 0.0844727 0.411784 0.256348 0.24707C0.431803 0.0823568 0.637695 0 0.874023 0C1.08529 0 1.29118 0.059082 1.4917 0.177246L8.8501 4.49023C9.09359 4.62988 9.27262 4.76774 9.38721 4.90381C9.50537 5.03988 9.56445 5.2028 9.56445 5.39258C9.56445 5.57878 9.50537 5.73991 9.38721 5.87598C9.27262 6.01204 9.09359 6.15169 8.8501 6.29492L1.4917 10.6025C1.29118 10.7207 1.08529 10.7798 0.874023 10.7798C0.637695 10.7798 0.431803 10.6974 0.256348 10.5327C0.0844727 10.3716 -0.00146484 10.1227 -0.00146484 9.78613ZM9.52148 9.78613V0.999023C9.52148 0.662435 9.60742 0.411784 9.7793 0.24707C9.95475 0.0823568 10.1606 0 10.397 0C10.6047 0 10.8105 0.059082 11.0146 0.177246L18.3677 4.49023C18.6147 4.62988 18.7956 4.76774 18.9102 4.90381C19.0283 5.03988 19.0874 5.2028 19.0874 5.39258C19.0874 5.57878 19.0283 5.73991 18.9102 5.87598C18.7956 6.01204 18.6147 6.15169 18.3677 6.29492L11.0146 10.6025C10.8105 10.7207 10.6047 10.7798 10.397 10.7798C10.1606 10.7798 9.95475 10.6974 9.7793 10.5327C9.60742 10.3716 9.52148 10.1227 9.52148 9.78613Z" fill="inherit" fillOpacity="0.5" />
+      <path d="M21 4v16" />
+      <path d="M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z" />
     </svg>
   )
 );

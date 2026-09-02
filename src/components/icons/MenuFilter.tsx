@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import type { IconProps } from "./types";
 
-export const Maximize2 = forwardRef<SVGSVGElement, IconProps>(
+export const MenuFilter = forwardRef<SVGSVGElement, IconProps>(
   ({ size = 24, className, fill, fillOpacity, stroke, strokeWidth = 2, color, solid, ...props }, ref) => (
     <svg
       ref={ref}
@@ -19,11 +19,16 @@ export const Maximize2 = forwardRef<SVGSVGElement, IconProps>(
       strokeLinejoin="round"
       {...props}
     >
-      <path d="M15 3h6v6" />
-      <path d="m21 3-7 7" />
-      <path d="m3 21 7-7" />
-      <path d="M9 21H3v-6" />
+      <path d="M10 5H3" />
+      <path d="M12 19H3" />
+      <path d="M14 3v4" />
+      <path d="M16 17v4" />
+      <path d="M21 12h-9" />
+      <path d="M21 19h-5" />
+      <path d="M21 5h-7" />
+      <path d="M8 10v4" />
+      <path d="M8 12H3" />
     </svg>
   )
 );
-Maximize2.displayName = "Maximize2";
+MenuFilter.displayName = "MenuFilter";

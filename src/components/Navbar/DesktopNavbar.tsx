@@ -3,11 +3,11 @@
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Home,
-  Search,
-  Library,
+  Home, 
+  Search, 
   Radio,
-} from "lucide-react";
+  Library, 
+} from "@/components/icons";
 import {
   Settings,
   ChevronLeft,
@@ -91,7 +91,7 @@ export default function DesktopNavbar() {
                           : "text-foreground/60 hover:text-foreground hover:bg-foreground/5",
                       )}
                     >
-                      <Icon size={18} strokeWidth={2.5} className="shrink-0" />
+                      <Icon size={18} strokeWidth={0.5} className="shrink-0" />
                     </Link>
                   );
                 })}

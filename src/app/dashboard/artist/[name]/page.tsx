@@ -193,10 +193,11 @@ export default function ArtistPage({
                 >
                   <Bookmark
                     size={18}
+                    solid={isBookmarked}
                     className={cn(
                       "transition-colors",
                       isBookmarked
-                        ? "fill-primary text-primary"
+                        ? "text-primary"
                         : "text-primary/80",
                     )}
                   />

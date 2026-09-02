@@ -56,7 +56,7 @@ export default function LikedSongsPage() {
 
   const coverNode = (
     <div className="w-full h-full bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center">
-      <Star size={125} className="fill-white text-white" />
+      <Star size={125} solid className="text-white" />
     </div>
   );
 

@@ -16,7 +16,7 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 md:px-24 lg:px-32 relative z-10">
         <div className="absolute top-8 left-8 sm:left-16 md:left-24 lg:left-32">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-inner group-hover:scale-102 transition-transform">
               <Music size={18} className="ml-0.5" />
             </div>
             <h1 className="text-2xl font-black tracking-tight text-neutral-900">

@@ -276,7 +276,7 @@ export function PlaylistLayout({
                 )}
                 onClick={onTogglePin}
               >
-                <Pin size={16} className={isPinned ? "fill-current" : ""} />
+                <Pin size={16} solid={isPinned} />
               </Button>
               <Button
                 variant="ghost"
@@ -343,7 +343,7 @@ export function PlaylistLayout({
                   onClick={onTogglePin}
                   title={isPinned ? "Unpin playlist" : "Pin playlist"}
                 >
-                  <Pin size={16} className={isPinned ? "fill-current" : ""} />
+                  <Pin size={16} solid={isPinned} />
                 </Button>
 
                 <Button
@@ -366,9 +366,9 @@ export function PlaylistLayout({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-10 px-0 text-foreground/70 hover:text-foreground hover:bg-foreground/10"
+                    className="w-10 px-0 text-foreground/80 hover:text-foreground hover:bg-foreground/10"
                   >
-                    <ListFilter size={14} />
+                    <ListFilter size={16} strokeWidth={2} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -395,12 +395,12 @@ export function PlaylistLayout({
                 variant="ghost"
                 size="sm"
                 onClick={toggleSort}
-                className="w-10 px-0 text-foreground/70 hover:bg-foreground/10 hover:text-foreground"
+                className="w-10 px-0 text-foreground/80 hover:bg-foreground/10 hover:text-foreground"
               >
                 {sortOrder === "desc" ? (
-                  <ArrowDownUp size={16} />
+                  <ArrowDownUp size={16} strokeWidth={2} />
                 ) : (
-                  <ArrowUpDown size={16} />
+                  <ArrowUpDown size={16} strokeWidth={2} />
                 )}
               </Button>
             </ButtonGroup>

@@ -106,7 +106,7 @@ export default function SidebarLayout({
                       )}
                     >
                       <div className="w-12 h-12 shrink-0 rounded-md bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm">
-                        <Star size={20} className="fill-white text-white" />
+                        <Star size={20} solid className="text-white" />
                       </div>
                       <div className="flex flex-col min-w-0">
                         <span
@@ -188,7 +188,7 @@ function SidebarPlaylistItem({
 
             {playlist.isPinned && (
               <div className="absolute top-1 left-1 bg-background/80 backdrop-blur-md p-1 rounded-full shadow-md text-foreground">
-                <Pin size={8} className="fill-current" />
+                <Pin size={8} solid />
               </div>
             )}
           </div>

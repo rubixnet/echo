@@ -142,7 +142,7 @@ export function DesktopMiniPlayer({
                     disabled={!activeMetadata}
                     className="text-foreground/40 hover:text-foreground transition-colors disabled:opacity-50"
                   >
-                    <Shuffle size={20} strokeWidth={2} />
+                    <Shuffle size={20} strokeWidth={2}   />
                   </button>
                   <button
                     onClick={playPrevious}
@@ -151,12 +151,12 @@ export function DesktopMiniPlayer({
                     }
                     className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
                   >
-                    <SkipBack size={24} strokeWidth={1} />
+                    <SkipBack size={24} strokeWidth={2} />
                   </button>
                   <button
                     onClick={controlTogglePlay}
                     disabled={!activeMetadata}
-                    className="text-foreground hover:scale-105 active:scale-98 transition-all disabled:opacity-50"
+                    className="text-foreground hover:scale-102 active:scale-98 transition-all disabled:opacity-50"
                   >
                     {isLoading ? (
                       <Loader2
@@ -165,9 +165,9 @@ export function DesktopMiniPlayer({
                         strokeWidth={2.5}
                       />
                     ) : isPlaying ? (
-                      <Pause size={28} fill="currentColor" strokeWidth={1} />
+                      <Pause size={28} fill="currentColor" strokeWidth={2} />
                     ) : (
-                      <Play size={28} fill="currentColor" strokeWidth={1} />
+                      <Play size={28} fill="currentColor" strokeWidth={2} />
                     )}
                   </button>
                   <button
@@ -175,7 +175,7 @@ export function DesktopMiniPlayer({
                     disabled={!activeMetadata}
                     className="text-foreground/70 hover:text-foreground active:scale-98 transition-all disabled:opacity-30"
                   >
-                    <SkipForward size={24} strokeWidth={1} />
+                    <SkipForward size={24} strokeWidth={2} />
                   </button>
                   <button
                     onClick={() => setIsOnLoop(!isOnLoop)}
@@ -187,7 +187,7 @@ export function DesktopMiniPlayer({
                         : "text-foreground/40 hover:text-foreground",
                     )}
                   >
-                    <Repeat size={20} strokeWidth={2} />
+                    <Repeat size={20} strokeWidth={2}  />
                   </button>
                 </>
               )}
@@ -200,14 +200,14 @@ export function DesktopMiniPlayer({
                 disabled={!activeMetadata}
                 className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
               >
-                <MicVocal size={18} strokeWidth={2} />
+                <MicVocal size={18} strokeWidth={2}  />
               </button>
               <button
                 onClick={() => onOpenTab?.("queue")}
                 disabled={!activeMetadata}
                 className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
               >
-                <ListMusic size={18} strokeWidth={2} />
+                <ListMusic size={18} strokeWidth={2}   />
               </button>
               <div className="relative shrink-0 w-8 h-8 flex items-center justify-center">
                 {activeMetadata ? (
@@ -222,7 +222,7 @@ export function DesktopMiniPlayer({
                         disabled={!activeMetadata}
                         className="w-8 h-8 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
                       >
-                        <EllipsisVertical size={16} strokeWidth={2} />
+                        <EllipsisVertical size={16} strokeWidth={2}  />
                       </button>
                     }
                   />

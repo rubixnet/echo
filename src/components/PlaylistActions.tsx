@@ -288,7 +288,7 @@ export function PlaylistContextMenu({
           >
             <Pin
               size={isMobile ? 18 : 14}
-              className={isPinned ? "fill-current" : ""}
+              solid={isPinned}
             />
             <span>{isPinned ? "Unpin Playlist" : "Pin Playlist"}</span>
           </DropdownMenuItem>

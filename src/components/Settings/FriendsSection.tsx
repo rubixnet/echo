@@ -8,7 +8,7 @@ import { LiquidPanel } from "@/components/LiquidUI/LiquidPanel";
 import { LiquidContainer } from "@/components/LiquidUI/LiquidContainer";
 import { cn } from "@/lib/utils";
 import {
-  User,
+    User,
 } from "@/components/icons";
 import FriendCard, { type FriendCardFriend } from "./FriendCard";
 import { Id } from "../../../convex/_generated/dataModel";

@@ -33,6 +33,7 @@ design,
 
 later! 
 - fix algo more! 
+- mobile sidebars
 - create og image for that particular song with particular link for that use. 
 - make buttons consistent
 - adding popups

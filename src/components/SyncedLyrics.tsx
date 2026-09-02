@@ -154,7 +154,7 @@ export function SyncedLyrics({
             className={cn(
               "text-2xl md:text-4xl font-black tracking-tight transition-all duration-500 ease-out cursor-pointer origin-left hover:text-foreground",
               isActive
-                ? "text-foreground scale-105 opacity-100 blur-none"
+                ? "text-foreground scale-102 opacity-100 blur-none"
                 : isPassed
                   ? "text-foreground/40 scale-100 opacity-50 blur-[0.5px] hover:blur-none hover:opacity-100"
                   : "text-foreground/30 scale-100 opacity-30 blur-[1px] hover:blur-none hover:opacity-100",

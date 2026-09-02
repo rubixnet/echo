@@ -248,7 +248,8 @@ export default function LibraryHubPage() {
                     <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
                       <Star
                         size={56}
-                        className="fill-white text-white drop-shadow-md"
+                        solid
+                        className="text-white drop-shadow-md"
                       />
                     </div>
                     <h3 className="font-bold text-sm text-foreground truncate">
@@ -332,7 +333,7 @@ export default function LibraryHubPage() {
                           unoptimized
                           src={artist.coverUrl}
                           alt={artist.title}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 font-bold text-xl">
@@ -405,7 +406,7 @@ function LibraryPlaylistItem({ playlist }: { playlist: LibraryPlaylist }) {
 
         {playlist.isPinned && (
           <div className="absolute top-2 left-2 bg-background/80 backdrop-blur-md p-1.5 rounded-full shadow-md text-foreground">
-            <Pin size={12} className="fill-current" />
+            <Pin size={12} solid />
           </div>
         )}
       </div>

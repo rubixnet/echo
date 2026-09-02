@@ -116,7 +116,7 @@ export function Track({
                   unoptimized
                   src={normalized.coverUrl}
                   alt={normalized.title}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-102"
                   onError={(e) => {
                     e.currentTarget.src =
                       "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256";

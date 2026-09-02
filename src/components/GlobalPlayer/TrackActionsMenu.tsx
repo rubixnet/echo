@@ -228,7 +228,8 @@ export function TrackActionMenuContent({
         >
           <Star
             size={sizeStyles.icon + 2}
-            className={cn(isLiked && "fill-emerald-500 text-emerald-500")}
+            solid={isLiked}
+            className={cn(isLiked && "text-emerald-500")}
           />
         </button>
 
@@ -243,7 +244,8 @@ export function TrackActionMenuContent({
         >
           <Bookmark
             size={sizeStyles.icon + 2}
-            className={cn(isBookmarked && "fill-emerald-500 text-emerald-500")}
+            solid={isBookmarked}
+            className={cn(isBookmarked && "text-emerald-500")}
           />
         </button>
 

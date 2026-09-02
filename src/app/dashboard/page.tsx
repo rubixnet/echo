@@ -97,7 +97,7 @@ function PlaylistCard({
         <Image width={500} height={500} unoptimized
           src={category.coverUrl || fallbackImage}
           alt={category.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
         />
       </div>
       <h3 className="font-bold text-sm text-foreground truncate">
