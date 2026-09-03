@@ -1,7 +1,3 @@
-import type { SVGProps } from "react";
+import type { LucideProps } from "lucide-react";
 
-export type IconProps = Omit<SVGProps<SVGSVGElement>, "width" | "height"> & {
-  size?: number | string;
-  strokeWidth?: number;
-  fill?: string;
-};
+export type IconProps = Omit<LucideProps, "ref">;

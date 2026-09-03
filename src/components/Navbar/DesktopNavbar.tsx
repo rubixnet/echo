@@ -7,7 +7,8 @@ import {
   Search,
   Library,
   Radio,
-} from "lucide-react";
+  type IconProps,
+} from "@/components/icons";
 import {
   Settings,
   ChevronLeft,

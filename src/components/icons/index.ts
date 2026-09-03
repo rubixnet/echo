@@ -29,6 +29,7 @@ export { Radio } from "./Radio";
 export { Reload } from "./Reload";
 export { Repeat } from "./Repeat";
 export { Search } from "./Search";
+export { Settings } from "./Settings";
 export { Share } from "./Share";
 export { Shuffle } from "./Shuffle";
 export { SkipBack } from "./SkipBack";

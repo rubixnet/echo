@@ -400,7 +400,7 @@ export function PlaylistLayout({
                 {sortOrder === "desc" ? (
                   <ArrowDownUp size={16} />
                 ) : (
-                  <ArrowUpDown size={16} />
+                  <ArrowUpDown size={16} className="scale-x-[-1]" />
                 )}
               </Button>
             </ButtonGroup>
