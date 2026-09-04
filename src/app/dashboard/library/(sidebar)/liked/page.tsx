@@ -6,9 +6,9 @@ import { api } from "../../../../../../convex/_generated/api";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useUser } from "@/hooks/useUser";
 import { Track } from "@/components/TrackComponent";
-import {
-  Star,
-} from "@/components/icons";
+import { 
+  Star
+} from "lucide-react"
 
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 

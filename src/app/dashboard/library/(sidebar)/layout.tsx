@@ -3,11 +3,13 @@
 import Image from "next/image";
 import React from "react";
 import {
-  Star,
   ListMusic,
   History,
   Pin,
 } from "@/components/icons";
+import { 
+  Star
+} from "lucide-react"
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";

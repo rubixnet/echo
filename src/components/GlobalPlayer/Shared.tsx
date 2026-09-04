@@ -18,14 +18,16 @@ import {
   ListMusic,
   Shuffle,
   Repeat,
-  Star,
 } from "@/components/icons";
+import { 
+  Star
+} from "lucide-react"
 import {
   Pause,
   Loader2,
 } from "lucide-react";
 import { fetchRelatedTracks } from "@/lib/fetchRelatedTracks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";  
 
 export function ProgressBar({
   heightClass = "h-1.5",

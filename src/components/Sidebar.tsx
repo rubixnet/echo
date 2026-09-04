@@ -9,13 +9,15 @@ import {
   Radio,
   Pin,
   ListMusic,
-  Star,
   X,
   History,
   User as ArtistIcon,
   Music,
   type IconProps,
 } from "@/components/icons";
+import { 
+  Star
+} from "lucide-react"
 import { 
   ChevronUp,
   ChevronDown,

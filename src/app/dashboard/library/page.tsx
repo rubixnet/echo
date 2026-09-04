@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo, useCallback } from "react";
 import {
   History,
-  Star,
   ListMusic,
   Pin,
   ChevronDown,
   ChevronUp,
 } from "@/components/icons";
+import { 
+  Star, 
+} from "lucide-react"
 import {
   MoreVertical,
 } from "lucide-react";
@@ -247,7 +249,7 @@ export default function LibraryHubPage() {
                   >
                     <div className="aspect-square w-full rounded-md overflow-hidden bg-gradient-to-br from-rose-500 via-fuchsia-600 to-indigo-800 flex items-center justify-center shadow-sm mb-3">
                       <Star
-                        size={56}
+                        size={80}
                         className="fill-white text-white drop-shadow-md"
                       />
                     </div>
