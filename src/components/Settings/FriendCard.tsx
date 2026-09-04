@@ -1,23 +1,14 @@
-"use client";
-
-import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  ChevronDown,
-  ListMusic,
-  X,
-  Radio,
-  Music,
+    ListMusic,
+    X,
+    Radio,
 } from "@/components/icons";
 import {
-  Disc3,
-  Heart,
-  Share2,
-  Check,
+    Disc3,
 } from "lucide-react";
 
 type FriendPlaylist = {
@@ -40,8 +31,6 @@ type FriendCardProps = {
         playlistCount: number;
         playlists?: FriendPlaylist[];
     };
-    isExpanded: boolean;
-    onToggleExpand: () => void;
     onRemoveFriend: () => void;
 };
 
@@ -49,32 +38,17 @@ export type FriendCardFriend = FriendCardProps["friend"];
 
 export default function FriendCard({
     friend,
-    isExpanded,
-    onToggleExpand,
     onRemoveFriend,
 }: FriendCardProps) {
-    const [copiedId, setCopiedId] = useState<string | null>(null);
-
-    const handleCopyPlaylistLink = (playlistId: string) => {
-        const url = `${window.location.origin}/dashboard/library/playlist/${playlistId}`;
-        navigator.clipboard.writeText(url);
-        setCopiedId(playlistId);
-        setTimeout(() => setCopiedId(null), 2000);
-    };
 
     return (
-        <motion.div
-            layout
-            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+        <Link
+            href={`/dashboard/friends/${friend._id}`}
             className={cn(
-                "rounded-lg transition-colors overflow-hidden",
-                isExpanded
-                    ? "shadow-sm"
-                    : "bg-transparent hover:bg-foreground/[0.02]"
+                "rounded-lg hover:bg-foreground/5 hover:text-primary transition-colors overflow-hidden",
             )}
         >
             <div
-                onClick={onToggleExpand}
                 className="flex items-center justify-between p-3 cursor-pointer select-none"
             >
                 <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -145,12 +119,6 @@ export default function FriendCard({
                     >
                         <ListMusic size={12} />
                         <span>{friend.playlistCount}</span>
-                        <motion.span
-                            animate={{ rotate: isExpanded ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <ChevronDown size={12} />
-                        </motion.span>
                     </Button>
 
                     <Button
@@ -167,117 +135,6 @@ export default function FriendCard({
                     </Button>
                 </div>
             </div>
-
-            <AnimatePresence initial={false}>
-                {isExpanded && (
-                    <motion.div
-                        key="content"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                        className="px-3 pb-3 pt-1 border-t border-foreground/5 space-y-3"
-                    >
-                        {friend.activeRoomId && (
-                            <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/[0.06] border border-primary/20">
-                                <div className="flex items-center gap-2">
-                                    <Disc3 size={15} className="text-primary animate-spin" />
-                                    <div>
-                                        <p className="text-xs font-semibold text-foreground">
-                                            {friend.activeRoomName || "Active Room"}
-                                        </p>
-                                        <p className="text-[10px] text-foreground/60">
-                                            Listening in synchronized room
-                                        </p>
-                                    </div>
-                                </div>
-                                <Button
-                                    asChild
-                                    size="sm"
-                                    className="h-7 px-3 text-xs rounded-lg bg-primary text-primary-foreground"
-                                >
-                                    <Link href={`/rooms/${friend.activeRoomId}`}>Join Now</Link>
-                                </Button>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-semibold text-foreground/70 uppercase tracking-wider">
-                                Playlists ({friend.playlists?.length || 0})
-                            </span>
-                        </div>
-
-                        {!friend.playlists || friend.playlists.length === 0 ? (
-                            <p className="text-xs text-foreground/40 italic py-2">
-                                No public playlists shared.
-                            </p>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {friend.playlists.map((playlist) => (
-                                    <div
-                                        key={playlist._id}
-                                        className={cn(
-                                            "flex items-center justify-between p-2 rounded-xl border transition-colors",
-                                            playlist.isLikedSongs
-                                                ? "bg-pink-500/[0.04] border-pink-500/20"
-                                                : "bg-foreground/[0.03] border-foreground/5 hover:border-foreground/10"
-                                        )}
-                                    >
-                                        <Link
-                                            href={`/dashboard/library/playlist/${playlist._id}`}
-                                            className="flex items-center gap-2.5 min-w-0 flex-1"
-                                        >
-                                            <div className="w-8 h-8 rounded-lg bg-foreground/10 overflow-hidden flex items-center justify-center shrink-0">
-                                                {playlist.isLikedSongs ? (
-                                                    <Heart size={14} className="text-pink-500 fill-pink-500" />
-                                                ) : playlist.coverUrl ? (
-                                                    <Image
-                                                        src={playlist.coverUrl}
-                                                        width={32}
-                                                        height={32}
-                                                        unoptimized
-                                                        alt={playlist.name}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <Music size={13} className="text-foreground/40" />
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-xs font-medium text-foreground truncate flex items-center gap-1.5">
-                                                    {playlist.name}
-                                                    {playlist.isLikedSongs && (
-                                                        <span className="text-[9px] px-1 py-0.2 rounded bg-pink-500/10 text-pink-500 font-semibold">
-                                                            Liked
-                                                        </span>
-                                                    )}
-                                                </span>
-                                                <span className="text-[10px] text-foreground/40">
-                                                    {playlist.trackCount} tracks
-                                                </span>
-                                            </div>
-                                        </Link>
-
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleCopyPlaylistLink(playlist._id)}
-                                            className="h-7 w-7 p-0 text-foreground/40 hover:text-foreground rounded-lg shrink-0"
-                                            title="Share / Copy Link"
-                                        >
-                                            {copiedId === playlist._id ? (
-                                                <Check size={12} className="text-emerald-500" />
-                                            ) : (
-                                                <Share2 size={12} />
-                                            )}
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.div>
+        </Link>
     );
 }
