@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as banner from "../banner.js";
 import type * as crons from "../crons.js";
 import type * as exclusions from "../exclusions.js";
 import type * as friends from "../friends.js";
@@ -34,6 +35,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  banner: typeof banner;
   crons: typeof crons;
   exclusions: typeof exclusions;
   friends: typeof friends;

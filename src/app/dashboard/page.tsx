@@ -3,13 +3,11 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Music,
-} from "@/components/icons";
-import {
   TrendingUp,
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Banner } from "@/components/Banner";
 
 export interface Category {
   _id: string;
@@ -25,7 +23,7 @@ export default function DashboardPage() {
   const categories = useQuery(api.syncPlaylists.getCategories);
 
   const handleNavigate = (id: string) => {
-    router.push(`/dashboard/${id}`);
+    router.push(`/dashboard/playlists/${id}`);
   };
 
   if (categories === undefined) {
@@ -37,6 +35,7 @@ export default function DashboardPage() {
 
   return (
     <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto pb-32">
+      <Banner />
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-foreground/80">
           <TrendingUp size={18} />
@@ -55,23 +54,8 @@ export default function DashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="flex items-center gap-2 text-foreground/80">
-          <Music size={18} />
-          <h2 className="text-xl font-bold tracking-tight">
-            Genres & Radio Feeds
-          </h2>
-        </div>
-
-        {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {genres.map((item) => (
-            <PlaylistCard
-              key={item._id}
-              category={item}
-              onClick={() => handleNavigate(item.categoryId)}
-            />
-          ))}
-        </div> */}
       </section>
+
     </div>
   );
 }

@@ -68,11 +68,19 @@ export default defineSchema({
     .index("by_user_and_playedAt", ["userId", "playedAt"])
     .index("by_user_and_playCount", ["userId", "playCount"]),
 
-  friends: defineTable({
-    userId: v.id("users"),
-    friendId: v.id("users"),
+  bannerInfo: defineTable({
+    contentHtml: v.string(),  
+    active: v.boolean(),
     createdAt: v.number(),
   })
+    .index("by_active", ["active"])
+    .index("by_created", ["createdAt"]), 
+
+  friends: defineTable({
+      userId: v.id("users"),
+      friendId: v.id("users"),
+      createdAt: v.number(),
+    })
     .index("by_user", ["userId"])
     .index("by_friend", ["friendId"])
     .index("by_user_and_friend", ["userId", "friendId"]),
