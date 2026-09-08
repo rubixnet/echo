@@ -7,7 +7,6 @@ import {
   Search,
   Library,
   Radio,
-  type IconProps,
 } from "@/components/icons";
 import {
   Settings,

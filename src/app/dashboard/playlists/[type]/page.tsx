@@ -10,7 +10,7 @@ import {
 import { PlaylistLayout, TrackLike } from "@/components/PlaylistLayout";
 import { Track } from "@/components/TrackComponent";
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../../../convex/_generated/api";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 
 export default function TypePage({

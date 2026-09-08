@@ -31,7 +31,7 @@ export default function DashboardPage() {
   }
 
   const charts = categories.filter((item) => item.type === "chart");
-  const genres = categories.filter((item) => item.type === "genre");
+  // const genres = categories.filter((item) => item.type === "genre");
 
   return (
     <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto pb-32">
