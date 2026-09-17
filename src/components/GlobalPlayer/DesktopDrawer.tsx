@@ -52,7 +52,8 @@ export function DesktopDrawer({
   activeTab: TabView;
   setActiveTab: (tab: TabView) => void;
 }) {
-  const { activeMetadata, currentTimeSec, seekToTime } = useAudioEngine();
+  const { activeMetadata, isPlaying, currentTimeSec, durationSec, seekToTime } =
+    useAudioEngine();
   const router = useRouter();
   const { upNextTracks, isFetching } = useNextInQueue(5);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -151,77 +152,105 @@ export function DesktopDrawer({
         </div>
       </div>
 
-      <div className="flex-1 relative z-10 overflow-hidden flex flex-col px-4">
-        {activeMetadata ? (
-          <>
-            {activeTab === "lyrics" && (
-              <div className="flex-1 overflow-hidden flex flex-col max-w-xl mx-auto w-full relative">
-                <SyncedLyrics
-                  activeMetadata={activeMetadata}
-                  currentTimeSec={currentTimeSec}
-                  seekToTime={seekToTime}
-                />
-              </div>
-            )}
-            {activeTab === "cover" && (
-              <div className="flex-1 flex items-center justify-center p-2">
-                <div className="w-full max-w-[220px] aspect-square rounded-xl shadow-xl overflow-hidden shrink-0 border border-foreground/5">
-                  <Image
-                    width={500}
-                    height={500}
-                    unoptimized
-                    src={activeMetadata.coverUrl || ""}
-                    className="w-full h-full object-cover"
-                    alt="Cover"
-                  />
-                </div>
-              </div>
-            )}
-            {activeTab === "queue" && (
-              <div className="flex-1 flex flex-col max-w-xl  w-full h-full overflow-hidden">
-                <PlaybackStatus isFetching={isFetching} />
-                <h3 className="text-[12px] font-medium text-foreground/50 tracking-wide mb-2 mt-5 shrink-0 px-1 ">
-                  Playing Next
-                </h3>
-                <div className="flex-1 liquid-scroll px-1 space-y-0.5">
-                  {upNextTracks.map((track, idx) => (
-                    <Track
-                      key={track.id || track._id || `queue-${idx}`}
-                      track={track}
-                      variant="row"
-                      loadingId={loadingId}
-                      setLoadingId={setLoadingId}
-                      showDuration={false}
-                      className="hover:bg-foreground/5"
-                    />
-                  ))}
-
-                  {isFetching && (
-                    <div className="flex items-center justify-center p-6 text-foreground/40 gap-2">
-                      <Loader2 className="animate-spin" size={14} />
-                      <span className="text-xs font-medium">
-                        Finding similar tracks...
-                      </span>
-                    </div>
-                  )}
-
-                  {!isFetching && upNextTracks.length === 0 && (
-                    <div className="flex items-center justify-center p-6 text-foreground/40">
-                      <span className="text-xs font-medium">End of queue</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-foreground/30 gap-3">
-            <Music size={24} />
-            <p className="text-xs font-medium uppercase tracking-widest">
-              No active track
-            </p>
+      <div
+        className={cn(
+          "flex-1 relative z-10 overflow-hidden flex px-4",
+          isFullscreen ? "flex-row gap-6" : "flex-col",
+        )}
+      >
+        {isFullscreen && activeMetadata && (
+          <div className="w-1/2 h-full flex items-center justify-center p-2 shrink-0">
+            <div className="w-full max-w-[340px] aspect-square rounded-2xl shadow-2xl overflow-hidden border border-foreground/10">
+              <Image
+                width={500}
+                height={500}
+                unoptimized
+                src={activeMetadata.coverUrl || ""}
+                className="w-full h-full object-cover"
+                alt="Cover"
+              />
+            </div>
           </div>
         )}
+        <div
+          className={cn(
+            "h-full min-h-0 flex flex-col",
+            isFullscreen ? "w-1/2" : "w-full",
+          )}
+        >
+          {activeMetadata ? (
+            <>
+              {activeTab === "lyrics" && (
+                <div className="flex-1 overflow-hidden flex flex-col max-w-xl mx-auto w-full relative">
+                  <SyncedLyrics
+                    activeMetadata={activeMetadata}
+                    currentTimeSec={currentTimeSec}
+                    seekToTime={seekToTime}
+                    isPlaying={isPlaying}
+                    durationSec={durationSec}
+                  />
+                </div>
+              )}
+              {activeTab === "cover" && (
+                <div className="flex-1 flex items-center justify-center p-2">
+                  <div className="w-full max-w-[220px] aspect-square rounded-xl shadow-xl overflow-hidden shrink-0 border border-foreground/5">
+                    <Image
+                      width={500}
+                      height={500}
+                      unoptimized
+                      src={activeMetadata.coverUrl || ""}
+                      className="w-full h-full object-cover"
+                      alt="Cover"
+                    />
+                  </div>
+                </div>
+              )}
+              {activeTab === "queue" && (
+                <div className="flex-1 flex flex-col max-w-xl  w-full h-full overflow-hidden">
+                  <PlaybackStatus isFetching={isFetching} />
+                  <h3 className="text-[12px] font-medium text-foreground/50 tracking-wide mb-2 mt-5 shrink-0 px-1 ">
+                    Playing Next
+                  </h3>
+                  <div className="flex-1 liquid-scroll px-1 space-y-0.5">
+                    {upNextTracks.map((track, idx) => (
+                      <Track
+                        key={track.id || track._id || `queue-${idx}`}
+                        track={track}
+                        variant="row"
+                        loadingId={loadingId}
+                        setLoadingId={setLoadingId}
+                        showDuration={false}
+                        className="hover:bg-foreground/5"
+                      />
+                    ))}
+
+                    {isFetching && (
+                      <div className="flex items-center justify-center p-6 text-foreground/40 gap-2">
+                        <Loader2 className="animate-spin" size={14} />
+                        <span className="text-xs font-medium">
+                          Finding similar tracks...
+                        </span>
+                      </div>
+                    )}
+
+                    {!isFetching && upNextTracks.length === 0 && (
+                      <div className="flex items-center justify-center p-6 text-foreground/40">
+                        <span className="text-xs font-medium">End of queue</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-foreground/30 gap-3">
+              <Music size={24} />
+              <p className="text-xs font-medium uppercase tracking-widest">
+                No active track
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       {activeMetadata && (

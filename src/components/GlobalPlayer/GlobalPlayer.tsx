@@ -12,6 +12,7 @@ import { DesktopMiniPlayer } from "./DesktopMiniPlayer";
 import { MobilePlayer } from "./MobilePlayer";
 import { AddToPlaylistModal } from "../AddToPlaylistModal";
 import { GuestModal } from "./GuestModal";
+import { TrackErrorModal } from "./TrackErrorModal";
 import { normalizeTrack } from "@/lib/trackUtils";
 
 const STORAGE_KEY = "app_last_played_track";
@@ -250,6 +251,7 @@ export default function GlobalPlayer() {
   return (
     <>
       <GuestModal />
+      <TrackErrorModal />
       <div className="hidden md:block">
         <DesktopDrawer
           isOpen={isDrawerOpen}

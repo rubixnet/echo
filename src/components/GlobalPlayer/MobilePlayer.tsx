@@ -289,6 +289,8 @@ export function MobilePlayer({
                 activeMetadata={activeMetadata}
                 currentTimeSec={currentTimeSec}
                 seekToTime={controlSeekTo}
+                isPlaying={isPlaying}
+                durationSec={durationSec}
               />
             )}
           </div>

@@ -3,7 +3,63 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "edge";
 
 const HF_SPACE_URL = "https://rubixnet-fastapi.hf.space";
-const HF_TOKEN = process.env.HF_TOKEN; 
+const HF_TOKEN = process.env.HF_TOKEN;
+
+const CACHE_LONG = {
+  "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400",
+};
+const CACHE_SHORT = {
+  "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600",
+};
+
+interface LyricLine {
+  time: number;
+  text: string;
+}
+
+function parseLRC(lrc: string): LyricLine[] {
+  const lines: LyricLine[] = [];
+  for (const raw of lrc.split(/\r?\n/)) {
+    const tags = [...raw.matchAll(/\[(\d{1,2}):(\d{1,2})(?:[.:](\d{1,3}))?\]/g)];
+    if (tags.length === 0) continue;
+    const text = raw.replace(/\[[^\]]*\]/g, "").trim();
+    if (!text) continue;
+    for (const m of tags) {
+      const minutes = parseInt(m[1], 10);
+      const seconds = parseInt(m[2], 10);
+      let fraction = 0;
+      if (m[3] !== undefined) {
+        fraction = parseInt(m[3].padEnd(3, "0").slice(0, 3), 10) / 1000;
+      }
+      lines.push({ time: minutes * 60 + seconds + fraction, text });
+    }
+  }
+  return lines.sort((a, b) => a.time - b.time);
+}
+
+function normalize(data: Record<string, unknown>) {
+  if (Array.isArray(data.lyrics)) {
+    return {
+      lyrics: data.lyrics,
+      plainLyrics: typeof data.plainLyrics === "string" ? data.plainLyrics : "",
+      syncedLyrics:
+        typeof data.syncedLyrics === "string" ? data.syncedLyrics : "",
+      trackName: data.trackName ?? null,
+      artistName: data.artistName ?? null,
+      duration: typeof data.duration === "number" ? data.duration : null,
+    };
+  }
+  const synced = typeof data.syncedLyrics === "string" ? data.syncedLyrics : "";
+  const plain = typeof data.plainLyrics === "string" ? data.plainLyrics : "";
+  return {
+    lyrics: synced ? parseLRC(synced) : [],
+    plainLyrics: plain,
+    syncedLyrics: synced,
+    trackName: data.trackName ?? null,
+    artistName: data.artistName ?? null,
+    duration: typeof data.duration === "number" ? data.duration : null,
+  };
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -15,77 +71,45 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing artist or title" }, { status: 400 });
   }
 
-  const queryParams = new URLSearchParams({ artist, title });
-  if (duration) queryParams.set("duration", duration);
-
-  try {
-    const hfController = new AbortController();
-    const hfTimeout = setTimeout(() => hfController.abort(), 3000); 
-
-    const hfHeaders: HeadersInit = {};
-    if (HF_TOKEN) {
-      hfHeaders["Authorization"] = `Bearer ${HF_TOKEN}`;
-    }
-
-    const hfRes = await fetch(`${HF_SPACE_URL}/api/get?${queryParams}`, {
-      headers: hfHeaders,
-      signal: hfController.signal,
-    });
-    clearTimeout(hfTimeout);
-
-    if (hfRes.ok) {
-      const data = await hfRes.json();
-      return NextResponse.json(data, {
-        status: 200,
-        headers: { "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400" },
+  if (HF_TOKEN) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const query = new URLSearchParams({ artist, title });
+      if (duration) query.set("duration", duration);
+      const res = await fetch(`${HF_SPACE_URL}/api/get?${query}`, {
+        headers: { Authorization: `Bearer ${HF_TOKEN}` },
+        signal: controller.signal,
       });
-    }
-  } catch {
+      clearTimeout(timer);
+      if (res.ok) {
+        const body = normalize(await res.json());
+        if (body.lyrics.length > 0 || body.plainLyrics) {
+          return NextResponse.json(body, { status: 200, headers: CACHE_LONG });
+        }
+      }
+    } catch { }
   }
 
   try {
-    const liveController = new AbortController();
-    const liveTimeout = setTimeout(() => liveController.abort(), 5000);
-
-    const liveParams = new URLSearchParams({
-      track_name: title,
-      artist_name: artist,
-    });
-    if (duration) liveParams.set("duration", Math.round(Number(duration)).toString());
-
-    const liveRes = await fetch(`https://lrclib.net/api/get?${liveParams}`, {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const query = new URLSearchParams({ track_name: title, artist_name: artist });
+    if (duration) query.set("duration", Math.round(Number(duration)).toString());
+    const res = await fetch(`https://lrclib.net/api/get?${query}`, {
       headers: {
-        "User-Agent": "MyMusicApp/1.0 (https://github.com/my-music-app)",
+        "User-Agent": "echo/1.0 (https://github.com/rubixnet/echo)",
       },
-      signal: liveController.signal,
+      signal: controller.signal,
     });
-    clearTimeout(liveTimeout);
-
-    if (liveRes.ok) {
-      const data = await liveRes.json();
-      const formatted = {
-        track_name: data.track_name,
-        artist_name: data.artist_name,
-        album_name: data.album_name,
-        duration: data.duration,
-        instrumental: data.instrumental,
-        plain_lyrics: data.plain_lyrics,
-        synced_lyrics: data.synced_lyrics,
-      };
-
-      return NextResponse.json(formatted, {
-        status: 200,
-        headers: { "Cache-Control": "public, s-maxage=2592000, stale-while-revalidate=86400" },
-      });
+    clearTimeout(timer);
+    if (res.ok) {
+      const body = normalize(await res.json());
+      if (body.lyrics.length > 0 || body.plainLyrics) {
+        return NextResponse.json(body, { status: 200, headers: CACHE_LONG });
+      }
     }
-  } catch {
-  }
+  } catch { }
 
-  return NextResponse.json(
-    { error: "Lyrics not found" },
-    {
-      status: 404,
-      headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=600" },
-    }
-  );
+  return NextResponse.json({ error: "Lyrics not found" }, { status: 404, headers: CACHE_SHORT });
 }
