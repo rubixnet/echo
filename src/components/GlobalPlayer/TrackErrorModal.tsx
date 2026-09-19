@@ -26,7 +26,10 @@ export function TrackErrorModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={() => setIsOpen(false)}
+    >
       <LiquidPanel
         radius="24px"
         className="w-full max-w-md animate-in zoom-in-95 duration-200"

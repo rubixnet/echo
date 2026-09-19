@@ -158,7 +158,7 @@ export default function RoomPage({
           onClick={controlTogglePlay}
           disabled={!isHost || !hasTrack}
           className={cn(
-            "group relative flex items-center justify-center w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full focus:outline-none transition-transform active:scale-[0.98]",
+            "group relative flex items-center justify-center w-[280px] h-[280px] md:w-[340px] md:h-[340px] rounded-full focus:outline-none transition-transform active:scale-[0.99]",
             isHost && hasTrack ? "cursor-pointer" : "cursor-default",
           )}
         >

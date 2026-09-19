@@ -160,18 +160,6 @@ export default function GlobalPlayer() {
     return () => clearTimeout(timer);
   }, [userId, isPlaying, durationSec, activeMetadata, updateCurrentTrack]);
 
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isPlaying]);
-
   const handleGlobalTogglePlay = useCallback(() => {
     if (!isPlaying && activeMetadata) {
       const normalized = normalizeTrack({
