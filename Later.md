@@ -26,3 +26,4 @@ later!
 - onboarding of user like drawn ui!
 - controls bento grid for the user, showing navbar options, track component grid ui idea figma
 - simple change or layout animation for expanded friends profile! 
+- updating lyrics page to have option to check if lyrics true and proper stacked or not if not then show non timestamp version.
