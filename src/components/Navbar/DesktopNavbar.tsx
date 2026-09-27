@@ -5,8 +5,8 @@ import Link from "next/link";
 import {
   Home,
   Search,
-  Library,
   Radio,
+  MusicLibrary,
 } from "@/components/icons";
 import {
   Settings,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS: { href: string; icon: LucideIcon; label: string }[] = [
   { href: "/dashboard", icon: Home, label: "Home" },
   { href: "/dashboard/search", icon: Search, label: "Search" },
-  { href: "/dashboard/library", icon: Library, label: "Library" },
+  { href: "/dashboard/library", icon: MusicLibrary, label: "Library" },
   { href: "/dashboard/rooms", icon: Radio, label: "Rooms" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];

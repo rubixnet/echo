@@ -16,7 +16,6 @@ export default function SettingsPage() {
       <main className="w-full max-w-3xl space-y-8">
         <SettingsHeader />
         <FriendsSection />
-        {/* <FavoriteGenresSection /> */}
         <HiddenTracksSection />
         <PrivacySection />
       </main>

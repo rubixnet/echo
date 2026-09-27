@@ -210,7 +210,7 @@ export function GlobalSearchBar() {
         <div className="absolute top-full left-0 right-0 mt-3 slide-in-from-top-2 duration-200 z-50">
           <LiquidPanel radius="24px" className="w-full">
             <div className="p-2">
-              <div className="space-y-0.5 overflow-y-auto liquid-scroll pr-1 mr-1">
+              <div className="space-y-0.5 overflow-y-auto liquid-scroll">
                 {combinedList.map((item, index) => (
                   <button
                     key={item.id}

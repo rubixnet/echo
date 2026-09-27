@@ -22,9 +22,6 @@ export default function FriendsSection() {
     const [loading, setLoading] = useState(false);
     const [showUsersPopover, setShowUsersPopover] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
-    const [expandedFriendId, setExpandedFriendId] = useState<Id<"users"> | null>(
-        null
-    );
 
     const friends = useQuery(
         api.friends.getFriendsData,
@@ -181,12 +178,6 @@ export default function FriendsSection() {
                         <FriendCard
                             key={friend._id}
                             friend={friend as FriendCardFriend}
-                            isExpanded={expandedFriendId === friend._id}
-                            onToggleExpand={() =>
-                                setExpandedFriendId(
-                                    expandedFriendId === friend._id ? null : friend._id
-                                )
-                            }
                             onRemoveFriend={() =>
                                 toggleFriend({
                                     userId: user._id,

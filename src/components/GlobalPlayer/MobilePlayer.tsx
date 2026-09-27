@@ -14,10 +14,10 @@ import {
   Shuffle,
   ChevronDown,
   Music,
-  ListMusic,
+  ListFilter,
   EllipsisVertical,
   Radio,
-  MicVocal,
+  Lyrics,
 } from "@/components/icons";
 import {
   Pause,
@@ -253,7 +253,6 @@ export function MobilePlayer({
           onClick={() => setIsExpanded(false)}
           className="p-2 text-foreground/60 hover:text-foreground rounded-full transition-colors"
         >
-          <ChevronDown size={28} strokeWidth={2} />
         </button>
         <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60">
           {mobileTab === "lyrics"
@@ -266,7 +265,6 @@ export function MobilePlayer({
           onClick={() => setIsExpanded(false)}
           className="p-2 text-foreground/60 hover:text-foreground rounded-full transition-colors"
         >
-          <ChevronDown size={28} strokeWidth={2} />
         </button>
       </div>
 
@@ -338,7 +336,7 @@ export function MobilePlayer({
               mobileTab === "lyrics" ? "text-primary" : "text-foreground/70 hover:text-foreground",
             )}
           >
-            <MicVocal size={28} strokeWidth={2} />
+            <Lyrics size={28} strokeWidth={2} />
           </Button>
 
           <LiquidContainer radius="999px">
@@ -379,7 +377,7 @@ export function MobilePlayer({
                 setMobileTab((prev) => (prev === "queue" ? "cover" : "queue"))
               }
             >
-              <ListMusic size={18} strokeWidth={2} />
+              <ListFilter size={18} strokeWidth={2} />
             </button>
           </LiquidContainer>
         </div>

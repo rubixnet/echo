@@ -19,6 +19,7 @@ import {
     MicVocal,
     Minimize2,
     Music,
+    MusicLibrary,
     New,
     PenLine,
     Pin,
@@ -64,6 +65,7 @@ export default function Page() {
             <MicVocal size={64} className="text-foreground/80" />
             <Minimize2 size={64} className="text-foreground/80" />
             <Music size={64} className="text-foreground/80" />
+            <MusicLibrary size={64} className="text-foreground/80" />
             <New size={64} className="text-foreground/80" />
             <PenLine size={64} className="text-foreground/80" />
             <Pin size={64} className="text-foreground/80" />

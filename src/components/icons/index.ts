@@ -19,6 +19,7 @@ export { Maximize2 } from "./Maximize2";
 export { MicVocal } from "./MicVocal";
 export { Minimize2 } from "./Minimize2";
 export { Music } from "./Music";
+export { MusicLibrary } from "./MusicLibrary";
 export { New } from "./New";
 export { PenLine } from "./PenLine";
 export { Pin } from "./Pin";
