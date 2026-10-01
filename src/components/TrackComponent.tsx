@@ -106,7 +106,7 @@ export function Track({
               onClick={handlePlay}
               onKeyDown={handleKeyDown}
               className={cn(
-                "group relative flex flex-col gap-3 p-3 w-full max-w-[240px] mx-auto rounded-2xl hover:bg-neutral-100/60 dark:hover:bg-white/5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+                "group relative flex flex-col gap-2 w-full max-w-[240px] mx-auto rounded-2xl transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
                 className
               )}
             >
@@ -123,7 +123,7 @@ export function Track({
                       "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256";
                   }}
                 />
-                
+
                 <div
                   className={cn(
                     "absolute inset-0 flex items-center justify-center bg-black/20 transition-all duration-300",
@@ -150,7 +150,7 @@ export function Track({
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-1 px-1 min-w-0">
                 <div className="flex items-start justify-between gap-1.5 min-w-0">
                   <h3

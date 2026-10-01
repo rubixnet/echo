@@ -27,7 +27,7 @@ export function DemoSongsSection() {
         <h2 className="text-xl font-bold tracking-tight">Demo Songs</h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 lg:grid-cols-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2 lg:grid-cols-6">
         {DEMO_SONGS.map((song, i) => (
           <Track
             key={song.id}

@@ -35,7 +35,10 @@ export default function DashboardPage() {
     <div className="px-6 lg:px-12 py-10 space-y-12 bg-background text-foreground max-w-7xl mx-auto pb-32">
       <Banner />
       <section className="space-y-4">
-        <div className="flex items-center gap-2 text-foreground/80">
+
+        <DemoSongsSection />
+
+        <div className="flex items-center gap-2 mt-2 text-foreground/80">
           <h2 className="text-xl font-bold tracking-tight">Top Charts</h2>
         </div>
 
@@ -49,7 +52,6 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
-      <DemoSongsSection />
     </div>
   );
 }
