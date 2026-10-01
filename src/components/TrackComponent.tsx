@@ -24,11 +24,9 @@ import {
 import {
   Play,
   EllipsisVertical,
-} from "@/components/icons";
-import {
   Pause,
-  Loader2,
-} from "lucide-react";
+  Loader,
+} from "@/components/icons";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUserExclusions } from "@/hooks/useUserExclusions";
@@ -107,54 +105,60 @@ export function Track({
               tabIndex={0}
               onClick={handlePlay}
               onKeyDown={handleKeyDown}
-              className="group relative flex flex-col gap-3 p-4 rounded-3xl hover:bg-neutral-50 dark:hover:bg-neutral-100/50 transition-all cursor-pointer border border-transparent hover:border-neutral-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:bg-neutral-100/50"
+              className={cn(
+                "group relative flex flex-col gap-3 p-3 w-full max-w-[240px] mx-auto rounded-2xl hover:bg-neutral-100/60 dark:hover:bg-white/5 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+                className
+              )}
             >
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 shadow-sm">
+              <div className="relative aspect-square w-full rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 shadow-sm shrink-0">
                 <Image
-                  width={500}
-                  height={500}
+                  width={400}
+                  height={400}
                   unoptimized
                   src={normalized.coverUrl}
                   alt={normalized.title}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   onError={(e) => {
                     e.currentTarget.src =
                       "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=256";
                   }}
                 />
+                
                 <div
                   className={cn(
-                    "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                    "absolute inset-0 flex items-center justify-center bg-black/20 transition-all duration-300",
                     isCurrent
-                      ? "bg-black/40 opacity-100"
-                      : "bg-black/0 opacity-0 group-hover:bg-black/20 group-hover:opacity-100"
+                      ? "bg-black/50 opacity-100"
+                      : "opacity-0 group-hover:bg-black/30 group-hover:opacity-100"
                   )}
                 >
                   <div
                     className={cn(
-                      "w-12 h-12 flex items-center justify-center rounded-full bg-emerald-500 text-primary shadow-xl transform transition-transform duration-300",
+                      "text-white transform transition-transform duration-300 drop-shadow-md z-10",
                       isCurrent || isLoading
                         ? "scale-100"
-                        : "scale-75 translate-y-4 group-hover:scale-100 group-hover:translate-y-0"
+                        : "scale-75 group-hover:scale-100"
                     )}
                   >
                     {isLoading ? (
-                      <Loader2 size={24} className="animate-spin text-white" />
+                      <Loader size={32} className="animate-spin text-white" />
                     ) : isCurrent ? (
-                      <Pause size={24} className="fill-white text-white" />
+                      <Pause size={32} className="fill-white text-white" />
                     ) : (
-                      <Play size={24} className="fill-white text-white ml-1" />
+                      <Play size={32} className="fill-white text-white ml-1" />
                     )}
                   </div>
                 </div>
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
+              
+              <div className="flex flex-col gap-1 px-1 min-w-0">
+                <div className="flex items-start justify-between gap-1.5 min-w-0">
                   <h3
                     className={cn(
-                      "font-bold text-base truncate tracking-tight flex-1",
-                      isCurrent ? "text-emerald-600" : "text-neutral-900 dark:text-neutral-100"
+                      "font-semibold text-base leading-tight truncate tracking-tight flex-1",
+                      isCurrent ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-900 dark:text-neutral-100"
                     )}
+                    title={normalized.title}
                   >
                     {normalized.title}
                   </h3>
@@ -165,7 +169,7 @@ export function Track({
                     <DropdownMenuTrigger asChild>
                       <button
                         onClick={(e) => e.stopPropagation()}
-                        className="p-1 -mr-1 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-md"
+                        className="p-1 -mr-1 -mt-0.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 cursor-pointer transition-colors focus-visible:outline-none rounded-md shrink-0"
                       >
                         <EllipsisVertical size={16} />
                       </button>
@@ -186,11 +190,12 @@ export function Track({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <div className="text-sm font-medium text-neutral-500 truncate flex items-center gap-1">
+                <div className="text-sm font-medium text-neutral-500 truncate flex items-center gap-1 min-w-0">
                   <Link
                     href={`/dashboard/artist/${encodeURIComponent(normalized.artist)}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="hover:underline hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors"
+                    className="hover:underline hover:text-neutral-900 dark:hover:text-neutral-200 transition-colors truncate font-medium leading-tight"
+                    title={normalized.artist}
                   >
                     {normalized.artist}
                   </Link>
@@ -237,7 +242,7 @@ export function Track({
                     )}
                   >
                     {isLoading ? (
-                      <Loader2 size={14} className="text-white animate-spin" />
+                      <Loader size={14} className="text-white animate-spin" />
                     ) : isCurrent ? (
                       <Pause size={14} className="text-white fill-white" />
                     ) : (
@@ -306,7 +311,6 @@ export function Track({
         </ContextMenuTrigger>
 
         <ContextMenuContent className="w-[215px] z-[9999]">
-          
           <TrackActionMenuContent
             track={normalized}
             size="md"
