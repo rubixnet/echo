@@ -26,7 +26,7 @@ import {
   EllipsisVertical,
   Pause,
   Loader,
-} from "@/components/icons";
+} from "lucide-react";
 import { useGlobalPlayback } from "@/hooks/useGlobalPlayback";
 import { useAudioEngine } from "@/components/providers/AudioProvider";
 import { useUserExclusions } from "@/hooks/useUserExclusions";
