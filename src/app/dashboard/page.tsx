@@ -2,12 +2,10 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import {
-  TrendingUp,
-} from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Banner } from "@/components/Banner";
+import { DemoSongsSection } from "@/components/DemoSongsSection";
 
 export interface Category {
   _id: string;
@@ -38,7 +36,6 @@ export default function DashboardPage() {
       <Banner />
       <section className="space-y-4">
         <div className="flex items-center gap-2 text-foreground/80">
-          <TrendingUp size={18} />
           <h2 className="text-xl font-bold tracking-tight">Top Charts</h2>
         </div>
 
@@ -52,10 +49,7 @@ export default function DashboardPage() {
           ))}
         </div>
       </section>
-
-      <section className="space-y-4">
-      </section>
-
+      <DemoSongsSection />
     </div>
   );
 }

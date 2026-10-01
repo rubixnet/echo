@@ -68,6 +68,8 @@ export interface NormalizableTrack {
 export function extracttrackId(raw: unknown): string {
   if (!raw || typeof raw !== "string") return "";
 
+  if (/^demo-[a-z0-9-]+$/.test(raw)) return raw;
+
   if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
 
   const vMatch = raw.match(/[?&]v=([a-zA-Z0-9_-]{11})/);

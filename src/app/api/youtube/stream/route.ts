@@ -1,12 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createReadStream, statSync } from "fs";
+import { join } from "path";
 import {
   getBackend,
   getStreamUrlViaYtDlp,
 } from "@/lib/streamBackend";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const urlCache = new Map<string, { url: string; expires: number }>();
+
+const DEMO_ID_PREFIX = "demo-";
+const DEMO_AUDIO_DIR = join(process.cwd(), "public", "audio", "demo", "tracks");
+
+function getDemoAudioPath(id: string): string | null {
+  const slug = id.slice(DEMO_ID_PREFIX.length);
+  if (!slug || !/^[a-z0-9-]+$/.test(slug)) return null;
+  return join(DEMO_AUDIO_DIR, `${slug}.mp3`);
+}
+
+function serveDemoAudio(filePath: string, range: string | null): NextResponse {
+  const size = statSync(filePath).size;
+
+  if (range) {
+    const match = /bytes=(\d*)-(\d*)/.exec(range);
+    if (match) {
+      const start = match[1] ? parseInt(match[1], 10) : 0;
+      const end = match[2] ? parseInt(match[2], 10) : size - 1;
+
+      if (start >= size || start > end) {
+        return new NextResponse(null, {
+          status: 416,
+          headers: { "Content-Range": `bytes */${size}` },
+        });
+      }
+
+      return new NextResponse(
+        createReadStream(filePath, { start, end }) as unknown as ReadableStream,
+        {
+          status: 206,
+          headers: {
+            "Content-Type": "audio/mpeg",
+            "Content-Length": String(end - start + 1),
+            "Content-Range": `bytes ${start}-${end}/${size}`,
+            "Accept-Ranges": "bytes",
+            "Cache-Control": "public, max-age=3600",
+          },
+        },
+      );
+    }
+  }
+
+  return new NextResponse(
+    createReadStream(filePath) as unknown as ReadableStream,
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Content-Length": String(size),
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=3600",
+      },
+    },
+  );
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,6 +72,26 @@ export async function GET(request: NextRequest) {
 
   if (!id) {
     return NextResponse.json({ error: "Missing video ID" }, { status: 400 });
+  }
+
+  if (id.startsWith(DEMO_ID_PREFIX)) {
+    const filePath = getDemoAudioPath(id);
+    if (!filePath) {
+      return NextResponse.json(
+        { error: "Unknown demo track" },
+        { status: 404 },
+      );
+    }
+
+    try {
+      return serveDemoAudio(filePath, request.headers.get("range"));
+    } catch (error) {
+      console.error("Demo track read error:", error);
+      return NextResponse.json(
+        { error: "Demo audio unavailable" },
+        { status: 404 },
+      );
+    }
   }
 
   let backend: ReturnType<typeof getBackend>;
