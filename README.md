@@ -4,6 +4,8 @@ video demo
 
 https://youtu.be/-PLmuoUYjb0
 
+P.S - added demo songs today if song do not play from youtube to test all the functions that echo has, though all song request for past week has hit 100 percent success rates for song
+
 ### Note: this is for educational purposes only
 
 Echo is an experimental music streaming platform which i make to learn live and music streaming along with some stuff, this project is for educational purpose
@@ -179,3 +181,6 @@ bun run dev
 then open http://localhost:3001 and log in with google. first login lands you on `/onboarding`, after that it's `/dashboard`.
 
 10. if you are using convex, also run `npx convex dev` in a second terminal to keep the database synced.
+
+
+
