@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:22.23.3-bookworm-slim
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PATH="/opt/yt-dlp-venv/bin:${PATH}"
@@ -12,6 +12,7 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY package*.json ./
+RUN npm install --global npm@11.21.0
 RUN npm ci
 
 COPY . .
