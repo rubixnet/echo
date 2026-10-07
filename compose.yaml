@@ -1,0 +1,21 @@
+services:
+  echo:
+    build: .
+    ports:
+      - "3001:3001"
+      - "3210:3210"
+      - "3211:3211"
+    env_file:
+      - .env.local
+    environment:
+      STREAM_BACKEND: ytdlp
+      LOCAL_DEMO_AUTH: "true"
+      NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "false"
+      JWT_SECRET: echo-local-demo-session-secret-change-for-any-real-deployment
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    init: true
+    command: ["node", "scripts/run-local.mjs"]

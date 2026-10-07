@@ -8,7 +8,6 @@
  * @module
  */
 
-import type * as auth from "../auth.js";
 import type * as banner from "../banner.js";
 import type * as crons from "../crons.js";
 import type * as exclusions from "../exclusions.js";
@@ -34,7 +33,6 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  auth: typeof auth;
   banner: typeof banner;
   crons: typeof crons;
   exclusions: typeof exclusions;
@@ -80,6 +78,4 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {
-  workOSAuthKit: import("@convex-dev/workos-authkit/_generated/component.js").ComponentApi<"workOSAuthKit">;
-};
+export declare const components: {};

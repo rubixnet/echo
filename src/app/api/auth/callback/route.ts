@@ -1,12 +1,8 @@
-import { WorkOS } from "@workos-inc/node";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
-
-const workos = new WorkOS(process.env.WORKOS_API_KEY!);
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -16,7 +12,14 @@ export async function GET(req: Request) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
+  if (!process.env.WORKOS_API_KEY || !process.env.WORKOS_CLIENT_ID || !process.env.JWT_SECRET) {
+    return NextResponse.redirect(new URL("/login?error=oauth_not_configured", req.url));
+  }
+
   try {
+    const { WorkOS } = await import("@workos-inc/node");
+    const workos = new WorkOS(process.env.WORKOS_API_KEY);
+    const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
     const response = await workos.userManagement.authenticateWithCode({
       clientId: process.env.WORKOS_CLIENT_ID!,
       code,

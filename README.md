@@ -18,6 +18,42 @@ this application uses convex, workos, tailwind, yt dlp, nextjs, hugging face (fo
 
 ## running locally
 
+### easy setup: Docker and local Convex
+
+for a simple local run, use Docker. it runs the app, Convex's local development backend, yt-dlp and FFmpeg together. you don't need to install node, python, or yt-dlp, and you don't need to set up WorkOS/Google OAuth or create a hosted Convex deployment.
+
+you need Docker Desktop (or Docker Engine with Compose) and an internet connection for the first download.
+
+1. create `.env.local` from the example (this keeps an existing `.env.local` file):
+
+```
+cp -n .env.example .env.local
+```
+
+if `.env.local` already has a hosted `CONVEX_DEPLOYMENT` or `NEXT_PUBLIC_CONVEX_*` values, remove those lines first so the local backend can write its own settings there.
+
+2. initialize Convex locally. when it asks, choose **Start without an account (run Convex locally)**. it will create the database and write the local URLs into `.env.local`:
+
+```
+docker compose run --rm echo npx convex dev --once
+```
+
+3. start the app and local database:
+
+```
+docker compose up --build
+```
+
+open http://localhost:3001. on the login page, enter a Gmail address to create or reopen that local demo profile, then finish onboarding. the email is just a profile label and local account key; it isn't verified or sent to Google.
+
+the local Convex database is stored in `.convex/` and stays there when you stop or rebuild the containers. `docker compose down` does not delete it. to start with a fresh database, remove `.convex/`.
+
+the demo sign-in is for local development/review only. anyone with access to the running app can enter an email and open that local profile; don't expose this mode as a public app.
+
+### manual setup (hosted Convex + WorkOS/Google)
+
+the steps below keep the original cloud-backed setup. use these if you want to run without Docker or use the hosted Convex deployment and Google sign-in. for the local Docker setup above, you can skip this whole section.
+
 you need node 20.9 or newer, bun, and python if you go with the yt-dlp option.
 
 1. clone the repo and install dependencies
