@@ -10,6 +10,7 @@ services:
     environment:
       STREAM_BACKEND: ytdlp
       LOCAL_DEMO_AUTH: "true"
+      NEXT_PUBLIC_LOCAL_DEMO_AUTH: "true"
       NEXT_PUBLIC_ENABLE_GOOGLE_AUTH: "false"
       JWT_SECRET: echo-local-demo-session-secret-change-for-any-real-deployment
       WATCHPACK_POLLING: "true"

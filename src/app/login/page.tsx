@@ -12,7 +12,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [demoError, setDemoError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const googleSignInEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === "true";
+  const demoSignInEnabled = process.env.NEXT_PUBLIC_LOCAL_DEMO_AUTH === "true";
+  const googleSignInEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false";
 
   const slides = [
     {
@@ -83,38 +84,42 @@ export default function LoginPage() {
             Welcome in.
           </h2>
           <p className="text-primary/70 font-medium mb-10 leading-relaxed">
-            Try Echo with a local demo profile, or use Google if this deployment has it configured.
+            {demoSignInEnabled
+              ? "Try Echo with a local demo profile, or use Google if this deployment has it configured."
+              : "Sign in or create an account to start syncing. We'll show you around once you're inside."}
           </p>
 
-          <form onSubmit={onDemoLogin} className="space-y-4">
-            <label htmlFor="demo-email" className="text-sm font-semibold text-primary/80">
-              Gmail address for your local profile
-            </label>
-            <Input
-              id="demo-email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@gmail.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              pattern="[^@]+@gmail[.]com"
-              title="Enter a Gmail address"
-              className="h-12 rounded-xl bg-card"
-            />
-            <Button
-              type="submit"
-              disabled={isSigningIn}
-              className={cn(
-                "w-full flex items-center justify-center gap-3 h-14 ",
+          {demoSignInEnabled && (
+            <form onSubmit={onDemoLogin} className="space-y-4">
+              <label htmlFor="demo-email" className="text-sm font-semibold text-primary/80">
+                Gmail address for your local profile
+              </label>
+              <Input
+                id="demo-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@gmail.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                pattern="[^@]+@gmail[.]com"
+                title="Enter a Gmail address"
+                className="h-12 rounded-xl bg-card"
+              />
+              <Button
+                type="submit"
+                disabled={isSigningIn}
+                className={cn(
+                  "w-full flex items-center justify-center gap-3 h-14 ",
+                )}
+              >
+                {isSigningIn ? "Opening your local profile…" : "Continue with demo account"}
+              </Button>
+              {demoError && (
+                <p role="alert" className="text-sm text-destructive">{demoError}</p>
               )}
-            >
-              {isSigningIn ? "Opening your local profile…" : "Continue with demo account"}
-            </Button>
-            {demoError && (
-              <p role="alert" className="text-sm text-destructive">{demoError}</p>
-            )}
-          </form>
+            </form>
+          )}
 
           {googleSignInEnabled && (
             <Button
@@ -127,9 +132,11 @@ export default function LoginPage() {
             </Button>
           )}
 
-          <p className="mt-4 text-xs text-primary/55">
-            This creates a local-only profile using the Gmail address you enter. It is not verified or used to sign into Google.
-          </p>
+          {demoSignInEnabled && (
+            <p className="mt-4 text-xs text-primary/55">
+              This creates a local-only profile using the Gmail address you enter. It is not verified or used to sign into Google.
+            </p>
+          )}
 
           <p className="mt-8 text-center text-xs font-medium text-neutral-400">
             By continuing, you agree to our{" "}
