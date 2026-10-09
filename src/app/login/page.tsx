@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 export default function LoginPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [email, setEmail] = useState("");
   const [demoError, setDemoError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const demoSignInEnabled = process.env.NEXT_PUBLIC_LOCAL_DEMO_AUTH === "true";
   const googleSignInEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH !== "false";
@@ -64,7 +67,17 @@ export default function LoginPage() {
     }
   };
 
-  const onGoogleLogin = () => {
+  const onGoogleLogin = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const url = new URL("/api/auth/google?platform=android", window.location.origin);
+        await Browser.open({ url: url.toString() });
+      } catch (error) {
+        console.error("Could not open secure sign-in browser:", error);
+        setAuthError("Could not open Google sign-in. Please try again.");
+      }
+      return;
+    }
     window.location.assign("/api/auth/google");
   };
 
@@ -130,6 +143,10 @@ export default function LoginPage() {
             >
               Continue with Google
             </Button>
+          )}
+
+          {authError && (
+            <p role="alert" className="mt-3 text-sm text-destructive">{authError}</p>
           )}
 
           {demoSignInEnabled && (

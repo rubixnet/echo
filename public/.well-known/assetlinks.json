@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.echo.music.test",
+      "sha256_cert_fingerprints": [
+        "67:1A:AC:A1:39:29:B0:FC:01:FE:44:A7:58:DE:D4:82:3A:CB:E9:11:E4:23:DE:50:EA:CC:23:3E:CF:9B:C4:DD"
+      ]
+    }
+  }
+]

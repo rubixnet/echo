@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SignJWT } from "jose";
+import { jwtVerify } from "jose";
 import { fetchQuery, fetchMutation } from "convex/nextjs";
 import { api } from "../../../../../convex/_generated/api";
 
@@ -14,6 +15,24 @@ export async function GET(req: Request) {
 
   if (!process.env.WORKOS_API_KEY || !process.env.WORKOS_CLIENT_ID || !process.env.JWT_SECRET) {
     return NextResponse.redirect(new URL("/login?error=oauth_not_configured", req.url));
+  }
+
+  const state = searchParams.get("state");
+  if (state) {
+    try {
+      const { payload } = await jwtVerify(
+        state,
+        new TextEncoder().encode(process.env.JWT_SECRET),
+      );
+      if (payload.platform === "android") {
+        const handoff = new URL("/mobile-auth", req.url);
+        handoff.searchParams.set("code", code);
+        handoff.searchParams.set("state", state);
+        return NextResponse.redirect(handoff);
+      }
+    } catch {
+      return NextResponse.redirect(new URL("/login?error=auth_failed", req.url));
+    }
   }
 
   try {

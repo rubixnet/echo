@@ -3,6 +3,7 @@ import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import NativeAuthReturn from "@/components/providers/NativeAuthReturn";
 
 export const metadata: Metadata = {
   title: "Echo",
@@ -23,7 +24,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <NativeAuthReturn />
+              {children}
+            </TooltipProvider>
           </ConvexClientProvider>
         </ThemeProvider>
       </body>
